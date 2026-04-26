@@ -1,0 +1,25 @@
+{
+  "category": "Great Game",
+  "source_url": "https://fallenlondon.wiki/wiki/Well-Placed_Pawn",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 141161, "name": "Final Breath",            "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 122490, "name": "Moves in the Great Game", "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 122489, "name": "Vital Intelligence",      "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 758,    "name": "Copper Cipher Ring",      "echo_value": 37.50,   "raw_price": "37.50 Echoes"},
+    {"id": 142793, "name": "Corresponding Sounder",   "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 144796, "name": "A Seat at the Board",     "echo_value": 1562.50, "raw_price": "1562.50 Echoes"},
+    {"id": 144795, "name": "Vienna Opening",          "echo_value": 25.00,   "raw_price": "50 Hinterland Scrip"},
+    {"id": 144793, "name": "Epaulette Mate",          "echo_value": 25.00,   "raw_price": "50 Hinterland Scrip"},
+    {"id": 144794, "name": "Queen Mate",              "echo_value": 62.50,   "raw_price": "125 Hinterland Scrip"},
+    {"id": 142855, "name": "Much-Needed Gap",         "echo_value": 62.50,   "raw_price": "125 Assortment of Khaganian Coinage"}
+  ],
+  "notes": [
+    "Well-Placed Pawn (ID 141394): cannot be sold at Bazaar - excluded",
+    "A Seat at the Board (ID 144796): 1562.50 echoes - NOT in content.js currently (142793 is listed as Corresponding Sounder)",
+    "Content.js has 142793 as Corresponding Sounder at 312.50 - confirmed correct",
+    "Content.js has 142855 as Much-Needed Gap at 62.50 - confirmed (125 x 0.50 = 62.50)",
+    "Vienna Opening, Epaulette Mate, Queen Mate IDs need verification - IDs given are approximate",
+    "Stalemate: 125 Assortment of Khaganian Coinage = 62.50 echoes"
+  ]
+}

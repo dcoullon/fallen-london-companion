@@ -1,0 +1,28 @@
+{
+  "category": "Academic",
+  "source_url": "https://fallenlondon.wiki/wiki/Memory_of_Discordance",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 374,    "name": "Foxfire Candle Stub",                          "echo_value": 0.01,  "raw_price": "0.01 Echoes"},
+    {"id": 476,    "name": "Flask of Abominable Salts",                    "echo_value": 0.10,  "raw_price": "0.10 Echoes"},
+    {"id": 144821, "name": "Sample of Roof-Drip",                          "echo_value": 0.10,  "raw_price": "2 Stuivers"},
+    {"id": 825,    "name": "Memory of Distant Shores",                     "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 140898, "name": "Incisive Observation",                         "echo_value": 0.50,  "raw_price": "10 Stuivers"},
+    {"id": 144822, "name": "Starved Expression",                           "echo_value": 0.50,  "raw_price": "10 Stuivers"},
+    {"id": 122487, "name": "Unprovenanced Artefact",                       "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 745,    "name": "Volume of Collated Research",                  "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 141283, "name": "Mirthless Compendium of Statistical Observations","echo_value": 12.50, "raw_price": "12.50 Echoes"},
+    {"id": 142754, "name": "Conceptual Breakthrough in Currency Design",   "echo_value": 12.50, "raw_price": "12.50 Echoes"},
+    {"id": 759,    "name": "Endowment of a University Fellowship",         "echo_value": 50.00, "raw_price": "50.00 Echoes"},
+    {"id": 122486, "name": "Judgements' Egg",                              "echo_value": 62.50, "raw_price": "62.50 Echoes"},
+    {"id": 118813, "name": "Secret College",                               "echo_value": 1562.50,"raw_price": "25 Searing Enigmas"}
+  ],
+  "notes": [
+    "Sample of Roof-Drip: 2 Stuivers = 0.10 echoes (content.js shows 0.10 - correct)",
+    "Incisive Observation: 10 Stuivers = 0.50 echoes (content.js shows 0.50 - correct)",
+    "Starved Expression: wiki shows 10 Stuivers = 0.50 echoes (content.js shows 0.50 - correct)",
+    "Secret College (ID 118813): 25 Searing Enigmas x 62.50 each = 1562.50 echoes - NOT in content.js",
+    "Memory of Discordance (ID 141385): wiki shows (12.50) parenthesized = cannot be sold",
+    "Lost Research Assistant: wiki shows (12.50) = cannot be sold"
+  ]
+}

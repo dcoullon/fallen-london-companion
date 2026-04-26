@@ -1,0 +1,21 @@
+{
+  "category": "Rumour",
+  "source_url": "https://fallenlondon.wiki/wiki/Proscribed_Material",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 420,    "name": "Proscribed Material",           "echo_value": 0.04,    "raw_price": "0.04 Echoes"},
+    {"id": 656,    "name": "Inkling of Identity",           "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 659,    "name": "Scrap of Incendiary Gossip",    "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 657,    "name": "An Identity Uncovered!",        "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 735,    "name": "Night on the Town",             "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 141194, "name": "Rumour of the Upper River",     "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 858,    "name": "Blackmail Material",            "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 762,    "name": "Diary of the Dead",             "echo_value": 60.00,   "raw_price": "60.00 Echoes"},
+    {"id": 141882, "name": "Mortification of a Great Power","echo_value": 62.50,   "raw_price": "62.50 Echoes (implicit value)"},
+    {"id": 931,    "name": "Intriguer's Compendium",        "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 930,    "name": "Rumourmonger's Network",        "echo_value": 1560.00, "raw_price": "1560.00 Echoes"}
+  ],
+  "notes": [
+    "Mortification of a Great Power (ID 141882): wiki shows (62.50) in parentheses = implicit value, not direct Bazaar sell"
+  ]
+}

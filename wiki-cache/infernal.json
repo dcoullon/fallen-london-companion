@@ -1,0 +1,26 @@
+{
+  "category": "Infernal",
+  "source_url": "https://fallenlondon.wiki/wiki/Soul",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 386,    "name": "Soul",                                        "echo_value": 0.02,    "raw_price": "0.02 Echoes"},
+    {"id": 928,    "name": "Amanita Sherry",                              "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 668,    "name": "Brilliant Soul",                              "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 653,    "name": "Devilbone Die",                               "echo_value": 0.90,    "raw_price": "0.90 Echoes"},
+    {"id": 122798, "name": "Queer Soul",                                  "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 927,    "name": "Muscaria Brandy",                             "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 747,    "name": "Portfolio of Souls",                          "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 23695,  "name": "Silent Soul",                                 "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 482,    "name": "Brass Ring",                                  "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 749,    "name": "Bright Brass Skull",                          "echo_value": 60.00,   "raw_price": "60.00 Echoes"},
+    {"id": 141281, "name": "Devilish Probability Distributor",            "echo_value": 62.50,   "raw_price": "62.50 Echoes"},
+    {"id": 141772, "name": "Discordant Soul",                             "echo_value": 62.50,   "raw_price": "62.50 Echoes"},
+    {"id": 141229, "name": "Infernal Machine",                            "echo_value": 66.00,   "raw_price": "66.00 Echoes"},
+    {"id": 669,    "name": "Coruscating Soul",                            "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 929,    "name": "Reported Location of a One-Time Prince of Hell","echo_value": 1560.00,"raw_price": "1560.00 Echoes"}
+  ],
+  "notes": [
+    "Brass Ring (ID 482) is in the Infernal category but NOT in content.js - should be added",
+    "Discordant Soul shows 62.50 confirmed by individual wiki page"
+  ]
+}

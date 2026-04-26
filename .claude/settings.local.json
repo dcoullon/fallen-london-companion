@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir C:\\\\Users\\\\dcoullon\\\\claude-projects\\\\fallen-london:*)",
+      "WebSearch",
+      "WebFetch(domain:wiki.fallenlondon.com)",
+      "WebFetch(domain:www.fallenlondon.com)",
+      "WebFetch(domain:failbettergames.com)",
+      "WebFetch(domain:fallenlondon.wiki)",
+      "WebFetch(domain:community.failbettergames.com)",
+      "WebFetch(domain:www.failbettergames.com)",
+      "Bash(node:*)",
+      "Bash(start:*)",
+      "Bash(python3:*)",
+      "Bash(python -c \"from PIL import Image; img = Image.open\\(r'C:\\\\Users\\\\dcoullon\\\\claude-projects\\\\fallen-london\\\\Screenshot 2026-04-10 114703-showing the net conversion.png'\\); print\\(img.size\\)\")",
+      "Bash(powershell:*)",
+      "WebFetch(domain:extensionworkshop.com)",
+      "WebFetch(domain:support.mozilla.org)",
+      "WebFetch(domain:www.cnet.com)",
+      "WebFetch(domain:www.reddit.com)",
+      "WebFetch(domain:kiwibrowerandroid.com)",
+      "WebFetch(domain:bugzilla.mozilla.org)",
+      "WebFetch(domain:wiki.mozilla.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.comparitech.net)",
+      "WebFetch(domain:www.mozilla.org)",
+      "WebFetch(domain:www.firefox.com)",
+      "WebFetch(domain:support.google.com)",
+      "Bash(web-ext --version)",
+      "Bash(web-ext build *)",
+      "Bash(web-ext lint *)"
+    ]
+  }
+}

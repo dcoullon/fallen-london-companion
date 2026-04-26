@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FL Companion — Bookmarklet</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #12100a;
+      color: #e8d5a0;
+      font-family: Georgia, serif;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 28px 16px 48px;
+      line-height: 1.6;
+    }
+    h1 { color: #c9a84c; font-size: 20px; border-bottom: 1px solid #3a2e1e; padding-bottom: 10px; margin-bottom: 4px; }
+    h2 { color: #c9a84c; font-size: 15px; margin: 28px 0 10px; text-transform: uppercase; letter-spacing: 1px; }
+    p  { margin: 0 0 12px; color: #cdbf99; }
+    ol, ul { margin: 0 0 14px; padding-left: 22px; color: #cdbf99; }
+    li { margin-bottom: 6px; }
+    .drag-link {
+      display: inline-block;
+      background: #191408;
+      border: 2px solid #c9a84c;
+      color: #c9a84c;
+      padding: 10px 18px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 15px;
+      font-family: Georgia, serif;
+      cursor: grab;
+    }
+    .drag-link:hover { background: #2a2015; }
+    .copy-area {
+      background: #1a1208;
+      border: 1px solid #3a2e1e;
+      border-radius: 4px;
+      padding: 12px;
+      margin: 10px 0;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      background: #0e0c07;
+      border: 1px solid #2a2015;
+      color: #6b5a3e;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 6px;
+      resize: none;
+      border-radius: 2px;
+    }
+    button {
+      background: #2a2015;
+      border: 1px solid #6b5a3e;
+      color: #c9a84c;
+      padding: 7px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      border-radius: 2px;
+      font-family: Georgia, serif;
+      margin-top: 6px;
+    }
+    button:hover { background: #3a3020; border-color: #c9a84c; }
+    button.copied { border-color: #4a7c59; color: #4a7c59; }
+    .note {
+      background: #1a1208;
+      border-left: 3px solid #c9a84c;
+      padding: 8px 12px;
+      margin: 14px 0;
+      color: #cdbf99;
+      font-size: 0.92em;
+    }
+    hr { border: none; border-top: 1px solid #2a2015; margin: 28px 0; }
+  </style>
+</head>
+<body>
+
+<h1>FL Companion — Bookmarklet</h1>
+<p>
+  Shows echo values next to items gained or lost, plus upfront cost previews before you choose a branch.
+  Works on any browser including Android Chrome — activate once per session after the game loads.
+</p>
+
+<hr>
+
+<h2>Desktop — drag to bookmarks bar</h2>
+<p>Drag this link onto your bookmarks bar. Then open Fallen London and click it once.</p>
+<p><a class="drag-link" id="bm-link" href="#">&#9881; FL Companion</a></p>
+<p style="color:#6b5a3e;font-size:0.85em">If dragging doesn't work, use the copy method below.</p>
+
+<hr>
+
+<h2>Android Chrome — step by step</h2>
+<ol>
+  <li>Bookmark <em>any</em> page (tap the star icon or ⋮ → <strong>Add to bookmarks</strong>).</li>
+  <li>Open <strong>Bookmarks</strong> (⋮ → Bookmarks).</li>
+  <li>Long-press the bookmark you just created → <strong>Edit bookmark</strong>.</li>
+  <li>Delete the <strong>URL</strong> field completely and paste the code below. Keep the name, e.g. <em>FL Companion</em>.</li>
+  <li>Save.</li>
+</ol>
+<div class="note">
+  Every time you open Fallen London, tap that bookmark from the bookmarks list once the game has loaded.
+  A brief <em>"FL Companion active"</em> banner confirms it's running for the session.
+</div>
+
+<h2>Copy the code</h2>
+<div class="copy-area">
+  <textarea id="bm-code" readonly placeholder="Loading..."></textarea>
+  <button id="copy-btn" onclick="copyCode()">Copy to clipboard</button>
+</div>
+
+<hr>
+
+<h2>What it shows</h2>
+<ul>
+  <li><strong>After each action:</strong> echo value in green/red next to every item gained or lost, plus a net total when multiple items change.</li>
+  <li><strong>Before choosing a branch:</strong> echo cost of required items shown below the icon (e.g. <em>−0.50E</em> under Vision of the Surface).</li>
+  <li><strong>Rat Market Saturation:</strong> current boost tier and how far to the next threshold.</li>
+</ul>
+
+<!-- ── Bookmarklet source (raw JS, embedded for self-contained use) ── -->
+<script id="bm-src" type="text/plain">
+(function(){
+if(window.__flCompanion){alert("FL Companion is already active!");return;}
+window.__flCompanion=true;
+var P={
+557:0.01,382:0.01,383:0.02,815:0.10,473:0.20,822:0.50,823:2.50,736:12.50,824:62.50,12350:312.50,24121:1562.60,
+380:0.01,389:0.02,145109:0.10,390:0.15,525:0.50,828:0.50,809:2.50,105858:12.50,812:12.50,144751:12.50,821:62.50,814:312.50,106142:1562.60,
+375:0.01,918:0.50,122495:2.50,141157:2.50,139723:4.17,
+381:0.01,907:0.10,915:0.50,922:2.50,923:12.50,924:62.50,925:312.50,926:1560.00,
+385:0.01,328:2.50,810:2.50,949:12.50,754:62.50,16308:312.50,106683:1560.00,811:62.50,
+144025:0.01,449:0.12,12186:0.50,392:2.50,737:6.00,12188:12.50,742:12.50,140900:12.50,142094:16.50,142710:20.00,751:60.00,12187:312.50,
+420:0.04,656:0.10,659:0.50,657:2.50,735:2.50,141194:2.50,858:12.50,762:60.00,141882:62.50,931:312.50,930:1560.00,
+386:0.02,928:0.10,668:0.50,653:0.90,122798:2.50,927:2.50,747:12.50,23695:12.50,482:12.50,749:60.00,141281:62.50,141772:62.50,141229:66.00,669:312.50,929:1560.00,
+384:0.01,652:0.10,144977:12.50,141160:2.50,951:2.50,763:12.50,121792:12.50,23504:62.50,122492:62.50,122493:62.50,1053:312.50,
+374:0.01,476:0.10,144821:0.10,825:0.50,144822:0.50,140898:0.50,122487:2.50,745:2.50,141283:12.50,142754:12.50,759:50.00,122486:62.50,118813:1562.50,
+141161:0.50,122490:0.50,122489:12.50,758:37.50,142855:62.50,142793:312.50,144796:1562.50,
+142251:0.50,142250:2.50,141675:12.50,142249:62.50,142295:312.50,
+388:0.02,935:0.10,932:0.50,144955:0.50,773:2.50,849:12.50,933:62.50,936:312.50,934:1560.00,
+377:0.01,424:0.10,587:0.50,852:2.50,946:12.50,832:62.50,14975:312.50,
+423:0.05,141913:0.10,141917:0.10,425:0.15,141914:0.50,141570:2.50,141916:2.50,145558:2.50,141946:12.50,142074:62.50,142448:62.50,
+426:0.20,13929:0.50,13928:2.50,141883:12.50,739:12.50,123213:62.50,143050:62.50,142087:312.50,
+378:0.01,141285:0.01,920:0.10,142660:0.10,831:0.50,956:2.50,743:6.00,959:12.50,142661:12.50,955:15.00,981:25.00,129586:141.85,142202:62.50,143646:62.50,142662:62.50,142463:312.50,142669:312.50,141189:312.50,
+391:0.02,531:0.10,827:0.50,945:2.50,741:12.50,142709:12.50,114982:62.50,142386:62.50,143044:312.50,143045:312.50,142504:1562.50,
+379:0.01,122484:0.50,122494:0.50,122485:0.50,122483:2.50,122488:2.50,142666:62.50,
+471:0.03,470:0.10,477:0.10,642:0.10,643:0.12,560:0.20,523:0.25,635:0.50,862:0.50,468:2.00,413:12.50,22523:12.50,748:25.00,755:30.00,761:35.00,750:35.00,757:47.50,753:57.50,13640:60.00,
+387:0.01,141158:0.50,141159:0.50,764:2.50,140779:2.50,738:6.00,142840:62.50,
+376:0.01,14621:0.50,14620:2.50,123214:12.50,
+141374:0.10,141324:0.10,141486:0.50,122491:0.50,618:0.70,121611:2.50,140892:2.50,140894:2.50,142237:5.00,140962:12.50,140891:12.50,143051:62.50,143588:62.50,141542:63.50,410:80000.00,
+22390:0.01,144605:0.01,421:0.03,143057:0.10,144995:0.05,582:0.25,125025:0.50,140732:0.50,142708:0.50,140706:2.50,
+140889:0.01,140879:0.01,140771:0.10,140852:0.50,140756:1.00,140813:2.50,140814:2.50,140851:2.50,143548:2.50,140881:2.50,140853:2.50,141372:2.50,140773:3.00,141480:3.00,140772:3.00,142727:5.00,140839:12.50,140833:12.50,140850:12.50,141371:12.50,142298:12.50,140774:12.50,141380:15.00,140849:15.00,141774:17.50,140882:25.00,141540:27.50,145642:35.00,145008:60.00,140843:62.50,141479:62.50,140847:62.50,140838:62.50,142351:65.00,140845:312.50,140857:312.50,140844:312.50,141640:312.50,
+756:27.50,18045:1.00,18379:1.00,18101:2.00,18100:10.00,18308:30.00,18309:50.00,18310:60.00,18311:70.00,18312:80.00,18396:130.00,18381:180.00,829:0.50,746:6.00,141016:12.50,619:0.50,752:27.50,
+422:0.05,588:0.20,830:0.50,658:0.50,944:2.50,740:6.00,744:12.50,
+142190:0.50,
+306:2.50,145125:6.25,145126:6.25,145128:6.25,307:6.40,145127:75.00,145129:75.00,730:225.00,727:312.50,
+718:6.40,320:12.50,719:14.40,322:62.50,323:90.00,325:230.00,21891:230.00,
+717:12.50,720:12.50,319:14.40,321:62.50,324:90.00,21893:230.00,326:230.40,
+556:0.01,303:0.04,555:0.10,465:0.50,466:0.50,544:1.50,308:2.50,305:2.50,304:6.40,309:6.40,310:62.50,311:62.50,21847:200.00,21845:200.00,21894:200.00,21897:200.00,312:312.50,
+1004:0.20,333:2.50,327:3.20,339:6.40,329:12.50,334:14.40,338:25.60,335:32.40,336:32.40,330:51.20,340:160.00,21896:210.00,729:225.00,655:230.00,332:250.00,337:312.50,
+290:0.40,292:1.60,291:2.50,293:2.50,295:2.50,294:6.40,296:6.40,298:6.40,299:6.40,297:6.40,300:57.60,301:62.50,302:160.00,21848:200.00,
+765:0.10,356:0.40,467:0.40,358:2.50,357:2.50,361:6.40,359:6.40,360:32.40,362:62.50,363:160.00,364:160.00,21846:230.00,
+1005:10.00,348:12.50,140648:14.00,346:14.40,347:32.40,350:62.50,349:62.50,
+313:0.01,436:0.10,435:0.10,722:0.20,723:0.20,726:0.20,725:0.20,721:0.20,724:0.20,317:2.88,315:6.40,316:6.40,318:62.50,21892:200.00,21895:210.00,
+464:0.04,441:0.20,442:0.20,443:0.20,558:0.50,498:0.50,342:6.40,343:6.40,344:6.40,345:32.40,351:45.00,144549:100.00,353:160.00,21898:200.00,728:312.50,355:5856.40
+};
+function parseChanges(data){
+  if(!data||!Array.isArray(data.messages))return[];
+  var ch=[];
+  for(var i=0;i<data.messages.length;i++){
+    var msg=data.messages[i];
+    if(!msg.possession)continue;
+    if(msg.possession.nature!=="Thing"&&P[msg.possession.id]==null)continue;
+    var gained,qty;
+    if(msg.type==="StandardQualityChangeMessage"){
+      if(msg.changeType!=="Decreased"&&msg.changeType!=="Increased")continue;
+      gained=msg.changeType==="Decreased";
+      var m=msg.message.match(/([\d,]+) x /);
+      if(!m)continue;
+      qty=parseInt(m[1].replace(/,/g,""),10);
+    }else if(msg.type==="QualityExplicitlySetMessage"){
+      var m=msg.message.match(/([\d,]+) x /);
+      if(!m)continue;
+      qty=parseInt(m[1].replace(/,/g,""),10);
+      gained=true;
+    }else continue;
+    var id=msg.possession.id,name=msg.possession.name;
+    var up=P[id]!=null?P[id]:null;
+    var ev=up!==null?qty*up*(gained?1:-1):null;
+    ch.push({name:name,qty:qty,gained:gained,echoValue:ev});
+  }
+  return ch;
+}
+function annotateResults(changes){
+  if(!changes.length)return;
+  var pc=changes.filter(function(c){return c.echoValue!==null;});
+  var annotated={},parents=[],attempts=0;
+  function tryAnnotate(){
+    for(var i=0;i<pc.length;i++){
+      var c=pc[i];
+      if(annotated[c.name])continue;
+      var st=" x "+c.name;
+      var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+      var node;
+      while((node=walker.nextNode())){
+        if(!node.textContent.includes(st))continue;
+        var parent=node.parentElement;
+        if(!parent)continue;
+        if(parent.querySelector(".fl-echo-val[data-item]"))continue;
+        var sign=c.gained?"+":"−";
+        var color=c.gained?"#4a7c59":"#b03030";
+        var span=document.createElement("span");
+        span.className="fl-echo-val";
+        span.setAttribute("data-item",c.name);
+        span.style.cssText="color:"+color+";font-size:0.9em;margin-left:6px";
+        span.textContent="("+sign+Math.abs(c.echoValue).toFixed(2)+" echoes)";
+        parent.appendChild(span);
+        annotated[c.name]=true;
+        parents.push(parent);
+        break;
+      }
+    }
+    attempts++;
+    if(Object.keys(annotated).length<pc.length&&attempts<20){setTimeout(tryAnnotate,150);return;}
+    var net=pc.reduce(function(s,c){return s+c.echoValue;},0);
+    if(parents.length>1){
+      var ex=document.getElementById("fl-net-inline");
+      if(ex)ex.remove();
+      var nc=net>=0?"#4a7c59":"#b03030";
+      var ns=net>=0?"+":"";
+      var el=document.createElement("div");
+      el.id="fl-net-inline";
+      el.style.cssText="color:"+nc+";font-size:0.9em;margin-top:6px;font-style:italic;border-top:1px solid #3a2e1e;padding-top:4px";
+      el.textContent="Net total: "+ns+net.toFixed(2)+" echoes";
+      parents[parents.length-1].insertAdjacentElement("afterend",el);
+    }
+  }
+  setTimeout(tryAnnotate,300);
+}
+function parseSaturation(data){
+  if(!data||!Array.isArray(data.messages))return null;
+  for(var i=0;i<data.messages.length;i++){
+    var msg=data.messages[i];
+    if(msg.possession&&msg.possession.name==="Rat Market Saturation")return msg.possession.level!=null?msg.possession.level:null;
+  }
+  return null;
+}
+function annotateSaturation(level){
+  var label,detail;
+  if(level<=65000){label="32% boost";detail=(65000-level).toLocaleString()+" to 12% tier";}
+  else if(level<=180000){label="12% boost";detail=(180000-level).toLocaleString()+" to no boost";}
+  else{label="no boost";detail="above 180k";}
+  var attempts=0;
+  function tryAnnotate(){
+    var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    var node;
+    while((node=walker.nextNode())){
+      if(!node.textContent.includes(" x Rat Market Saturation"))continue;
+      var parent=node.parentElement;
+      if(!parent||parent.querySelector(".fl-saturation-hint"))break;
+      var span=document.createElement("span");
+      span.className="fl-saturation-hint";
+      span.style.cssText="color:#c9a84c;font-size:0.9em;margin-left:6px";
+      span.textContent="("+label+" · "+detail+")";
+      parent.appendChild(span);
+      return;
+    }
+    if(++attempts<20)setTimeout(tryAnnotate,150);
+  }
+  setTimeout(tryAnnotate,300);
+}
+function parseRequiredQty(tooltip){
+  if(!tooltip)return null;
+  if(/at most/i.test(tooltip))return null;
+  var m=tooltip.match(/you need(?:ed)? ([\d,]+)/i);
+  if(m)return parseInt(m[1].replace(/,/g,""),10);
+  if(/you unlocked this with an?\s/i.test(tooltip))return 1;
+  return null;
+}
+function parseBranchCosts(data){
+  if(!data||!data.storylet||!Array.isArray(data.storylet.childBranches))return[];
+  var results=[];
+  for(var i=0;i<data.storylet.childBranches.length;i++){
+    var branch=data.storylet.childBranches[i];
+    if(!Array.isArray(branch.qualityRequirements)||!branch.qualityRequirements.length)continue;
+    var costs=[];
+    for(var j=0;j<branch.qualityRequirements.length;j++){
+      var req=branch.qualityRequirements[j];
+      if(req.category==="Companion")continue;
+      var up=P[req.qualityId]!=null?P[req.qualityId]:null;
+      if(up===null)continue;
+      var qty=parseRequiredQty(req.tooltip);
+      if(qty===null)continue;
+      costs.push({name:req.qualityName,qty:qty,echoValue:qty*up});
+    }
+    if(!costs.length)continue;
+    var total=costs.reduce(function(s,c){return s+c.echoValue;},0);
+    results.push({branchName:branch.name,costs:costs,total:total});
+  }
+  return results;
+}
+var _obs=null;
+function annotateBranchCosts(branchCosts){
+  if(_obs){_obs.disconnect();_obs=null;}
+  if(!branchCosts.length)return;
+  var map=new Map();
+  for(var i=0;i<branchCosts.length;i++)for(var j=0;j<branchCosts[i].costs.length;j++)map.set(branchCosts[i].costs[j].name,branchCosts[i].costs[j].echoValue);
+  function tryInject(){
+    var containers=document.querySelectorAll("div.icon.quality-requirement");
+    for(var i=0;i<containers.length;i++){
+      var container=containers[i];
+      var btn=container.querySelector("[role='button'][aria-label]");
+      if(!btn||btn.dataset.flCostDone)continue;
+      var label=btn.getAttribute("aria-label")||"";
+      if(!/you unlocked this with|you need\b/i.test(label))continue;
+      map.forEach(function(echoValue,name){
+        if(btn.dataset.flCostDone)return;
+        if(!label.includes(name))return;
+        btn.dataset.flCostDone="1";
+        var badge=document.createElement("div");
+        badge.className="fl-cost-hint";
+        badge.style.cssText="color:#b03030;font-size:0.7em;text-align:center;font-family:Georgia,serif;font-style:italic;pointer-events:none;line-height:1.3";
+        badge.textContent="−"+echoValue.toFixed(2)+"E";
+        container.appendChild(badge);
+      });
+    }
+  }
+  _obs=new MutationObserver(tryInject);
+  _obs.observe(document.body,{childList:true,subtree:true});
+  setTimeout(function(){if(_obs){_obs.disconnect();_obs=null;}},300000);
+}
+var _cnt=0;
+function _bump(label){
+  _cnt++;
+  var el=document.getElementById("fl-debug");
+  if(!el){el=document.createElement("div");el.id="fl-debug";el.style.cssText="position:fixed;bottom:4px;left:4px;background:#191408;border:1px solid #3a2e1e;color:#c9a84c;font-family:monospace;font-size:11px;padding:3px 7px;border-radius:2px;z-index:99999";document.body.appendChild(el);}
+  el.textContent="FL intercepted: "+_cnt+" ("+label+")";
+}
+var _origFetch=window.fetch;
+window.fetch=async function(){
+  var response=await _origFetch.apply(this,arguments);
+  var url=typeof arguments[0]==="string"?arguments[0]:(arguments[0]&&arguments[0].url)||"";
+  if(url.includes("choosebranch")||url.includes("storylet/begin")){
+    var label=url.includes("choosebranch")?"action":"branch";
+    _bump(label);
+    response.clone().json().then(function(data){
+      if(url.includes("choosebranch")){
+        annotateResults(parseChanges(data));
+        var sat=parseSaturation(data);
+        if(sat!==null)annotateSaturation(sat);
+      }else{
+        annotateBranchCosts(parseBranchCosts(data));
+      }
+    }).catch(function(){});
+  }
+  return response;
+};
+var banner=document.createElement("div");
+banner.style.cssText="position:fixed;top:0;left:50%;transform:translateX(-50%);background:#191408;border:1px solid #c9a84c;color:#e8d5a0;font-family:Georgia,serif;font-size:13px;padding:6px 14px;border-radius:0 0 4px 4px;z-index:99999;cursor:pointer";
+banner.textContent="FL Companion active";
+banner.onclick=function(){banner.remove();};
+document.body.appendChild(banner);
+setTimeout(function(){banner.style.transition="opacity 0.5s";banner.style.opacity="0";setTimeout(function(){banner.remove();},500);},4000);
+})();
+</script>
+
+<script>
+(function () {
+  var src = document.getElementById("bm-src").textContent.trim();
+  // Collapse internal whitespace to single spaces, keeping it on one line
+  var minified = src.replace(/\s+/g, " ").trim();
+  var uri = "javascript:" + encodeURIComponent(minified);
+
+  document.getElementById("bm-link").href = uri;
+  document.getElementById("bm-code").value = uri;
+})();
+
+function copyCode() {
+  var ta = document.getElementById("bm-code");
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+  var btn = document.getElementById("copy-btn");
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(ta.value).then(function () { flash(btn); });
+  } else {
+    document.execCommand("copy");
+    flash(btn);
+  }
+}
+
+function flash(btn) {
+  btn.textContent = "Copied!";
+  btn.classList.add("copied");
+  setTimeout(function () { btn.textContent = "Copy to clipboard"; btn.classList.remove("copied"); }, 2000);
+}
+</script>
+
+</body>
+</html>

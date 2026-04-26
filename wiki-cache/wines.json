@@ -1,0 +1,22 @@
+{
+  "category": "Wines",
+  "source_url": "https://fallenlondon.wiki/wiki/Bottle_of_Greyfields_1879",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 557,   "name": "Bottled Oblivion",                             "echo_value": 0.01,    "raw_price": "0.01 Echoes"},
+    {"id": 382,   "name": "Bottle of Greyfields 1879",                    "echo_value": 0.01,    "raw_price": "0.01 Echoes"},
+    {"id": 383,   "name": "Bottle of Greyfields 1882",                    "echo_value": 0.02,    "raw_price": "0.02 Echoes"},
+    {"id": 815,   "name": "Bottle of Morelways 1872",                     "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 473,   "name": "Bottle of Greyfields 1868 First Sporing",      "echo_value": 0.20,    "raw_price": "0.20 Echoes"},
+    {"id": 822,   "name": "Bottle of Strangling Willow Absinthe",         "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 823,   "name": "Bottle of Broken Giant 1844",                  "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 736,   "name": "Cellar of Wine",                               "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 824,   "name": "Bottle of Fourth City Airag: Year of the Tortoise", "echo_value": 62.50, "raw_price": "62.50 Echoes"},
+    {"id": 12350, "name": "Vial of Tears of the Bazaar",                  "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 24121, "name": "Vial of Masters' Blood",                       "echo_value": 1562.60, "raw_price": "1562.60 Echoes"}
+  ],
+  "notes": [
+    "Bottle of Black Wings Absinthe (ID 529) has no sell price",
+    "Bottle of Greyfields 1868 First Sporing is listed in source at 0.20 Echoes"
+  ]
+}

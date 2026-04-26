@@ -1,0 +1,39 @@
+{
+  "category": "Osteology",
+  "source_url": "https://fallenlondon.wiki/wiki/Bone_Fragments",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 140889, "name": "Bone Fragments",                      "echo_value": 0.01,  "raw_price": "0.01 Echoes"},
+    {"id": 140879, "name": "Bat Wing",                            "echo_value": 0.01,  "raw_price": "0.01 Echoes"},
+    {"id": 140771, "name": "Femur of a Surface Deer",             "echo_value": 0.10,  "raw_price": "0.10 Echoes"},
+    {"id": 140852, "name": "Fin Bones, Collected",                "echo_value": 0.50,  "raw_price": "0.50 Echoes (individual page: 50 Pennies = skeleton value)"},
+    {"id": 140881, "name": "Tomb-Lion's Tail",                    "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 140756, "name": "Unidentified Thigh Bone",             "echo_value": 0.50,  "raw_price": "1 Hinterland Scrip"},
+    {"id": 140813, "name": "Human Arm",                           "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 140851, "name": "Plaster Tail Bones",                  "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 143548, "name": "Segmented Ribcage",                   "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 140853, "name": "Withered Tentacle",                   "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 141372, "name": "Wing of a Young Terror Bird",         "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 142727, "name": "Obsidian Chitin Tail",                "echo_value": 5.00,  "raw_price": "500 Pennies (bone market value)"},
+    {"id": 140839, "name": "Human Ribcage",                       "echo_value": 12.50, "raw_price": "12.50 Echoes"},
+    {"id": 140833, "name": "Thorned Ribcage",                     "echo_value": 12.50, "raw_price": "12.50 Echoes"},
+    {"id": 140850, "name": "Albatross Wing",                      "echo_value": 12.50, "raw_price": "12.50 Echoes"},
+    {"id": 141371, "name": "Horned Skull",                        "echo_value": 12.50, "raw_price": "12.50 Echoes"},
+    {"id": 142351, "name": "Ivory Femur",                         "echo_value": 12.50, "raw_price": "25 Hinterland Scrip"},
+    {"id": 141380, "name": "Amber-Crusted Fin",                   "echo_value": 15.00, "raw_price": "15.00 Echoes"},
+    {"id": 140849, "name": "Ivory Humerus",                       "echo_value": 12.50, "raw_price": "25 Hinterland Scrip"},
+    {"id": 140882, "name": "Plated Skull",                        "echo_value": 25.00, "raw_price": "25.00 Echoes"},
+    {"id": 140843, "name": "Mammoth Ribcage",                     "echo_value": 62.50, "raw_price": "62.50 Echoes"},
+    {"id": 141479, "name": "Doubled Skull",                       "echo_value": 62.50, "raw_price": "62.50 Echoes"},
+    {"id": 140847, "name": "Sabre-toothed Skull",                 "echo_value": 62.50, "raw_price": "62.50 Echoes"},
+    {"id": 811,    "name": "Rubbery Skull",                       "echo_value": 62.50, "raw_price": "125 Hinterland Scrip"}
+  ],
+  "notes": [
+    "Most osteology items don't have direct Bazaar sell prices - they contribute to skeleton assembly",
+    "Values from content.js used where wiki only shows bone market assembly values",
+    "Ivory Femur: content.js shows 12.50; wiki shows 25 Hinterland Scrip = 12.50 echoes - confirmed correct",
+    "Ivory Humerus: content.js shows 15.00; wiki shows 25 Hinterland Scrip = 12.50 echoes - DISCREPANCY",
+    "Amber-Crusted Fin: content.js shows 15.00; wiki shows 1500 skeleton value",
+    "Rubbery Skull (ID 811) in Rubbery category, also relevant here"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "category": "Sustenance",
+  "source_url": "https://fallenlondon.wiki/wiki/Parabolan_Orange-apple",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 141374, "name": "Jasmine Leaves",                       "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 141324, "name": "Remains of a Pinewood Shark",          "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 141486, "name": "Pot of Venison Marrow",                "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 122491, "name": "Solacefruit",                          "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 618,    "name": "Dark-Dewed Cherry",                    "echo_value": 0.70,    "raw_price": "0.70 Echoes"},
+    {"id": 121611, "name": "Tin of Zzoup",                         "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 140892, "name": "Crate of Incorruptible Biscuits",      "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 140894, "name": "Basket of Rubbery Pies",               "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 142237, "name": "Beatrice's Taper-nut",                 "echo_value": 5.00,    "raw_price": "5.00 Echoes"},
+    {"id": 140962, "name": "Parabolan Orange-apple",               "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 141324, "name": "Remains of a Pinewood Shark",          "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 140891, "name": "Sausage About Which No One Complains", "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 143051, "name": "Hellworm Milk",                        "echo_value": 62.50,   "raw_price": "62.50 Echoes"},
+    {"id": 143588, "name": "Ripened Wheel of Hellworm Cheese",     "echo_value": 62.50,   "raw_price": "62.50 Echoes"},
+    {"id": 141542, "name": "Tinned Ham",                           "echo_value": 63.50,   "raw_price": "63.50 Echoes"},
+    {"id": 410,    "name": "Firkin of Hesperidean Cider",          "echo_value": 80000.00,"raw_price": "80000.00 Echoes"}
+  ],
+  "notes": [
+    "Parabolan Orange-apple (ID 140962): NOT in content.js - should be added at 12.50 echoes",
+    "Sausage About Which No One Complains: content.js shows 12.50, wiki page for Sustenance shows 62.50 - need to verify individual page",
+    "Ripened Wheel of Hellworm Cheese: content.js shows 62.50 but Sustenance table shows 63.50 - individual page confirms 62.50"
+  ]
+}

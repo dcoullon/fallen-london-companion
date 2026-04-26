@@ -1,0 +1,28 @@
+{
+  "category": "Curiosity",
+  "source_url": "https://fallenlondon.wiki/wiki/F.F._Gebrandt's_Superior_Laudanum",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 471,   "name": "F.F. Gebrandt's Tincture of Vigour: Half-Full","echo_value": 0.03,   "raw_price": "0.03 Echoes"},
+    {"id": 470,   "name": "F.F. Gebrandt's Tincture of Vigour",           "echo_value": 0.10,   "raw_price": "0.10 Echoes"},
+    {"id": 477,   "name": "F.F. Gebrandt's Superior Laudanum",            "echo_value": 0.10,   "raw_price": "0.10 Echoes"},
+    {"id": 642,   "name": "Venom-Ruby",                                    "echo_value": 0.10,   "raw_price": "0.10 Echoes"},
+    {"id": 643,   "name": "Sapphire",                                      "echo_value": 0.12,   "raw_price": "0.12 Echoes"},
+    {"id": 560,   "name": "Gift of Scorn",                                 "echo_value": 0.20,   "raw_price": "0.20 Echoes"},
+    {"id": 523,   "name": "Nikolas & Sons Instant Ablution Absolution",   "echo_value": 0.25,   "raw_price": "0.25 Echoes"},
+    {"id": 635,   "name": "A Partially Unwrapped Cat?",                   "echo_value": 0.50,   "raw_price": "0.50 Echoes"},
+    {"id": 862,   "name": "Cryptobotanical Rosette",                      "echo_value": 0.50,   "raw_price": "0.50 Echoes"},
+    {"id": 468,   "name": "Horsehead Amulet",                             "echo_value": 2.00,   "raw_price": "2.00 Echoes"},
+    {"id": 22523, "name": "A Blue and Shining Stone",                     "echo_value": 12.50,  "raw_price": "12.50 Echoes"},
+    {"id": 748,   "name": "Antique Constable's Badge",                    "echo_value": 25.00,  "raw_price": "25.00 Echoes"},
+    {"id": 755,   "name": "Ornate Typewriter",                            "echo_value": 30.00,  "raw_price": "30.00 Echoes"},
+    {"id": 761,   "name": "Red-Feathered Pin",                            "echo_value": 35.00,  "raw_price": "35.00 Echoes"},
+    {"id": 750,   "name": "Tiny Jewelled Reliquary",                      "echo_value": 35.00,  "raw_price": "35.00 Echoes"},
+    {"id": 757,   "name": "Engraved Pewter Tankard",                      "echo_value": 47.50,  "raw_price": "47.50 Echoes"},
+    {"id": 753,   "name": "Old Bone Skeleton Key",                        "echo_value": 57.50,  "raw_price": "57.50 Echoes"},
+    {"id": 13640, "name": "Trade Secret",                                 "echo_value": 60.00,  "raw_price": "60.00 Echoes"}
+  ],
+  "notes": [
+    "Powder of Renewal (ID 141762) cannot be sold at Bazaar - excluded"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "category": "Contraband",
+  "source_url": "https://fallenlondon.wiki/wiki/Flawed_Diamond",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 144025, "name": "Stashed Treasure",                      "echo_value": 0.01,   "raw_price": "0.01 Echoes"},
+    {"id": 449,    "name": "Flawed Diamond",                        "echo_value": 0.12,   "raw_price": "0.12 Echoes"},
+    {"id": 12186,  "name": "Ostentatious Diamond",                  "echo_value": 0.50,   "raw_price": "0.50 Echoes"},
+    {"id": 392,    "name": "London Street Sign",                    "echo_value": 2.50,   "raw_price": "2.50 Echoes"},
+    {"id": 737,    "name": "Use of Villains",                       "echo_value": 6.00,   "raw_price": "6.00 Echoes"},
+    {"id": 12188,  "name": "Magnificent Diamond",                   "echo_value": 12.50,  "raw_price": "12.50 Echoes"},
+    {"id": 742,    "name": "Comprehensive Bribe",                   "echo_value": 12.50,  "raw_price": "12.50 Echoes"},
+    {"id": 140900, "name": "Hillmover",                             "echo_value": 12.50,  "raw_price": "12.50 Echoes"},
+    {"id": 142094, "name": "Shard of Glim the Size of a Small Child","echo_value": 16.50, "raw_price": "16.50 Echoes"},
+    {"id": 142710, "name": "Unassuming Crate",                     "echo_value": 20.00,  "raw_price": "20.00 Echoes"},
+    {"id": 751,    "name": "Rookery Password",                      "echo_value": 60.00,  "raw_price": "60.00 Echoes"},
+    {"id": 12187,  "name": "Fabulous Diamond",                      "echo_value": 312.50, "raw_price": "312.50 Echoes"},
+    {"id": 145002, "name": "Ascended Ambergris",                   "echo_value": 2.55,   "raw_price": "51 Stuivers (at Hallow's Exchange)"}
+  ],
+  "notes": [
+    "Comprehensive Bribe (ID 742) is in the wiki Contraband category table but NOT in content.js - should be added",
+    "Ascended Ambergris (ID 145002): 51 Stuivers = 2.55 echoes at Hallow's Exchange; 50 Stuivers = 2.50 at other markets"
+  ]
+}

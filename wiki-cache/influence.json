@@ -1,0 +1,20 @@
+{
+  "category": "Influence",
+  "source_url": "https://fallenlondon.wiki/wiki/Stolen_Correspondence",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 422,    "name": "Stolen Correspondence",    "echo_value": 0.05,  "raw_price": "0.05 Echoes"},
+    {"id": 588,    "name": "Intriguing Snippet",       "echo_value": 0.20,  "raw_price": "0.20 Echoes"},
+    {"id": 830,    "name": "Compromising Document",    "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 658,    "name": "Secluded Address",         "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 740,    "name": "Personal Recommendation",  "echo_value": 6.00,  "raw_price": "6.00 Echoes"},
+    {"id": 944,    "name": "Stolen Kiss",              "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 744,    "name": "Favour in High Places",    "echo_value": 12.50, "raw_price": "12.50 Echoes"},
+    {"id": 383020, "name": "A Latent Network",         "echo_value": 0.05,  "raw_price": "0.05 Echoes"}
+  ],
+  "notes": [
+    "Entire Influence category is MISSING from content.js - all items here should be added",
+    "Secluded Address (ID 658): 0.50 Echoes",
+    "A Latent Network (ID 383020): very high ID, may need verification - shown as 0.05 Echoes"
+  ]
+}

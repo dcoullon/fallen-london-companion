@@ -1,0 +1,18 @@
+{
+  "category": "Legal",
+  "source_url": "https://fallenlondon.wiki/wiki/Infernal_Contract",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 426,    "name": "Infernal Contract",                    "echo_value": 0.20,   "raw_price": "0.20 Echoes"},
+    {"id": 13929,  "name": "Dubious Testimony",                    "echo_value": 0.50,   "raw_price": "0.50 Echoes"},
+    {"id": 13928,  "name": "Sworn Statement",                      "echo_value": 2.50,   "raw_price": "2.50 Echoes"},
+    {"id": 739,    "name": "Legal Document",                       "echo_value": 12.50,  "raw_price": "12.50 Echoes"},
+    {"id": 123213, "name": "Fragment of the Tragedy Procedures",   "echo_value": 62.50,  "raw_price": "62.50 Echoes"},
+    {"id": 143050, "name": "Sap of the Cedar at the Crossroads",  "echo_value": 62.50,  "raw_price": "125 Hinterland Scrip"},
+    {"id": 142087, "name": "Edicts of the First City",            "echo_value": 312.50, "raw_price": "312.50 Echoes"}
+  ],
+  "notes": [
+    "Cave-Aged Code of Honour (ID 141883): sells for 1 Legal Document at the Bazaar, not echoes - excluded",
+    "Sap of the Cedar: 125 Hinterland Scrip x 0.50 = 62.50 echoes"
+  ]
+}

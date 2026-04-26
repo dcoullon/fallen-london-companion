@@ -1,0 +1,20 @@
+{
+  "category": "Mysteries",
+  "source_url": "https://fallenlondon.wiki/wiki/Whispered_Hint",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 380,    "name": "Whispered Hint",            "echo_value": 0.01,    "raw_price": "0.01 Echoes"},
+    {"id": 389,    "name": "Cryptic Clue",              "echo_value": 0.02,    "raw_price": "0.02 Echoes"},
+    {"id": 145109, "name": "Tantalising Possibility",   "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 390,    "name": "Appalling Secret",          "echo_value": 0.15,    "raw_price": "0.15 Echoes"},
+    {"id": 525,    "name": "Journal of Infamy",         "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 828,    "name": "Tale of Terror!!",          "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 809,    "name": "Extraordinary Implication", "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 105858, "name": "Direful Reflection",        "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 812,    "name": "Uncanny Incunabulum",       "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 144751, "name": "Caustic Apocryphon",        "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 821,    "name": "Searing Enigma",            "echo_value": 62.50,   "raw_price": "62.50 Echoes"},
+    {"id": 814,    "name": "Dreadful Surmise",          "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 106142, "name": "Impossible Theorem",        "echo_value": 1562.60, "raw_price": "1562.60 Echoes"}
+  ]
+}

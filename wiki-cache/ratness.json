@@ -1,0 +1,14 @@
+{
+  "category": "Ratness",
+  "source_url": "https://fallenlondon.wiki/wiki/Rat_on_a_String",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 376,    "name": "Rat on a String",              "echo_value": 0.01,  "raw_price": "0.01 Echoes"},
+    {"id": 14621,  "name": "Venge-Rat Corpse",             "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 14620,  "name": "Baptised Rattus Faber Corpse", "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 123214, "name": "Ratty Reliquary",              "echo_value": 12.50, "raw_price": "12.50 Echoes"}
+  ],
+  "notes": [
+    "Rat of Glory (ID 106217) has no sell price - excluded"
+  ]
+}

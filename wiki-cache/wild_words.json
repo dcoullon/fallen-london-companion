@@ -1,0 +1,21 @@
+{
+  "category": "Wild Words",
+  "source_url": "https://fallenlondon.wiki/wiki/Primordial_Shriek",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 388,    "name": "Primordial Shriek",    "echo_value": 0.02,    "raw_price": "0.02 Echoes"},
+    {"id": 935,    "name": "Maniac's Prayer",      "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 932,    "name": "Correspondence Plaque","echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 144955, "name": "Tempestuous Tale",     "echo_value": 2.50,    "raw_price": "10 Stuivers (or 2.50 Echoes via lab research)"},
+    {"id": 773,    "name": "Aeolian Scream",       "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 849,    "name": "Storm-Threnody",       "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 933,    "name": "Night-Whisper",        "echo_value": 62.50,   "raw_price": "62.50 Echoes"},
+    {"id": 936,    "name": "Starstone Demark",     "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 934,    "name": "Breath of the Void",   "echo_value": 1560.00, "raw_price": "1560.00 Echoes"}
+  ],
+  "notes": [
+    "Content.js shows Aeolian Scream at 2.50 and Storm-Threnody at 12.50 but the wiki category table shows these swapped",
+    "Individual page for Aeolian Scream (ID 773) confirms 2.50 Echoes - content.js is correct",
+    "Tempestuous Tale: 10 Stuivers = 0.50 echoes per Stuiver rate BUT wiki also shows 2.50 Echoes via lab research - content.js shows 2.50 which matches the lab research conversion"
+  ]
+}

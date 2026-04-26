@@ -1,0 +1,12 @@
+{
+  "category": "Theological",
+  "source_url": "https://fallenlondon.wiki/wiki/Verse_of_Counter-Creed",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 142251, "name": "Palimpsest Scrap",      "echo_value": 0.50,   "raw_price": "0.50 Echoes"},
+    {"id": 142250, "name": "Apostate's Psalm",      "echo_value": 2.50,   "raw_price": "2.50 Echoes"},
+    {"id": 141675, "name": "Verse of Counter-Creed","echo_value": 12.50,  "raw_price": "12.50 Echoes"},
+    {"id": 142249, "name": "False Hagiotoponym",    "echo_value": 62.50,  "raw_price": "62.50 Echoes"},
+    {"id": 142295, "name": "Legenda Cosmogone",     "echo_value": 312.50, "raw_price": "312.50 Echoes"}
+  ]
+}

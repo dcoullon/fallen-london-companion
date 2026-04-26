@@ -1,0 +1,20 @@
+{
+  "category": "Currency",
+  "source_url": "https://fallenlondon.wiki/wiki/Fistful_of_Surface_Currency",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 22390,  "name": "Penny",                            "echo_value": 0.01,  "raw_price": "0.01 Echoes"},
+    {"id": 421,    "name": "Fistful of Surface Currency",      "echo_value": 0.03,  "raw_price": "0.03 Echoes"},
+    {"id": 582,    "name": "First City Coin",                  "echo_value": 0.25,  "raw_price": "0.25 Echoes"},
+    {"id": 143057, "name": "Rat-Shilling",                     "echo_value": 0.10,  "raw_price": "0.10 Echoes (conversion rate)"},
+    {"id": 144995, "name": "Stuiver",                          "echo_value": 0.05,  "raw_price": "0.05 Echoes"},
+    {"id": 125025, "name": "Hinterland Scrip",                 "echo_value": 0.50,  "raw_price": "0.50 Echoes (conversion rate)"},
+    {"id": 140732, "name": "Forged Justificande Coin",         "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 142708, "name": "Assortment of Khaganian Coinage",  "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 140706, "name": "Justificande Coin",                "echo_value": 2.50,  "raw_price": "2.50 Echoes"}
+  ],
+  "notes": [
+    "Rat-Shilling: 125 = 1 Fourth-City Echo at Rat Market; individual value treated as 0.10 echoes in content.js",
+    "Stuiver (ID 144995) NOT in content.js - should be added at 0.05 echoes"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "category": "Rubbery",
+  "source_url": "https://fallenlondon.wiki/wiki/Nodule_of_Deep_Amber",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 385,    "name": "Nodule of Deep Amber",     "echo_value": 0.01,    "raw_price": "0.01 Echoes"},
+    {"id": 328,    "name": "Nodule of Warm Amber",     "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 810,    "name": "Unearthly Fossil",         "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 949,    "name": "Nodule of Trembling Amber","echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 754,    "name": "Nodule of Pulsating Amber","echo_value": 62.50,   "raw_price": "62.50 Echoes"},
+    {"id": 16308,  "name": "Nodule of Fecund Amber",   "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 106683, "name": "Fluke-Core",               "echo_value": 1560.00, "raw_price": "1560.00 Echoes"},
+    {"id": 811,    "name": "Rubbery Skull",            "echo_value": 62.50,   "raw_price": "125 Hinterland Scrip"}
+  ],
+  "notes": [
+    "Nodule of Warm Amber: some sources show 1 Stuiver (0.05 echoes), but individual page confirms 2.50 echoes - content.js value 2.50 is correct",
+    "Rubbery Skull (ID 811) sells for 125 Hinterland Scrip = 62.50 echoes - not in content.js"
+  ]
+}

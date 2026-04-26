@@ -1,0 +1,25 @@
+{
+  "category": "Luminosity",
+  "source_url": "https://fallenlondon.wiki/wiki/Lump_of_Lamplighter_Beeswax",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 384,    "name": "Lump of Lamplighter Beeswax", "echo_value": 0.01,   "raw_price": "0.01 Echoes"},
+    {"id": 652,    "name": "Phosphorescent Scarab",       "echo_value": 0.10,   "raw_price": "0.10 Echoes"},
+    {"id": 141160, "name": "Tailfeather Brilliant as Flame","echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 951,    "name": "Mourning Candle",             "echo_value": 2.50,   "raw_price": "2.50 Echoes"},
+    {"id": 763,    "name": "Bejewelled Lens",             "echo_value": 12.50,  "raw_price": "12.50 Echoes"},
+    {"id": 121792, "name": "Snuffer's Gratitude",         "echo_value": 12.50,  "raw_price": "12.50 Echoes (wiki shows no direct Bazaar sell price)"},
+    {"id": 23504,  "name": "Eyeless Skull",               "echo_value": 62.50,  "raw_price": "62.50 Echoes"},
+    {"id": 122492, "name": "Mountain-sherd",              "echo_value": 62.50,  "raw_price": "62.50 Echoes"},
+    {"id": 122493, "name": "Element of Dawn",             "echo_value": 62.50,  "raw_price": "62.50 Echoes"},
+    {"id": 1053,   "name": "Ray-Drenched Cinder",         "echo_value": 312.50, "raw_price": "312.50 Echoes"}
+  ],
+  "notes": [
+    "Memory of Moonlight (ID 144977): wiki confirms NO Bazaar sell price - only sells at other markets for 250 Stuivers. Content.js lists it at 0.10 echoes which is WRONG.",
+    "Snuffer's Gratitude (ID 121792): wiki shows no documented sell price, but content.js has 12.50 - needs verification",
+    "Mourning Candle: some sources show 6.40, individual page shows 2.50 echoes - content.js 2.50 is correct",
+    "Tailfeather Brilliant as Flame (ID 141160) is NOT in content.js - should be added at 2.50 echoes",
+    "Khaganian Lightbulb (ID 142728) cannot be sold",
+    "Chrysalis Candle (ID 20412) is retired, value 2.50 Echoes"
+  ]
+}

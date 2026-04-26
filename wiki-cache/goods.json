@@ -1,0 +1,15 @@
+{
+  "category": "Goods",
+  "source_url": "https://fallenlondon.wiki/wiki/Certifiable_Scrap",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 375,    "name": "Piece of Rostygold",        "echo_value": 0.01,   "raw_price": "0.01 Echoes"},
+    {"id": 918,    "name": "Certifiable Scrap",         "echo_value": 0.50,   "raw_price": "0.50 Echoes"},
+    {"id": 122495, "name": "Knob of Scintillack",       "echo_value": 2.50,   "raw_price": "2.50 Echoes"},
+    {"id": 141157, "name": "Preserved Surface Blooms",  "echo_value": 2.50,   "raw_price": "2.50 Echoes"},
+    {"id": 139723, "name": "Attar",                     "echo_value": 4.1667, "raw_price": "~4.17 Echoes"}
+  ],
+  "notes": [
+    "Attar sell price is approximately 4.1667 echoes per wiki"
+  ]
+}

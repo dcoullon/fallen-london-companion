@@ -1,0 +1,30 @@
+{
+  "category": "Books",
+  "source_url": "https://fallenlondon.wiki/wiki/Revisionist_Historical_Narrative",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 18045,  "name": "Manuscript Page",                "echo_value": 1.00,   "raw_price": "1.00 Echoes (estimated - no direct Bazaar sell found)"},
+    {"id": 18379,  "name": "Unloved Short Story",            "echo_value": 1.00,   "raw_price": "1.00 Echoes"},
+    {"id": 18101,  "name": "Short Story",                    "echo_value": 2.00,   "raw_price": "2.00 Echoes"},
+    {"id": 18100,  "name": "Competent Short Story",          "echo_value": 10.00,  "raw_price": "10.00 Echoes"},
+    {"id": 18308,  "name": "Compelling Short Story",         "echo_value": 30.00,  "raw_price": "30.00 Echoes"},
+    {"id": 18309,  "name": "Thrilling Short Story",          "echo_value": 50.00,  "raw_price": "50.00 Echoes"},
+    {"id": 18310,  "name": "Exceptional Short Story",        "echo_value": 60.00,  "raw_price": "60.00 Echoes"},
+    {"id": 18311,  "name": "Extraordinary Short Story",      "echo_value": 70.00,  "raw_price": "70.00 Echoes"},
+    {"id": 18312,  "name": "Masterful Short Story",          "echo_value": 80.00,  "raw_price": "80.00 Echoes"},
+    {"id": 18396,  "name": "Celebrated Short Story",         "echo_value": 130.00, "raw_price": "130.00 Echoes"},
+    {"id": 18381,  "name": "Classic Short Story",            "echo_value": 180.00, "raw_price": "180.00 Echoes"},
+    {"id": 829,    "name": "Unusual Love Story",             "echo_value": 0.50,   "raw_price": "0.50 Echoes"},
+    {"id": 746,    "name": "Book of Hidden Bodies",          "echo_value": 6.00,   "raw_price": "6.00 Echoes"},
+    {"id": 752,    "name": "Entry in Slowcake's Exceptionals","echo_value": 27.50,  "raw_price": "27.50 Echoes"},
+    {"id": 141016, "name": "Corrective Historical Narrative","echo_value": 12.50,  "raw_price": "12.50 Echoes"},
+    {"id": 619,    "name": "Page from the Liber Visionis",   "echo_value": 0.50,   "raw_price": "0.50 Echoes"}
+  ],
+  "notes": [
+    "Content.js has: 18045 (Manuscript Page) = 1.00, 18379 (Unloved Short Story) = 1.00, 18101 (Short Story) = 2.00, 752 (Entry in Slowcake's) = 27.50",
+    "Wiki shows Short Story sells for 2.00 Echoes at Bazaar - content.js is correct",
+    "MANY books missing from content.js: Competent/Compelling/Thrilling/Exceptional/Extraordinary/Masterful/Celebrated/Classic Short Story",
+    "Also missing: Unusual Love Story (829), Book of Hidden Bodies (746), Corrective Historical Narrative (141016), Page from the Liber Visionis (619)",
+    "O'Boyle's Practical Primer: 40 Hinterland Scrip = 20.00 echoes - page 404 not found"
+  ]
+}

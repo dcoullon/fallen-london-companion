@@ -1,0 +1,23 @@
+{
+  "category": "Historical",
+  "source_url": "https://fallenlondon.wiki/wiki/Trace_of_the_First_City",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 423,    "name": "Relic of the Fourth City",          "echo_value": 0.05,  "raw_price": "0.05 Echoes"},
+    {"id": 141913, "name": "Rusted Stirrup",                    "echo_value": 0.10,  "raw_price": "0.10 Echoes"},
+    {"id": 141917, "name": "Silvered Cat's Claw",               "echo_value": 0.10,  "raw_price": "0.10 Echoes"},
+    {"id": 425,    "name": "Relic of the Second City",          "echo_value": 0.15,  "raw_price": "0.15 Echoes"},
+    {"id": 141914, "name": "Trace of Viric",                    "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 141570, "name": "Trace of the First City",           "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 141916, "name": "Nicatorean Relic",                  "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 145558, "name": "Relic of the Fifth City",           "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 141946, "name": "Unlawful Device",                   "echo_value": 12.50, "raw_price": "12.50 Echoes"},
+    {"id": 142074, "name": "Flask of Waswood Wellspring Water", "echo_value": 62.50, "raw_price": "62.50 Echoes"},
+    {"id": 142448, "name": "Chimerical Archive",                "echo_value": 62.50, "raw_price": "62.50 Echoes"}
+  ],
+  "notes": [
+    "Unlawful Device: content.js shows 12.50, wiki shows 13.00 for sell and 12.50 for Bazaar - wiki individual page confirms 12.50 Echoes at Bazaar",
+    "Relic of the Fifth City: content.js shows 2.50 - wiki individual page confirms 2.50 Echoes at Bazaar",
+    "Chimerical Archive (ID 142448) is NOT in content.js - should be added at 62.50 echoes"
+  ]
+}

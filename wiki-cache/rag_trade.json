@@ -1,0 +1,18 @@
+{
+  "category": "Rag Trade",
+  "source_url": "https://fallenlondon.wiki/wiki/Silk_Scrap",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 381, "name": "Silk Scrap",               "echo_value": 0.01,    "raw_price": "0.01 Echoes"},
+    {"id": 907, "name": "Surface-Silk Scrap",        "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 915, "name": "Whisper-Satin Scrap",       "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 922, "name": "Thirsty Bombazine Scrap",   "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 923, "name": "Puzzle-Damask Scrap",       "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 924, "name": "Parabola-Linen Scrap",      "echo_value": 62.50,   "raw_price": "62.50 Echoes"},
+    {"id": 925, "name": "Scrap of Ivory Organza",    "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 926, "name": "Veils-Velvet Scrap",        "echo_value": 1560.00, "raw_price": "1560.00 Echoes"}
+  ],
+  "notes": [
+    "Surface-Silk Scrap page shows 0.10 Penny (Silk Scrap page shows 0.30 Penny for Silk Scrap - discrepancy, individual page gives 0.01 for Silk Scrap which matches content.js)"
+  ]
+}

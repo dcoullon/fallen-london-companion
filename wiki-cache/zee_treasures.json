@@ -1,0 +1,17 @@
+{
+  "category": "Zee Treasures",
+  "source_url": "https://fallenlondon.wiki/wiki/Moon-Pearl",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 379,    "name": "Moon-Pearl",                   "echo_value": 0.01,  "raw_price": "0.01 Echoes"},
+    {"id": 122484, "name": "Deep-zee Catch",               "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 122494, "name": "Royal-Blue Feather",           "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 122485, "name": "Ambiguous Eolith",             "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 122483, "name": "Carved Ball of Stygian Ivory", "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 122488, "name": "Live Specimen",                "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 142666, "name": "Oneiric Pearl",                "echo_value": 62.50, "raw_price": "125 Assortment of Khaganian Coinage"}
+  ],
+  "notes": [
+    "Oneiric Pearl: 125 x 0.50 = 62.50 echoes. Content.js shows 62.50 - correct."
+  ]
+}

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FL Helper — Price Reference</title>
+  <style>
+    body {
+      background: #12100a;
+      color: #cdbf99;
+      font-family: Georgia, serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .notice {
+      background: #2a1f0e;
+      border: 1px solid #c47a7a;
+      color: #c47a7a;
+      padding: 12px 16px;
+      border-radius: 3px;
+      margin-bottom: 28px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .notice strong { color: #e8a87a; }
+    h1 {
+      font-size: 22px;
+      color: #e8d5a0;
+      border-bottom: 1px solid #3a2e1e;
+      padding-bottom: 10px;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      color: #6b5a3e;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+    h2 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #8b7355;
+      margin: 28px 0 8px;
+      border-bottom: 1px solid #2a2015;
+      padding-bottom: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      color: #6b5a3e;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 8px;
+      border-bottom: 1px solid #2a2015;
+    }
+    tr:hover td { background: #1a1408; }
+    td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #1e1810;
+      vertical-align: top;
+    }
+    .id { color: #6b5a3e; font-size: 11px; }
+    .price { text-align: right; color: #7ab87a; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .price.high { color: #e8c87a; }
+    .price.very-high { color: #e8a87a; }
+  </style>
+</head>
+<body>
+
+<div class="notice">
+  <strong>This file is for reference only.</strong> It is generated from the data in the extension and does not affect the extension itself.<br>
+  To add or correct a price, edit <strong>extension/content.js</strong> and find the <code>PRICES</code> object near the top of the file.
+</div>
+
+<h1>Fallen London Helper — Item Price Reference</h1>
+<div class="subtitle" id="subtitle">~475 tradeable items · Bazaar sell prices in echoes · Source: fallenlondon.wiki</div>
+
+<script>
+const categories = [
+  { name: "Wines", items: [
+    [557, "Bottled Oblivion", 0.01],
+    [382, "Bottle of Greyfields 1879", 0.01],
+    [383, "Bottle of Greyfields 1882", 0.02],
+    [815, "Bottle of Morelways 1872", 0.10],
+    [473, "Bottle of Greyfields 1868 First Sporing", 0.20],
+    [822, "Bottle of Strangling Willow Absinthe", 0.50],
+    [823, "Bottle of Broken Giant 1844", 2.50],
+    [736, "Cellar of Wine", 12.50],
+    [824, "Bottle of Fourth City Airag: Year of the Tortoise", 62.50],
+    [12350, "Vial of Tears of the Bazaar", 312.50],
+    [24121, "Vial of Masters' Blood", 1562.60],
+  ]},
+  { name: "Mysteries", items: [
+    [380, "Whispered Hint", 0.01],
+    [389, "Cryptic Clue", 0.02],
+    [145109, "Tantalising Possibility", 0.10],
+    [390, "Appalling Secret", 0.15],
+    [525, "Journal of Infamy", 0.50],
+    [828, "Tale of Terror!!", 0.50],
+    [809, "Extraordinary Implication", 2.50],
+    [105858, "Direful Reflection", 12.50],
+    [812, "Uncanny Incunabulum", 12.50],
+    [144751, "Caustic Apocryphon", 12.50],
+    [821, "Searing Enigma", 62.50],
+    [814, "Dreadful Surmise", 312.50],
+    [106142, "Impossible Theorem", 1562.60],
+  ]},
+  { name: "Goods", items: [
+    [375, "Piece of Rostygold", 0.01],
+    [918, "Certifiable Scrap", 0.50],
+    [122495, "Knob of Scintillack", 2.50],
+    [141157, "Preserved Surface Blooms", 2.50],
+    [139723, "Attar", 4.17],
+  ]},
+  { name: "Rag Trade", items: [
+    [381, "Silk Scrap", 0.01],
+    [907, "Surface-Silk Scrap", 0.10],
+    [915, "Whisper-Satin Scrap", 0.50],
+    [922, "Thirsty Bombazine Scrap", 2.50],
+    [923, "Puzzle-Damask Scrap", 12.50],
+    [924, "Parabola-Linen Scrap", 62.50],
+    [925, "Scrap of Ivory Organza", 312.50],
+    [926, "Veils-Velvet Scrap", 1560.00],
+  ]},
+  { name: "Rubbery", items: [
+    [385, "Nodule of Deep Amber", 0.01],
+    [328, "Nodule of Warm Amber", 2.50],
+    [810, "Unearthly Fossil", 2.50],
+    [949, "Nodule of Trembling Amber", 12.50],
+    [754, "Nodule of Pulsating Amber", 62.50],
+    [811, "Rubbery Skull", 62.50],
+    [16308, "Nodule of Fecund Amber", 312.50],
+    [106683, "Fluke-Core", 1560.00],
+  ]},
+  { name: "Contraband", items: [
+    [144025, "Stashed Treasure", 0.01],
+    [449, "Flawed Diamond", 0.12],
+    [12186, "Ostentatious Diamond", 0.50],
+    [392, "London Street Sign", 2.50],
+    [737, "Use of Villains", 6.00],
+    [12188, "Magnificent Diamond", 12.50],
+    [742, "Comprehensive Bribe", 12.50],
+    [140900, "Hillmover", 12.50],
+    [142094, "Shard of Glim the Size of a Small Child", 16.50],
+    [142710, "Unassuming Crate", 20.00],
+    [751, "Rookery Password", 60.00],
+    [12187, "Fabulous Diamond", 312.50],
+  ]},
+  { name: "Rumour", items: [
+    [420, "Proscribed Material", 0.04],
+    [656, "Inkling of Identity", 0.10],
+    [659, "Scrap of Incendiary Gossip", 0.50],
+    [657, "An Identity Uncovered!", 2.50],
+    [735, "Night on the Town", 2.50],
+    [141194, "Rumour of the Upper River", 2.50],
+    [858, "Blackmail Material", 12.50],
+    [762, "Diary of the Dead", 60.00],
+    [141882, "Mortification of a Great Power", 62.50],
+    [931, "Intriguer's Compendium", 312.50],
+    [930, "Rumourmonger's Network", 1560.00],
+  ]},
+  { name: "Infernal", items: [
+    [386, "Soul", 0.02],
+    [928, "Amanita Sherry", 0.10],
+    [668, "Brilliant Soul", 0.50],
+    [653, "Devilbone Die", 0.90],
+    [122798, "Queer Soul", 2.50],
+    [927, "Muscaria Brandy", 2.50],
+    [747, "Portfolio of Souls", 12.50],
+    [23695, "Silent Soul", 12.50],
+    [482, "Brass Ring", 12.50],
+    [749, "Bright Brass Skull", 60.00],
+    [141281, "Devilish Probability Distributor", 62.50],
+    [141772, "Discordant Soul", 62.50],
+    [141229, "Infernal Machine", 66.00],
+    [669, "Coruscating Soul", 312.50],
+    [929, "Reported Location of a One-Time Prince of Hell", 1560.00],
+  ]},
+  { name: "Luminosity", items: [
+    [384, "Lump of Lamplighter Beeswax", 0.01],
+    [652, "Phosphorescent Scarab", 0.10],
+    [141160, "Tailfeather Brilliant as Flame", 2.50],
+    [951, "Mourning Candle", 2.50],
+    [144977, "Memory of Moonlight", 12.50],
+    [763, "Bejewelled Lens", 12.50],
+    [121792, "Snuffer's Gratitude", 12.50],
+    [23504, "Eyeless Skull", 62.50],
+    [122492, "Mountain-sherd", 62.50],
+    [122493, "Element of Dawn", 62.50],
+    [1053, "Ray-Drenched Cinder", 312.50],
+  ]},
+  { name: "Academic", items: [
+    [374, "Foxfire Candle Stub", 0.01],
+    [476, "Flask of Abominable Salts", 0.10],
+    [144821, "Sample of Roof-Drip", 0.10],
+    [825, "Memory of Distant Shores", 0.50],
+    [144822, "Starved Expression", 0.50],
+    [140898, "Incisive Observation", 0.50],
+    [122487, "Unprovenanced Artefact", 2.50],
+    [745, "Volume of Collated Research", 2.50],
+    [141283, "Mirthless Compendium of Statistical Observations", 12.50],
+    [142754, "Conceptual Breakthrough in Currency Design", 12.50],
+    [759, "Endowment of a University Fellowship", 50.00],
+    [122486, "Judgements' Egg", 62.50],
+    [118813, "Secret College", 1562.50],
+  ]},
+  { name: "Great Game", items: [
+    [141161, "Final Breath", 0.50],
+    [122490, "Moves in the Great Game", 0.50],
+    [122489, "Vital Intelligence", 12.50],
+    [758, "Copper Cipher Ring", 37.50],
+    [142855, "Much-Needed Gap", 62.50],
+    [142793, "Corresponding Sounder", 312.50],
+    [144796, "A Seat at the Board", 1562.50],
+  ]},
+  { name: "Theological", items: [
+    [142251, "Palimpsest Scrap", 0.50],
+    [142250, "Apostate's Psalm", 2.50],
+    [141675, "Verse of Counter-Creed", 12.50],
+    [142249, "False Hagiotoponym", 62.50],
+    [142295, "Legenda Cosmogone", 312.50],
+  ]},
+  { name: "Wild Words", items: [
+    [388, "Primordial Shriek", 0.02],
+    [935, "Maniac's Prayer", 0.10],
+    [932, "Correspondence Plaque", 0.50],
+    [144955, "Tempestuous Tale", 0.50],
+    [773, "Aeolian Scream", 2.50],
+    [849, "Storm-Threnody", 12.50],
+    [933, "Night-Whisper", 62.50],
+    [936, "Starstone Demark", 312.50],
+    [934, "Breath of the Void", 1560.00],
+  ]},
+  { name: "Elder", items: [
+    [377, "Jade Fragment", 0.01],
+    [424, "Relic of the Third City", 0.10],
+    [587, "Mystery of the Elder Continent", 0.50],
+    [852, "Presbyterate Passphrase", 2.50],
+    [946, "Antique Mystery", 12.50],
+    [832, "Primaeval Hint", 62.50],
+    [14975, "Elemental Secret", 312.50],
+  ]},
+  { name: "Historical", items: [
+    [423, "Relic of the Fourth City", 0.05],
+    [141913, "Rusted Stirrup", 0.10],
+    [141917, "Silvered Cat's Claw", 0.10],
+    [425, "Relic of the Second City", 0.15],
+    [141914, "Trace of Viric", 0.50],
+    [141570, "Trace of the First City", 2.50],
+    [141916, "Nicatorean Relic", 2.50],
+    [145558, "Relic of the Fifth City", 2.50],
+    [141946, "Unlawful Device", 12.50],
+    [142074, "Flask of Waswood Wellspring Water", 62.50],
+    [142448, "Chimerical Archive", 62.50],
+  ]},
+  { name: "Legal", items: [
+    [426, "Infernal Contract", 0.20],
+    [13929, "Dubious Testimony", 0.50],
+    [13928, "Sworn Statement", 2.50],
+    [141883, "Cave-Aged Code of Honour", 12.50],
+    [739, "Legal Document", 12.50],
+    [123213, "Fragment of the Tragedy Procedures", 62.50],
+    [143050, "Sap of the Cedar at the Crossroads", 62.50],
+    [142087, "Edicts of the First City", 312.50],
+  ]},
+  { name: "Cartography", items: [
+    [378, "Shard of Glim", 0.01],
+    [141285, "Glass Gazette", 0.01],
+    [920, "Map Scrap", 0.10],
+    [142660, "Sighting of a Parabolan Landmark", 0.10],
+    [831, "Zee-Ztory", 0.50],
+    [956, "Partial Map", 2.50],
+    [743, "Collection of Curiosities", 6.00],
+    [959, "Puzzling Map", 12.50],
+    [142661, "Vitreous Almanac", 12.50],
+    [955, "Screaming Map: Left-Hand Half", 15.00],
+    [981, "Screaming Map: Right-Hand Half", 25.00],
+    [142202, "Salt Steppe Atlas", 62.50],
+    [143646, "Relatively Safe Zee Lane", 62.50],
+    [142662, "Oneiromantic Revelation", 62.50],
+    [129586, "Sky-Story", 141.85],
+    [142463, "Parabolan Parable", 312.50],
+    [142669, "Waswood Almanac", 312.50],
+    [141189, "Cartographer's Hoard", 312.50],
+  ]},
+  { name: "Nostalgia", items: [
+    [391, "Drop of Prisoner's Honey", 0.02],
+    [531, "Romantic Notion", 0.10],
+    [827, "Vision of the Surface", 0.50],
+    [945, "Touching Love Story", 2.50],
+    [741, "Bazaar Permit", 12.50],
+    [142709, "Emetic Revelation", 12.50],
+    [114982, "Soothe &amp; Cooper Long-Box", 62.50],
+    [142386, "Captivating Ballad", 62.50],
+    [143044, "Sample of Lacreous Affection", 312.50],
+    [143045, "Vestige of a Starlit Reverie", 312.50],
+    [142504, "A Tasting Flight of Targeted Toxins", 1562.50],
+  ]},
+  { name: "Zee Treasures", items: [
+    [379, "Moon-Pearl", 0.01],
+    [122484, "Deep-zee Catch", 0.50],
+    [122494, "Royal-Blue Feather", 0.50],
+    [122485, "Ambiguous Eolith", 0.50],
+    [122483, "Carved Ball of Stygian Ivory", 2.50],
+    [122488, "Live Specimen", 2.50],
+    [142666, "Oneiric Pearl", 62.50],
+  ]},
+  { name: "Curiosity", items: [
+    [471, "F.F. Gebrandt's Tincture of Vigour: Half-Full", 0.03],
+    [470, "F.F. Gebrandt's Tincture of Vigour", 0.10],
+    [477, "F.F. Gebrandt's Superior Laudanum", 0.10],
+    [642, "Venom-Ruby", 0.10],
+    [643, "Sapphire", 0.12],
+    [560, "Gift of Scorn", 0.20],
+    [523, "Nikolas &amp; Sons Instant Ablution Absolution", 0.25],
+    [635, "A Partially Unwrapped Cat?", 0.50],
+    [862, "Cryptobotanical Rosette", 0.50],
+    [468, "Horsehead Amulet", 2.00],
+    [22523, "A Blue and Shining Stone", 12.50],
+    [748, "Antique Constable's Badge", 25.00],
+    [755, "Ornate Typewriter", 30.00],
+    [761, "Red-Feathered Pin", 35.00],
+    [750, "Tiny Jewelled Reliquary", 35.00],
+    [757, "Engraved Pewter Tankard", 47.50],
+    [753, "Old Bone Skeleton Key", 57.50],
+    [13640, "Trade Secret", 60.00],
+  ]},
+  { name: "Industrial", items: [
+    [387, "Nevercold Brass Sliver", 0.01],
+    [141158, "Nightsoil of the Bazaar", 0.50],
+    [141159, "Bessemer Steel Ingot", 0.50],
+    [764, "Strong-Backed Labour", 2.50],
+    [140779, "Perfumed Gunpowder", 2.50],
+    [738, "Whirring Contraption", 6.00],
+    [142840, "Crackling Device", 62.50],
+  ]},
+  { name: "Ratness", items: [
+    [376, "Rat on a String", 0.01],
+    [14621, "Venge-Rat Corpse", 0.50],
+    [14620, "Baptised Rattus Faber Corpse", 2.50],
+    [123214, "Ratty Reliquary", 12.50],
+  ]},
+  { name: "Sustenance", items: [
+    [141374, "Jasmine Leaves", 0.10],
+    [141324, "Remains of a Pinewood Shark", 0.10],
+    [141486, "Pot of Venison Marrow", 0.50],
+    [122491, "Solacefruit", 0.50],
+    [618, "Dark-Dewed Cherry", 0.70],
+    [121611, "Tin of Zzoup", 2.50],
+    [140892, "Crate of Incorruptible Biscuits", 2.50],
+    [140894, "Basket of Rubbery Pies", 2.50],
+    [142237, "Beatrice's Taper-nut", 5.00],
+    [140962, "Parabolan Orange-apple", 12.50],
+    [140891, "Sausage About Which No One Complains", 12.50],
+    [143051, "Hellworm Milk", 62.50],
+    [143588, "Ripened Wheel of Hellworm Cheese", 62.50],
+    [141542, "Tinned Ham", 63.50],
+    [410, "Firkin of Hesperidean Cider", 80000.00],
+  ]},
+  { name: "Currency", items: [
+    [22390, "Penny", 0.01],
+    [421, "Fistful of Surface Currency", 0.03],
+    [143057, "Rat-Shilling", 0.10],
+    [144995, "Stuiver", 0.05],
+    [582, "First City Coin", 0.25],
+    [125025, "Hinterland Scrip", 0.50],
+    [140732, "Forged Justificande Coin", 0.50],
+    [142708, "Assortment of Khaganian Coinage", 0.50],
+    [140706, "Justificande Coin", 2.50],
+  ]},
+  { name: "Osteology (skeleton penny value ÷ 100)", items: [
+    [140889, "Bone Fragments", 0.01],
+    [140879, "Bat Wing", 0.01],
+    [140771, "Femur of a Surface Deer", 0.10],
+    [140852, "Fin Bones, Collected", 0.50],
+    [140756, "Unidentified Thigh Bone", 1.00],
+    [140813, "Human Arm", 2.50],
+    [140814, "Headless Skeleton", 2.50],
+    [140851, "Plaster Tail Bones", 2.50],
+    [143548, "Segmented Ribcage", 2.50],
+    [140881, "Tomb-Lion's Tail", 2.50],
+    [140853, "Withered Tentacle", 2.50],
+    [141372, "Wing of a Young Terror Bird", 2.50],
+    [140773, "Femur of a Jurassic Beast", 3.00],
+    [141480, "Helical Thighbone", 3.00],
+    [140772, "Knotted Humerus", 3.00],
+    [142727, "Obsidian Chitin Tail", 5.00],
+    [140839, "Human Ribcage", 12.50],
+    [140833, "Thorned Ribcage", 12.50],
+    [140850, "Albatross Wing", 12.50],
+    [141371, "Horned Skull", 12.50],
+    [142298, "Pentagrammic Skull", 12.50],
+    [140774, "Holy Relic of the Thigh of Saint Fiacre", 12.50],
+    [141380, "Amber-Crusted Fin", 15.00],
+    [140849, "Ivory Humerus", 15.00],
+    [141774, "Skull in Coral", 17.50],
+    [140882, "Plated Skull", 25.00],
+    [141540, "Fossilised Forelimb", 27.50],
+    [145642, "Panoptical Skull", 35.00],
+    [145008, "Glim-Encrusted Carapace", 60.00],
+    [140843, "Mammoth Ribcage", 62.50],
+    [141479, "Doubled Skull", 62.50],
+    [140847, "Sabre-toothed Skull", 62.50],
+    [140838, "Skeleton with Seven Necks", 62.50],
+    [142351, "Ivory Femur", 65.00],
+    [140845, "Leviathan Frame", 312.50],
+    [140857, "Prismatic Frame", 312.50],
+    [140844, "Ribcage with a Bouquet of Eight Spines", 312.50],
+    [141640, "Five-Pointed Ribcage", 312.50],
+  ]},
+  { name: "Books", items: [
+    [829, "Unusual Love Story", 0.50],
+    [756, "O'Boyle's Practical Primer (Various Languages of Nippon, Tartary, Cathay and the Princedoms of the Raj)", 27.50],
+    [619, "Page from the Liber Visionis", 0.50],
+    [18045, "Manuscript Page", 1.00],
+    [18379, "Unloved Short Story", 1.00],
+    [18101, "Short Story", 2.00],
+    [746, "Book of Hidden Bodies", 6.00],
+    [18100, "Competent Short Story", 10.00],
+    [141016, "Corrective Historical Narrative", 12.50],
+    [752, "Entry in Slowcake's Exceptionals", 27.50],
+    [18308, "Compelling Short Story", 30.00],
+    [18309, "Thrilling Short Story", 50.00],
+    [18310, "Exceptional Short Story", 60.00],
+    [18311, "Extraordinary Short Story", 70.00],
+    [18312, "Masterful Short Story", 80.00],
+    [18396, "Celebrated Short Story", 130.00],
+    [18381, "Classic Short Story", 180.00],
+  ]},
+  { name: "Influence", items: [
+    [422, "Stolen Correspondence", 0.05],
+    [588, "Intriguing Snippet", 0.20],
+    [830, "Compromising Document", 0.50],
+    [658, "Secluded Address", 0.50],
+    [944, "Stolen Kiss", 2.50],
+    [740, "Personal Recommendation", 6.00],
+    [744, "Favour in High Places", 12.50],
+  ]},
+  { name: "Epistolary", items: [
+    [142190, "F.F. Gebrandt's Flame-Resilient Paper", 0.50],
+  ]},
+  { name: "Accessories (Trompowsky et Fils)", items: [
+    [306, "Pair of Neathglass Goggles", 2.50],
+    [145125, "Venom-Ruby Lure", 6.25],
+    [145126, "Light-Drinking Cravat", 6.25],
+    [145128, "Rostygold Ring", 6.25],
+    [307, "Pair of Luminous Neathglass Goggles", 6.40],
+    [145127, "Carnelian Sapphire Pendant", 75.00],
+    [145129, "Unjustifiable Necktie", 75.00],
+    [730, "Twelve-Carat Diamond Ring", 225.00],
+    [727, "Semiotic Monocle", 312.50],
+  ]},
+  { name: "Men's Clothing (Dauncey's)", items: [
+    [718, "Gentleman's Athletic Support", 6.40],
+    [320, "Dignified Tailcoat", 12.50],
+    [719, "Morning Suit", 14.40],
+    [322, "Distinguished Gentleman's Outfit", 62.50],
+    [323, "Night-Trimmed Frock Coat", 90.00],
+    [325, "Sumptuous Dandy's Outfit", 230.00],
+    [21891, "Parabola-Linen Suit", 230.00],
+  ]},
+  { name: "Women's Clothing (Fadgett &amp; Daughters)", items: [
+    [717, "Corsetted Dress", 12.50],
+    [720, "Formidable Gown", 12.50],
+    [319, "Respectable Grey Gown", 14.40],
+    [321, "Elegant Emerald Gown", 62.50],
+    [324, "Magnificent Midnight-Blue Evening Gown", 90.00],
+    [21893, "Parabola-Linen Frock", 230.00],
+    [326, "Exquisite Ivory Gown", 230.40],
+  ]},
+  { name: "Hats (Maywell's Hattery)", items: [
+    [556, "Ridiculous Hat", 0.01],
+    [303, "Prisoner's Mask", 0.04],
+    [555, "Mask of the Rose", 0.10],
+    [465, "Modish Bonnet", 0.50],
+    [466, "Pirate Hat", 0.50],
+    [544, "Sporing Bonnet", 1.50],
+    [308, "Gay Bonnet", 2.50],
+    [305, "Gentleman's Hat", 2.50],
+    [304, "Iron Hat", 6.40],
+    [309, "Sneak-Thief's Mask", 6.40],
+    [310, "Beguiling Mask", 62.50],
+    [311, "Exceptional Hat", 62.50],
+    [21847, "Devilish Fedora", 200.00],
+    [21845, "Fecund Amber Tiara", 200.00],
+    [21894, "Snuffer's Face", 200.00],
+    [21897, "Tub of Gloam-Foam", 200.00],
+    [312, "Extraordinary Hat", 312.50],
+  ]},
+  { name: "Weapons (Carrow's Steel)", items: [
+    [1004, "Emergency Blunderbuss", 0.20],
+    [333, "Tasselled Walking-Stick", 2.50],
+    [327, "Skyglass Knife", 3.20],
+    [339, "Patent Scrutinizer", 6.40],
+    [329, "Ancient Hunting Rifle", 12.50],
+    [334, "Tasselled Sword-Cane", 14.40],
+    [338, "Irresistible Drum", 25.60],
+    [335, "Amber-Topped Walking-Stick", 32.40],
+    [336, "Set of Kifers", 32.40],
+    [330, "Ravenglass Knife", 51.20],
+    [340, "Patent Scrutinizer Deluxe!", 160.00],
+    [21896, "Infernal Sharpshooter's Rifle", 210.00],
+    [729, "Poison-Tipped Umbrella", 225.00],
+    [655, "Ratwork Watch", 230.00],
+    [332, "Ratwork Derringer", 250.00],
+    [337, "Set of Intricate Kifers", 312.50],
+  ]},
+  { name: "Gloves (Dark &amp; Savage)", items: [
+    [290, "Pair of Iron Manacles", 0.40],
+    [292, "Pair of Cutpurse's Mittens", 1.60],
+    [291, "Pair of Magician's Gloves", 2.50],
+    [293, "Eager Glove", 2.50],
+    [295, "Pair of Knife-and-Candler's Gloves", 2.50],
+    [294, "Avid Glove", 6.40],
+    [296, "Pair of Cracksman's Mittens", 6.40],
+    [298, "Pair of Dancemaster's Dabs", 6.40],
+    [299, "Pair of Lady's Lace Gloves", 6.40],
+    [297, "Pair of Spiderchitin Gauntlets", 6.40],
+    [300, "Voracious Glove", 57.60],
+    [301, "Insatiable Glove", 62.50],
+    [302, "Pair of Master Thief's Hands", 160.00],
+    [21848, "Pair of Lenguals", 200.00],
+  ]},
+  { name: "Boots (MERCURY)", items: [
+    [765, "Pair of Scuffed Boots", 0.10],
+    [356, "Pair of Leg Irons", 0.40],
+    [467, "Pair of Scarlet Stockings of Dubious Origin", 0.40],
+    [358, "Pair of Squeakless Boots", 2.50],
+    [357, "Pair of Stylish Riding Boots", 2.50],
+    [361, "Pair of Savage Hob-Nailed Boots", 6.40],
+    [359, "Pair of Spidersilk Slippers", 6.40],
+    [360, "Pair of Masterwork Dancing Slippers", 32.40],
+    [362, "Pair of Ratskin Boots", 62.50],
+    [363, "Pair of Hushed Spidersilk Slippers", 160.00],
+    [364, "Pair of Vakeskin Boots", 160.00],
+    [21846, "Pair of Kingscale Boots", 230.00],
+  ]},
+  { name: "Contacts (Redemptions)", items: [
+    [1005, "Scuttering Squad", 10.00],
+    [348, "Devious Henchman", 12.50],
+    [140648, "Starry-Eyed Scoundrel", 14.00],
+    [346, "Grubby Urchin", 14.40],
+    [347, "Winsome Dispossessed Orphan", 32.40],
+    [350, "Alluring Accomplice", 62.50],
+    [349, "Ruthless Henchman", 62.50],
+  ]},
+  { name: "Clothing (Gottery the Outfitter)", items: [
+    [313, "Bundle of Ragged Clothing", 0.01],
+    [436, "Set of Workman's Clothes", 0.10],
+    [435, "Sober Dress", 0.10],
+    [722, "Bloodstained Suit", 0.20],
+    [723, "Bundle of Glad Rags", 0.20],
+    [726, "Faded Morning Suit", 0.20],
+    [725, "Maidservant's Uniform", 0.20],
+    [721, "Rough Gown", 0.20],
+    [724, "Shabby Opera Cloak", 0.20],
+    [317, "Outfit of Black Felt Garments", 2.88],
+    [315, "Battered Grey Overcoat", 6.40],
+    [316, "Stained Red Velvet Gown", 6.40],
+    [318, "Ratskin Suit", 62.50],
+    [21892, "Far Khanate Lacquered Armour", 200.00],
+    [21895, "Smock of Four Thousand Three Hundred and Eight Pockets", 210.00],
+  ]},
+  { name: "Companions (Nassos Zoologicals)", items: [
+    [464, "Cheerful Goldfish", 0.04],
+    [441, "Lucky Weasel", 0.20],
+    [442, "Reprehensible Lizard", 0.20],
+    [443, "Sulky Bat", 0.20],
+    [558, "Talkative Rattus Faber", 0.50],
+    [498, "Araby Fighting-Weasel", 0.50],
+    [342, "Dazed Raven Advisor", 6.40],
+    [343, "Deshrieked Mandrake", 6.40],
+    [344, "Fairly Tame Sorrow-Spider", 6.40],
+    [345, "Working Rat", 32.40],
+    [351, "Malevolent Monkey", 45.00],
+    [144549, "Weasel of Woe", 100.00],
+    [353, "Rattus Faber Bandit-Chief", 160.00],
+    [21898, "Midnight Matriarch", 200.00],
+    [728, "Bengal Tigress", 312.50],
+    [355, "Overgoat", 5856.40],
+  ]},
+];
+
+function priceClass(p) {
+  if (p >= 312.50) return "price very-high";
+  if (p >= 12.50) return "price high";
+  return "price";
+}
+
+let totalItems = 0;
+categories.forEach(cat => {
+  totalItems += cat.items.length;
+  const h2 = document.createElement("h2");
+  h2.textContent = cat.name;
+  document.body.appendChild(h2);
+
+  const table = document.createElement("table");
+  table.innerHTML = `<tr><th>ID</th><th>Item</th><th style="text-align:right">Echoes</th></tr>`;
+  cat.items.forEach(([id, name, price]) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="id">${id}</td><td>${name}</td><td class="${priceClass(price)}">${price.toFixed(2)}</td>`;
+    table.appendChild(tr);
+  });
+  document.body.appendChild(table);
+});
+
+document.getElementById("subtitle").textContent =
+  `${totalItems} tradeable items · Bazaar sell prices in echoes · Source: fallenlondon.wiki`;
+</script>
+</body>
+</html>

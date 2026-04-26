@@ -1,0 +1,19 @@
+{
+  "category": "Industrial",
+  "source_url": "https://fallenlondon.wiki/wiki/Nevercold_Brass_Sliver",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 387,    "name": "Nevercold Brass Sliver",   "echo_value": 0.01,  "raw_price": "0.01 Echoes"},
+    {"id": 141158, "name": "Nightsoil of the Bazaar",  "echo_value": 0.50,  "raw_price": "0.50 Echoes"},
+    {"id": 764,    "name": "Strong-Backed Labour",     "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 140779, "name": "Perfumed Gunpowder",       "echo_value": 2.50,  "raw_price": "2.50 Echoes"},
+    {"id": 738,    "name": "Whirring Contraption",     "echo_value": 6.00,  "raw_price": "6.00 Echoes"},
+    {"id": 142840, "name": "Crackling Device",         "echo_value": 62.50, "raw_price": "62.50 Echoes"},
+    {"id": 141159, "name": "Bessemer Steel Ingot",     "echo_value": 0.50,  "raw_price": "1 Tempestuous Tale (via The Mausoleum Stalls = 10 Stuivers = 0.50 echoes)"}
+  ],
+  "notes": [
+    "Bessemer Steel Ingot (ID 141159): converts to 1 Tempestuous Tale at Mausoleum Stalls. Tempestuous Tale = 10 Stuivers = 0.50 echoes. NOT in content.js - needs adding",
+    "Ratwork Mechanism (ID 145640): only sells at Roof markets for 250 Stuivers = 12.50 echoes - NOT at Bazaar",
+    "Strong-Backed Labour: content.js shows 2.50 - wiki confirms 2.50 at Bazaar"
+  ]
+}

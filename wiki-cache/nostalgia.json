@@ -1,0 +1,26 @@
+{
+  "category": "Nostalgia",
+  "source_url": "https://fallenlondon.wiki/wiki/Drop_of_Prisoner's_Honey",
+  "fetched_date": "2026-04-09",
+  "items": [
+    {"id": 391,    "name": "Drop of Prisoner's Honey",          "echo_value": 0.02,    "raw_price": "0.02 Echoes"},
+    {"id": 142709, "name": "Emetic Revelation",                 "echo_value": 12.50,   "raw_price": "625 Cryptic Clues (= 625 x 0.02 = 12.50 Echoes)"},
+    {"id": 142436, "name": "Poetic First Draft",                "echo_value": 0.02,    "raw_price": "0.02 Echoes (estimated, same tier)"},
+    {"id": 142434, "name": "Sheaf of Poetic First Drafts",     "echo_value": 0.02,    "raw_price": "0.02 Echoes (no standard sell price)"},
+    {"id": 531,    "name": "Romantic Notion",                   "echo_value": 0.10,    "raw_price": "0.10 Echoes"},
+    {"id": 827,    "name": "Vision of the Surface",             "echo_value": 0.50,    "raw_price": "0.50 Echoes"},
+    {"id": 945,    "name": "Touching Love Story",               "echo_value": 2.50,    "raw_price": "2.50 Echoes"},
+    {"id": 741,    "name": "Bazaar Permit",                     "echo_value": 12.50,   "raw_price": "12.50 Echoes"},
+    {"id": 114982, "name": "Soothe & Cooper Long-Box",          "echo_value": 62.50,   "raw_price": "25 x An Identity Uncovered! = 25 x 2.50 = 62.50 Echoes"},
+    {"id": 142386, "name": "Captivating Ballad",               "echo_value": 62.50,   "raw_price": "62.50 Echoes"},
+    {"id": 143044, "name": "Sample of Lacreous Affection",     "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 143045, "name": "Vestige of a Starlit Reverie",     "echo_value": 312.50,  "raw_price": "312.50 Echoes"},
+    {"id": 142504, "name": "A Tasting Flight of Targeted Toxins","echo_value": 1562.50,"raw_price": "1562.50 Echoes"}
+  ],
+  "notes": [
+    "Emetic Revelation: wiki says 625 Cryptic Clues at Bazaar. 625 x 0.02 = 12.50 echoes. Content.js has 0.02 which is WRONG.",
+    "Poetic First Draft (ID 142436): content.js shows 0.02 - wiki shows no standard sell price, very low value item",
+    "Sheaf of Poetic First Drafts (ID 142434): content.js shows 0.02 - wiki shows no standard sell price",
+    "Soothe & Cooper Long-Box: content.js shows 62.50 - confirmed via 25x An Identity Uncovered! at 2.50 each"
+  ]
+}
