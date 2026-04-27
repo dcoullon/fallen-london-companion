@@ -18,6 +18,18 @@
 
 ## Pending
 
+### 1. Change point (CP) annotation on quality results
+
+After a storylet action, show the CP gained or lost on any quality that uses CP-based progression — stats (Shadowy, Dangerous…), quirks (Melancholy, Hedonism…), skills (Glasswork…), renown, and similar. Display as `+X CP` / `−X CP` inline next to the quality name in the result text.
+
+**Data available in the `choosebranch` response:**
+- `PyramidQualityChangeMessage` — has `progressBar: { leftScore, rightScore, startPercentage, endPercentage }` and a `tooltip` containing the current accumulated CP ("X change points, Y more needed to reach level Z").
+- `QualityCapMessage` — tooltip says "0 change points, N more needed…" (quality was capped, CP change was 0 — can skip or show `+0 CP`).
+- The CP delta can be computed from the progress bar: `totalCP = rightScore` (verified: Melancholy 14→15 needs 15 CP, Renown 37→38 needs 38 CP), `startCP = round(startPercentage/100 × totalCP)`, `endCP = round(endPercentage/100 × totalCP)`, `delta = endCP − startCP`. If the quality levelled up or down during the action, `leftScore ≠ rightScore − 1` so the bar spans a level boundary — handle separately.
+- Qualities that did NOT change (`changeType: "Unaltered"`) should be skipped or shown as `+0 CP` only if non-zero delta (shouldn't occur).
+
+**Implementation note:** the annotation target is the same result-text area used by the echo overlay; use the same TreeWalker / smallest-element approach to find the quality name and append a span.
+
 ### 2. Storylet choice cost preview
 Show the echo cost of items required to play a choice, before the player clicks it.
 - Different UX from the post-action overlay (needs to appear on the choice itself, not the result)
