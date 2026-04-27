@@ -33,7 +33,7 @@ Version: 0.3 (MV3, Firefox-first)
 - Echo value spans work by TreeWalker finding ` x ItemName` text nodes and appending a span to the parent element
 
 ## What's built
-- **Echo value overlay** — inline echo value on each item gained/lost; net total after last priced item
+- **Echo value overlay** — inline echo value on each item gained/lost; net total after last priced item. Handles standard changes, first-gain (`QualityExplicitlySetMessage`), and quality-gone-to-zero (recovers qty from cached `/myself` data).
 - **First-gain annotation** — `QualityExplicitlySetMessage` treated as full gain from zero
 - **Rat Market Saturation hint** — boost tier and distance to next threshold inline
 - **Branch cost preview** — echo cost shown on quality requirement icons before clicking a choice

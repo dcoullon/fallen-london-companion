@@ -67,11 +67,18 @@ function parseChanges(data) {
       if (!match) continue;
       qty = parseInt(match[1].replace(/,/g, ""), 10);
     } else if (msg.type === "QualityExplicitlySetMessage") {
-      // First-time gain from zero — "You now have N x Item", N equals the amount gained.
       const match = msg.message.match(/([\d,]+) x /);
-      if (!match) continue;
-      qty = parseInt(match[1].replace(/,/g, ""), 10);
-      gained = true;
+      if (match) {
+        // First-time gain from zero — "You now have N x Item"
+        qty = parseInt(match[1].replace(/,/g, ""), 10);
+        gained = true;
+      } else if (msg.changeType === "Lost" && _cachedFavoursQtys?.has(msg.possession.id)) {
+        // "Quality has gone!" — level set to 0, qty not in text; recover from cached previous level
+        qty = _cachedFavoursQtys.get(msg.possession.id);
+        gained = false;
+      } else {
+        continue;
+      }
     } else {
       continue;
     }
@@ -79,8 +86,9 @@ function parseChanges(data) {
     const { id, name } = msg.possession;
     const unitPrice = PRICES[id] ?? null;
     const echoValue = unitPrice !== null ? qty * unitPrice * (gained ? 1 : -1) : null;
+    const qualityGone = msg.type === "QualityExplicitlySetMessage" && msg.changeType === "Lost";
 
-    changes.push({ name, qty, gained, echoValue });
+    changes.push({ name, qty, gained, echoValue, qualityGone });
   }
   return changes;
 }
@@ -123,6 +131,18 @@ function annotateResults(changes) {
         targetEl = el;
       }
 
+      if (!targetEl && change.qualityGone) {
+        // "Your 'Name' Quality has gone!" — search for that text node instead
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+          if (node.textContent.includes(`'${change.name}' Quality has gone`)) {
+            targetEl = node.parentElement;
+            break;
+          }
+        }
+      }
+
       if (!targetEl) continue;
 
       const sign = change.gained ? "+" : "−";
@@ -146,9 +166,10 @@ function annotateResults(changes) {
 
     attempts++;
     // Retry if any span is missing from the live DOM (React may have removed it).
+    // qualityGone items use static text that's already in the DOM — don't retry for them.
     const allPresent = pricedChanges.every(c => {
       const s = document.querySelector(`.fl-echo-val[data-item="${CSS.escape(c.name)}"]`);
-      return s && s.isConnected;
+      return (s && s.isConnected) || c.qualityGone;
     });
     if (!allPresent && attempts < 20) {
       setTimeout(tryAnnotate, 150);
@@ -445,12 +466,14 @@ const FACTION_API_NAME_TO_ID = new Map([...FACTION_API_NAMES].map(([id, s]) => [
 let _cachedConversionItems = null; // null = not yet received; Map after first myself
 let _cachedCCQtys = null;          // null = not yet received; Map<id,qty> after first myself
 let _cachedFactionStats = null;    // null = not yet received; Map<id,{favours,renown}> after first myself
+let _cachedFavoursQtys = null;     // Map<favoursQualityId, qty> — used to recover qty when quality goes to 0
 
 function parseMyself(data) {
   if (!data || !Array.isArray(data.possessions)) return;
   const owned = new Map();
   const ccQtys = new Map();
   const factionStats = new Map();
+  const favoursQtys = new Map();
 
   function scan(categories) {
     for (const cat of categories) {
@@ -471,6 +494,7 @@ function parseMyself(data) {
               e.favours = p.level || 0;
               factionStats.set(fid, e);
             }
+            if (p.level > 0) favoursQtys.set(p.id, p.level);
           }
           if (renM) {
             const fid = FACTION_API_NAME_TO_ID.get(renM[1]);
@@ -490,6 +514,7 @@ function parseMyself(data) {
   _cachedConversionItems = owned;
   _cachedCCQtys = ccQtys;
   _cachedFactionStats = factionStats;
+  _cachedFavoursQtys = favoursQtys;
   // Remove stale bars so they re-inject with fresh data (qty and faction stats now known)
   document.getElementById("fl-renown-bar")?.remove();
   document.getElementById("fl-cc-bar")?.remove();
