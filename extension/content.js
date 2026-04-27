@@ -4,7 +4,7 @@
 // ── Inject fetch/XHR interceptor into the page's main world ─────────────────
 // Use textContent (not script.src) so the code executes synchronously before
 // the game's bootstrap can fire its initial /myself request.
-{
+if (typeof FL_TEST_MODE === "undefined") {
   const s = document.createElement("script");
   s.textContent = `(function () {
   const originalFetch = window.fetch;
@@ -782,3 +782,4 @@ window.addEventListener("message", (event) => {
 });
 
 startPossessionsObserver();
+window.FL_HELPER_LOADED = true;

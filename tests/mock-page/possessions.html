@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FL Mock — Possessions</title>
+  <script>window.FL_TEST_MODE = true;</script>
+  <script src="/extension/prices.js"></script>
+  <script src="/extension/content.js"></script>
+</head>
+<body>
+  <!--
+    Simulates the Fallen London possessions tab.
+    Matches what content.js setInterval polling expects:
+      - div.possessions (outer container)
+      - h1 containing "My Possessions"
+      - input.input--item-search (NOT outfit-controls__search-field)
+    Faction item tiles (data-quality-id) are included so the renown bar
+    can inject via DOM fallback even without a /myself API message.
+  -->
+  <div id="main" class="possessions">
+    <div class="quality-group">
+      <h1>My Possessions</h1>
+
+      <!-- Renown bar and CC bar inject after this input -->
+      <input class="input--item-search" placeholder="Search my possessions...">
+
+      <ul class="items items--inline quality-group__items">
+        <!-- Bohemians conversion item tile (id=755) -->
+        <li class="item">
+          <div class="icon icon--inventory" data-quality-id="755">
+            <div role="button">
+              <img src="//images.fallenlondon.com/icons/typewritersmall.png" alt="Ornate Typewriter">
+            </div>
+            <span class="js-item-value icon__value">3</span>
+          </div>
+        </li>
+
+        <!-- Constables conversion item tile (id=748) -->
+        <li class="item">
+          <div class="icon icon--inventory" data-quality-id="748">
+            <div role="button">
+              <img src="//images.fallenlondon.com/icons/coppersmall.png" alt="Antique Constable's Badge">
+            </div>
+            <span class="js-item-value icon__value">1</span>
+          </div>
+        </li>
+
+        <!-- Brilliant Soul CC item tile (id=668) -->
+        <li class="item">
+          <div class="icon icon--inventory" data-quality-id="668">
+            <div role="button">
+              <img src="//images.fallenlondon.com/icons/bottledsoulbluesmall.png" alt="Brilliant Soul">
+            </div>
+            <span class="js-item-value icon__value">5</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

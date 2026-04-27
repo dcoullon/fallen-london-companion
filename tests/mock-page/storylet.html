@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FL Mock — Storylet</title>
+  <script>window.FL_TEST_MODE = true;</script>
+  <script src="/extension/prices.js"></script>
+  <script src="/extension/content.js"></script>
+</head>
+<body>
+  <!--
+    Simulates a Fallen London storylet with branch choices.
+    The quality-requirement div is NOT pre-loaded here — tests inject it
+    after posting the storylet-begin message, which triggers the
+    MutationObserver that annotateBranchCosts sets up.
+  -->
+  <div class="storylet">
+    <h2>A Risky Venture</h2>
+    <div class="branches">
+      <!-- Branch choice container; quality-requirement div injected by test -->
+      <div class="branch" id="test-branch">
+        <h3>Take the Risk</h3>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

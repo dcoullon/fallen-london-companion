@@ -1,5 +1,35 @@
 # Fallen London Companion — How-To
 
+## Developer workflow (rapid iteration)
+
+### One-time setup
+```
+npm install
+npx playwright install chromium
+```
+
+### Auto-reload dev loop (Firefox)
+```
+npm run dev
+```
+Opens Firefox with the extension loaded from `extension/`. Any file change auto-reloads the extension — no manual remove/reinstall needed. The first run will open Fallen London; log in and the session is saved in `profiles/fl-dev/`.
+
+### Automated tests (no browser needed, no login)
+```
+npm test           # 10 unit tests (pure functions, instant)
+npm run test:e2e   # Playwright DOM tests (Chromium, headless)
+npm run test:all   # both in sequence
+```
+The Playwright tests load the extension scripts directly into a mock page and post simulated API messages to verify DOM output. They cover: echo value overlay, renown bar injection, cross-conversion bar injection, and branch cost annotations.
+
+### Other scripts
+```
+npm run lint   # web-ext lint
+npm run build  # web-ext build → dist/
+```
+
+---
+
 ## Links
 
 - **GitHub**: https://github.com/dcoullon/fallen-london-companion
