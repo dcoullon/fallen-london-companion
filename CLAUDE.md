@@ -13,12 +13,12 @@ Version: 0.3 (MV3, Firefox-first)
 | File | World | Role |
 |------|-------|------|
 | `extension/manifest.json` | — | MV3; runs on `*://www.fallenlondon.com/*` |
-| `extension/injected.js` | Page main world | Intercepts XHR; posts messages via `window.postMessage` |
-| `extension/content.js` | Isolated content script | Injects `injected.js`; listens for messages; does DOM injection and price lookup |
+| `extension/content.js` | Isolated content script | Inlines the fetch/XHR interceptor as `script.textContent` (synchronous, see note); listens for messages; does DOM injection and price lookup |
+| `extension/injected.js` | — | **Dead code.** Interceptor was moved inline into `content.js` to fix a timing race. File kept for reference only; not loaded. |
 | `extension/diagnostic.css` | Injected CSS | Diagnostic/overlay styles |
 
 ## Key API facts
-- Game is a React SPA; uses **XHR** (not fetch) for API calls
+- Game is a React SPA; uses **fetch** (and XHR as fallback) for API calls — both are intercepted
 - Endpoint: `POST https://api.fallenlondon.com/api/storylet/choosebranch`
 - Response: `messages[]` array with item changes
 - Filter tradeable items: `type === "StandardQualityChangeMessage"` AND `possession.nature === "Thing"`
@@ -37,6 +37,8 @@ Version: 0.3 (MV3, Firefox-first)
 - **First-gain annotation** — `QualityExplicitlySetMessage` treated as full gain from zero
 - **Rat Market Saturation hint** — boost tier and distance to next threshold inline
 - **Branch cost preview** — echo cost shown on quality requirement icons before clicking a choice
+- **Possessions tab — faction renown bar** — faction item icons at the top of the Possessions tab with quantity badges, hover glow, click-to-scroll. Favours/7 · renown/55 shown under each icon (parsed from `/myself`). "↓ Jump to items" link below the heading.
+- **Possessions tab — cross-conversion bar** — ordered T3 cross-conversion carousel below the renown bar; quantities from `/myself`; Making Waves items marked with dashed glow; grayed out when qty=0.
 
 ## Firefox / Android
 - **Primary target is Firefox for Android.** All features must work on mobile. Test on Android before considering anything done.
@@ -50,7 +52,7 @@ Version: 0.3 (MV3, Firefox-first)
 
 ## File sizes — what to read and when
 
-`content.js` is now ~400 lines of logic only. `prices.js` holds the PRICES table and is rarely needed — only read it when specifically working on item prices.
+`content.js` is now ~760 lines. `prices.js` holds the PRICES table and is rarely needed — only read it when specifically working on item prices.
 
 **Heavy files — only read when the task explicitly requires them:**
 | File | Size | When to read |
@@ -74,7 +76,6 @@ Use `python` (not `python3`) — `python3` is not on PATH on this machine. `pyth
 ## Pending features (IMPROVEMENTS.md for full detail)
 2. Agent "redo" tickbox
 3. Map quick-links
-4. Possessions tab — faction renown at top (injection approach unresolved — see note below)
 5. Bone Market — skeleton quality tracker
 6. Bone Market — buyer suggestion
 7. Bone Market — efficient skeleton suggestions
@@ -86,13 +87,9 @@ Use `python` (not `python3`) — `python3` is not on PATH on this machine. `pyth
 13. Bone Market — exhaustion threshold warning per bone
 
 ## Possessions tab injection
-Goal: inject a UI element at the top of the Possessions tab.
+`setInterval` (1 s) polling is the confirmed working approach. The renown bar and CC bar both use this pattern: inject if not present, remove+re-inject when fresh API data arrives.
 
-Things that work:
-- `document.querySelector("#main.possessions")` → truthy when tab is active
-- `setInterval` polling for `div.possessions > h1` then inserting after h1's parent — works fine
-- Echo value spans (TreeWalker on result-message elements that React renders once)
+**Do not use MutationObserver** — fails even with an immediate pre-observe call, likely a timing issue with the game's React render cycle.
 
-Previous failed attempts were due to the extension not being reloaded correctly (manifest not refreshed), not a fundamental DOM injection barrier.
-
-**Do not use MutationObserver** for possessions injection — fails even with an immediate pre-observe call, likely a timing issue with the game's React render cycle. `setInterval` (1 s) is confirmed working with full remove/reinstall.
+## Page-world script injection
+**Always use `script.textContent`, never `script.src`.** The `script.src` approach is async — the game's bootstrap fires `/myself` before the external file loads, so the intercept is never registered. With `textContent` the code executes synchronously the moment the element is appended. This cost two sessions to diagnose.
