@@ -85,19 +85,14 @@ Use `python` (not `python3`) — `python3` is not on PATH on this machine. `pyth
 12. Bone Market — buyer suggestion + exhaustion preview
 13. Bone Market — exhaustion threshold warning per bone
 
-## Possessions tab injection — known hard problem
+## Possessions tab injection
 Goal: inject a UI element at the top of the Possessions tab.
 
 Things that work:
 - `document.querySelector("#main.possessions")` → truthy when tab is active
+- `setInterval` polling for `div.possessions > h1` then inserting after h1's parent — works fine
 - Echo value spans (TreeWalker on result-message elements that React renders once)
 
-Things that did NOT work (all attempted, none produced visible result):
-- `setInterval` inserting a child into `div.possessions`
-- TreeWalker finding "My Possessions" h1, appending to parent
-- CSS pseudo-element `#main.possessions h1.heading::after` — also invisible
-- `position:fixed` elements appended to `document.body`
+Previous failed attempts were due to the extension not being reloaded correctly (manifest not refreshed), not a fundamental DOM injection barrier.
 
-The CSS pseudo-element failure is the key clue: it's immune to React reconciliation, so its failure means either (a) extension CSS is not being applied, or (b) the game's CSS suppresses pseudo-elements. This remains unresolved.
-
-Next investigation step: add `body { outline: 5px solid red !important }` to `diagnostic.css` to confirm whether extension CSS reaches the page at all.
+**Do not use MutationObserver** for possessions injection — fails even with an immediate pre-observe call, likely a timing issue with the game's React render cycle. `setInterval` (1 s) is confirmed working with full remove/reinstall.

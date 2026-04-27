@@ -352,6 +352,22 @@ const CONVERSION_ITEM_NAMES = new Map([
   [751, "Rookery Password"],
 ]);
 
+// Map: item id → icon image name (from /myself API; 751 unknown, read from DOM)
+const CONVERSION_ITEM_IMAGES = new Map([
+  [755, "typewriter"],
+  [750, "paintingfragment"],
+  [748, "copper"],
+  [753, "keystone"],
+  [757, "tankard"],
+  [758, "ring"],
+  [749, "skullbrass"],
+  [761, "flag"],
+  [754, "amber_red"],
+  [752, "bookbrown"],
+  [762, "bookdead"],
+  [751, "scarydoor"],
+]);
+
 let _cachedConversionItems = null; // null = not yet received; Map after first myself
 let _possessionsObserver = null;
 
@@ -363,7 +379,7 @@ function parseMyself(data) {
     for (const cat of categories) {
       for (const p of (cat.possessions || [])) {
         if (CONVERSION_ITEMS.has(p.id)) {
-          owned.set(p.id, { id: p.id, name: p.name, qty: p.level || 1 });
+          owned.set(p.id, { id: p.id, name: p.name, qty: p.level || 1, image: p.image || null });
         }
       }
       if (Array.isArray(cat.categories)) scan(cat.categories);
@@ -391,7 +407,125 @@ function scrollToConversionItem(itemName) {
   }
 }
 
-function startPossessionsObserver() {}  // no-op, kept for call-site compat
+// ── Possessions renown bar ────────────────────────────────────────────────────
+
+function injectRenownBar() {
+  if (document.getElementById("fl-renown-bar")?.isConnected) return;
+
+  const possDiv = document.querySelector("div.possessions");
+  if (!possDiv) return;
+
+  const searchInput = Array.from(possDiv.querySelectorAll("input.input--item-search"))
+    .find(el => !el.classList.contains("outfit-controls__search-field"));
+  if (!searchInput) return;
+
+  // Prefer API data; fall back to reading from rendered item tiles.
+  let items = _cachedConversionItems;
+  if (!items || items.size === 0) {
+    items = new Map();
+    for (const [id, name] of CONVERSION_ITEM_NAMES) {
+      const tile = possDiv.querySelector(`[data-quality-id="${id}"]`);
+      if (!tile) continue;
+      const qtyEl = tile.querySelector(".icon__value");
+      const qty = qtyEl ? (parseInt(qtyEl.textContent, 10) || 1) : 1;
+      const imgMatch = tile.querySelector("img")?.src?.match(/icons\/(.+?)small\.png/);
+      const image = imgMatch ? imgMatch[1] : (CONVERSION_ITEM_IMAGES.get(id) || null);
+      items.set(id, { id, name, qty, image });
+    }
+  }
+  if (items.size === 0) return;
+
+  const bar = document.createElement("div");
+  bar.id = "fl-renown-bar";
+  bar.style.cssText = "margin:6px 0 4px;font-family:Georgia,serif";
+
+  const label = document.createElement("h2");
+  label.className = "heading heading--2 quality-group__name";
+  label.textContent = "Faction renown";
+  bar.appendChild(label);
+
+  const list = document.createElement("ul");
+  list.className = "items items--inline quality-group__items";
+
+  for (const [id, item] of items) {
+    const faction = CONVERSION_ITEMS.get(id);
+    const image = item.image || CONVERSION_ITEM_IMAGES.get(id);
+
+    const li = document.createElement("li");
+    li.className = "item";
+
+    const iconDiv = document.createElement("div");
+    iconDiv.className = "icon icon--inventory icon--emphasize icon--usable";
+    iconDiv.title = `${faction} — ${item.name}`;
+
+    const inner = document.createElement("div");
+    inner.setAttribute("role", "button");
+    inner.tabIndex = 0;
+    inner.style.cssText = "outline:0;cursor:pointer";
+
+    if (image) {
+      const img = document.createElement("img");
+      img.src = `//images.fallenlondon.com/icons/${image}small.png`;
+      img.alt = item.name;
+      inner.appendChild(img);
+    }
+
+    iconDiv.appendChild(inner);
+
+    const badge = document.createElement("span");
+    badge.className = "js-item-value icon__value";
+    badge.textContent = item.qty;
+    iconDiv.appendChild(badge);
+
+    iconDiv.addEventListener("click", () => {
+      const realBtn = document.querySelector(`div.possessions [data-quality-id="${id}"] [role="button"]`);
+      if (realBtn) realBtn.click();
+    });
+
+    li.appendChild(iconDiv);
+    list.appendChild(li);
+  }
+
+  bar.appendChild(list);
+  searchInput.insertAdjacentElement("afterend", bar);
+}
+
+// ── Possessions jump link ────────────────────────────────────────────────────
+
+function injectPossessionsJumpLink() {
+  if (document.getElementById("fl-jump-link")?.isConnected) return;
+
+  const possDiv = document.querySelector("div.possessions");
+  if (!possDiv) return;
+
+  const h1 = possDiv.querySelector("h1");
+  if (!h1 || !h1.textContent.includes("My Possessions")) return;
+
+  const link = document.createElement("div");
+  link.id = "fl-jump-link";
+  link.style.cssText = "font-size:0.85em;margin:0;padding:0;color:#3f7277;cursor:pointer;font-family:Georgia,serif;text-decoration:underline;display:block";
+  link.textContent = "↓ Jump to items";
+  link.addEventListener("click", () => {
+    const second = Array.from(possDiv.querySelectorAll("input.input--item-search"))
+      .find(el => !el.classList.contains("outfit-controls__search-field"));
+    if (second) second.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  h1.parentElement?.insertAdjacentElement("afterend", link);
+}
+
+function injectPossessionsStyles() {
+  if (document.getElementById("fl-poss-styles")) return;
+  const style = document.createElement("style");
+  style.id = "fl-poss-styles";
+  style.textContent =
+    "#fl-renown-bar .icon--usable:hover img{box-shadow:0 0 5px 5px #92d1d5;transform:scale(1.05) translateZ(0);transition:box-shadow .1s,transform .1s}";
+  document.head.appendChild(style);
+}
+
+function startPossessionsObserver() {
+  setInterval(() => { injectPossessionsStyles(); injectPossessionsJumpLink(); injectRenownBar(); }, 1000);
+}
 
 // ── Wire up ───────────────────────────────────────────────────────────────────
 
@@ -410,3 +544,5 @@ window.addEventListener("message", (event) => {
     parseMyself(event.data.data);
   }
 });
+
+startPossessionsObserver();

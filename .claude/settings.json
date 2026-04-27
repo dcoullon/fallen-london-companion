@@ -1,5 +1,8 @@
 {
   "permissions": {
-    "allow": []
+    "allow": [
+      "Bash(web-ext lint *)",
+      "Bash(where *)"
+    ]
   }
 }

@@ -32,11 +32,11 @@ On the map screen, surface shortcuts to recently used destinations:
 - Link to the most frequently visited location
 - Requires tracking travel history locally (chrome.storage)
 
-### 4. Possessions tab — faction renown at the top
-In the Possessions tab, add a summary row at the very top showing faction renown items
-(e.g. Renown: Criminals, Renown: The Church, etc.) so they're immediately visible
-without scrolling through the full inventory.
-- Requires understanding the Possessions tab DOM structure and how renown items are identified
+### ~~4. Possessions tab — faction renown at the top~~ ✓ Done
+Implemented: faction item icons injected right after the items search box, with quantity
+badges, matching the game's inventory icon style and hover glow. Click scrolls to and
+highlights the item in the inventory below. Also added a "↓ Jump to items" link just below
+the "My Possessions" heading.
 
 ### 5. Bone Market — skeleton quality tracker
 While building a skeleton at the Bone Market, track and display the current qualities of
