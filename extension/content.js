@@ -352,18 +352,15 @@ function annotateBranchCosts(branchCosts) {
   function tryInject() {
     for (const container of document.querySelectorAll("div.icon.quality-requirement")) {
       const btn = container.querySelector("[role='button'][aria-label]");
-      if (!btn || btn.dataset.flCostDone) continue;
+      if (!btn) continue;
 
       const label = btn.getAttribute("aria-label") || "";
+      if (label.includes(" worth ")) continue;              // already annotated
       if (!/you unlocked this with|you need\b/i.test(label)) continue;
 
       for (const [name, echoValue] of costByQuality) {
         if (!label.includes(name)) continue;
-
-        btn.dataset.flCostDone = "1";
-        if (!label.includes(" worth ")) {
-          btn.setAttribute("aria-label", label + ` (worth ${echoValue.toFixed(2)} E)`);
-        }
+        btn.setAttribute("aria-label", label + ` (worth ${echoValue.toFixed(2)} E)`);
         break;
       }
     }
@@ -371,6 +368,8 @@ function annotateBranchCosts(branchCosts) {
 
   _branchCostObserver = new MutationObserver(tryInject);
   _branchCostObserver.observe(document.body, { childList: true, subtree: true });
+  tryInject();                   // handle icons already in DOM when message arrives
+  setTimeout(tryInject, 300);    // handle icons React renders asynchronously
   // Clean up after 5 minutes (one storylet session is plenty)
   setTimeout(() => { if (_branchCostObserver) { _branchCostObserver.disconnect(); _branchCostObserver = null; } }, 300000);
 }
