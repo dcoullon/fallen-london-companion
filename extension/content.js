@@ -1,11 +1,50 @@
 // Runs in the isolated content script world.
 // PRICES is defined in prices.js, loaded before this file via manifest.json.
 
-// ── Inject fetch interceptor into the page's main world ──────────────────────
-const script = document.createElement("script");
-script.src = chrome.runtime.getURL("injected.js");
-script.onload = () => script.remove();
-document.documentElement.appendChild(script);
+// ── Inject fetch/XHR interceptor into the page's main world ─────────────────
+// Use textContent (not script.src) so the code executes synchronously before
+// the game's bootstrap can fire its initial /myself request.
+{
+  const s = document.createElement("script");
+  s.textContent = `(function () {
+  const originalFetch = window.fetch;
+  window.fetch = async function (...args) {
+    const response = await originalFetch.apply(this, args);
+    const url = typeof args[0] === "string" ? args[0] : (args[0] && args[0].url) || "";
+    if (url.includes("choosebranch") || url.includes("storylet/begin") || url.includes("character/myself")) {
+      const type = url.includes("choosebranch") ? "choosebranch"
+                 : url.includes("storylet/begin") ? "storylet-begin"
+                 : "myself";
+      response.clone().json().then((data) => {
+        window.postMessage({ source: "fl-helper", type, data }, "*");
+      }).catch(() => {});
+    }
+    return response;
+  };
+  const originalOpen = XMLHttpRequest.prototype.open;
+  const originalSend = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+    this._flUrl = url;
+    return originalOpen.call(this, method, url, ...rest);
+  };
+  XMLHttpRequest.prototype.send = function (...args) {
+    if (this._flUrl && (this._flUrl.includes("choosebranch") || this._flUrl.includes("storylet/begin") || this._flUrl.includes("character/myself"))) {
+      const type = this._flUrl.includes("choosebranch") ? "choosebranch"
+                 : this._flUrl.includes("storylet/begin") ? "storylet-begin"
+                 : "myself";
+      this.addEventListener("load", () => {
+        try {
+          const data = JSON.parse(this.responseText);
+          window.postMessage({ source: "fl-helper", type, data }, "*");
+        } catch (err) {}
+      });
+    }
+    return originalSend.apply(this, args);
+  };
+})();`;
+  document.documentElement.appendChild(s);
+  s.remove();
+}
 
 // ── Parse choosebranch response ───────────────────────────────────────────────
 function parseChanges(data) {
@@ -386,13 +425,32 @@ const CC_ITEMS = [
 ];
 const CC_ITEM_IDS = new Set(CC_ITEMS.map(i => i.id));
 
+// Maps id → API quality name suffix (exact string the game uses in Favours:/Renown: items)
+const FACTION_API_NAMES = new Map([
+  [755, "Bohemians"],
+  [750, "The Church"],
+  [748, "Constables"],
+  [753, "Criminals"],
+  [757, "The Docks"],
+  [758, "The Great Game"],
+  [749, "Hell"],
+  [761, "Revolutionaries"],
+  [754, "Rubbery Men"],
+  [752, "Society"],
+  [762, "Tomb-Colonies"],
+  [751, "Urchins"],
+]);
+const FACTION_API_NAME_TO_ID = new Map([...FACTION_API_NAMES].map(([id, s]) => [s, id]));
+
 let _cachedConversionItems = null; // null = not yet received; Map after first myself
 let _cachedCCQtys = null;          // null = not yet received; Map<id,qty> after first myself
+let _cachedFactionStats = null;    // null = not yet received; Map<id,{favours,renown}> after first myself
 
 function parseMyself(data) {
   if (!data || !Array.isArray(data.possessions)) return;
   const owned = new Map();
   const ccQtys = new Map();
+  const factionStats = new Map();
 
   function scan(categories) {
     for (const cat of categories) {
@@ -403,6 +461,26 @@ function parseMyself(data) {
         if (CC_ITEM_IDS.has(p.id)) {
           ccQtys.set(p.id, p.level || 1);
         }
+        if (p.name) {
+          const favM = p.name.match(/^Favours: (.+)$/);
+          const renM = p.name.match(/^Renown: (.+)$/);
+          if (favM) {
+            const fid = FACTION_API_NAME_TO_ID.get(favM[1]);
+            if (fid != null) {
+              const e = factionStats.get(fid) ?? { favours: 0, renown: 0 };
+              e.favours = p.level || 0;
+              factionStats.set(fid, e);
+            }
+          }
+          if (renM) {
+            const fid = FACTION_API_NAME_TO_ID.get(renM[1]);
+            if (fid != null) {
+              const e = factionStats.get(fid) ?? { favours: 0, renown: 0 };
+              e.renown = p.level || 0;
+              factionStats.set(fid, e);
+            }
+          }
+        }
       }
       if (Array.isArray(cat.categories)) scan(cat.categories);
     }
@@ -411,7 +489,8 @@ function parseMyself(data) {
   scan(data.possessions);
   _cachedConversionItems = owned;
   _cachedCCQtys = ccQtys;
-  // Remove stale bars so they re-inject with fresh data (qty now known)
+  _cachedFactionStats = factionStats;
+  // Remove stale bars so they re-inject with fresh data (qty and faction stats now known)
   document.getElementById("fl-renown-bar")?.remove();
   document.getElementById("fl-cc-bar")?.remove();
 }
@@ -432,6 +511,7 @@ function scrollToConversionItem(itemName) {
 }
 
 // ── Possessions renown bar ────────────────────────────────────────────────────
+
 
 function injectRenownBar() {
   if (document.getElementById("fl-renown-bar")?.isConnected) return;
@@ -514,10 +594,18 @@ function injectRenownBar() {
     });
 
     li.appendChild(iconDiv);
+
+    const s = _cachedFactionStats?.get(id) ?? { favours: 0, renown: 0 };
+    const statsDiv = document.createElement("div");
+    statsDiv.className = "fl-faction-stats";
+    statsDiv.textContent = `${s.favours}/7 · ${s.renown}/55`;
+    li.appendChild(statsDiv);
+
     list.appendChild(li);
   }
 
   bar.appendChild(list);
+
   searchInput.insertAdjacentElement("afterend", bar);
 }
 
@@ -640,6 +728,8 @@ function injectPossessionsStyles() {
   style.textContent = [
     "#fl-renown-bar .icon--usable:hover img,#fl-cc-bar .icon--usable:not(.fl-cc-mw):hover img{box-shadow:0 0 5px 5px #92d1d5;transform:scale(1.05) translateZ(0);transition:box-shadow .1s,transform .1s}",
     "#fl-cc-bar .fl-cc-mw.icon--usable:hover img{outline:2px dashed #92d1d5;outline-offset:3px;transform:scale(1.05) translateZ(0);transition:outline .1s,transform .1s}",
+    "#fl-renown-bar li.item{display:inline-flex;flex-direction:column;align-items:center;overflow:visible;height:auto;vertical-align:top}",
+    "#fl-renown-bar .fl-faction-stats{font-size:10px;color:#282520;text-align:center;margin-top:2px;font-family:Georgia,serif;line-height:1.4}",
   ].join("");
   document.head.appendChild(style);
 }
