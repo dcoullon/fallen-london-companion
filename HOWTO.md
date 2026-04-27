@@ -2,30 +2,46 @@
 
 ## Developer workflow (rapid iteration)
 
-### One-time setup
+### One-time setup (first clone only)
 ```
 npm install
 npx playwright install chromium
 ```
 
-### Auto-reload dev loop (Firefox)
+### Starting a dev session
+Open a PowerShell window, `cd` to the project, then:
 ```
-npm run dev
+cmd /c "npm run dev"
 ```
-Opens Firefox with the extension loaded from `extension/`. Any file change auto-reloads the extension — no manual remove/reinstall needed. The first run will open Fallen London; log in and the session is saved in `profiles/fl-dev/`.
+A separate Firefox window opens on Fallen London with the extension loaded. Log in with the test account (credentials in Claude memory). Keep this window open while working — any file save in `extension/` auto-reloads the extension. No manual remove/reinstall ever needed.
 
-### Automated tests (no browser needed, no login)
+> **Note:** npm scripts must be run via `cmd /c "npm run ..."` in PowerShell due to execution policy. Alternatively open a plain `cmd` window and run npm commands directly.
+
+### Verifying a change after editing code
 ```
-npm test           # 10 unit tests (pure functions, instant)
-npm run test:e2e   # Playwright DOM tests (Chromium, headless)
-npm run test:all   # both in sequence
+cmd /c "npm run test:all"
 ```
-The Playwright tests load the extension scripts directly into a mock page and post simulated API messages to verify DOM output. They cover: echo value overlay, renown bar injection, cross-conversion bar injection, and branch cost annotations.
+Runs 10 unit tests + 12 Playwright DOM tests headlessly. Green = logic is correct. Takes ~35 seconds.
+
+To run just the Playwright tests:
+```
+cmd /c "npm run test:e2e"
+```
+
+For a specific test file:
+```
+cmd /c "npx playwright test tests/e2e/echo-overlay.spec.js"
+```
+
+### Visual check in Firefox
+After `npm run dev` is running, changes you save are picked up automatically. Switch to the Firefox dev window to see the result — no reload needed.
+
+To confirm the extension is loaded in that window: go to `about:debugging#/runtime/this-firefox` and look for "Fallen London Companion" under Temporary Extensions.
 
 ### Other scripts
 ```
-npm run lint   # web-ext lint
-npm run build  # web-ext build → dist/
+cmd /c "npm run lint"    # web-ext lint
+cmd /c "npm run build"   # web-ext build → dist/
 ```
 
 ---

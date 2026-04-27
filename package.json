@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "private": true,
   "scripts": {
-    "dev": "web-ext run --source-dir extension/ --firefox=\"C:/Program Files/Mozilla Firefox/firefox.exe\" --firefox-profile profiles/fl-dev --keep-profile-changes --start-url https://www.fallenlondon.com/",
+    "dev": "node -e \"require('fs').mkdirSync('profiles/fl-dev',{recursive:true})\" && web-ext run --source-dir extension/ --firefox=\"C:/Program Files/Mozilla Firefox/firefox.exe\" --firefox-profile profiles/fl-dev --keep-profile-changes --start-url https://www.fallenlondon.com/",
     "test": "node run-tests.js",
     "test:e2e": "npx playwright test",
     "test:all": "node run-tests.js && npx playwright test",
