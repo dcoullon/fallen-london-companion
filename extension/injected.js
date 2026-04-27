@@ -8,10 +8,6 @@
     const url =
       typeof args[0] === "string" ? args[0] : (args[0] && args[0].url) || "";
 
-    if (url.includes("api.fallenlondon") || url.includes("choosebranch") || url.includes("myself")) {
-      console.log("[fl-injected] fetch url:", url);
-    }
-
     if (url.includes("choosebranch") || url.includes("storylet/begin") || url.includes("character/myself")) {
       const type = url.includes("choosebranch") ? "choosebranch"
                  : url.includes("storylet/begin") ? "storylet-begin"
@@ -30,9 +26,6 @@
 
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {
     this._flUrl = url;
-    if (url && (url.includes("api.fallenlondon") || url.includes("myself"))) {
-      console.log("[fl-injected] XHR open:", method, url);
-    }
     return originalOpen.call(this, method, url, ...rest);
   };
 

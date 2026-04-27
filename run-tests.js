@@ -7,14 +7,19 @@ const { parseChanges, parseSaturation } = fn();
 
 const fixtures = [
   {
-    label: "Rostygold loss (10 × 0.01 = −0.10)",
+    label: "Rostygold loss + Favour gain (−0.10 + 6.00)",
     check(changes) {
-      if (changes.length !== 1) return "expected 1 change, got " + changes.length;
-      const c = changes[0];
-      if (c.name !== "Piece of Rostygold") return "wrong item: " + c.name;
-      if (c.gained !== false) return "should be loss";
-      if (c.qty !== 10) return "qty " + c.qty;
-      if (Math.abs(c.echoValue - (-0.10)) > 0.001) return "echo " + c.echoValue;
+      if (changes.length !== 2) return "expected 2 changes, got " + changes.length;
+      const rg = changes.find(c => c.name === "Piece of Rostygold");
+      const fav = changes.find(c => c.name === "Favours: Constables");
+      if (!rg) return "Rostygold missing";
+      if (!fav) return "Favour missing";
+      if (rg.gained !== false) return "Rostygold should be loss";
+      if (fav.gained !== true) return "Favour should be gain";
+      if (rg.qty !== 10) return "Rostygold qty " + rg.qty;
+      if (fav.qty !== 1) return "Favour qty " + fav.qty;
+      if (Math.abs(rg.echoValue - (-0.10)) > 0.001) return "Rostygold echo " + rg.echoValue;
+      if (Math.abs(fav.echoValue - 6.00) > 0.001) return "Favour echo " + fav.echoValue;
     },
     data: { messages: [
       { possession: { name: "Piece of Rostygold", nature: "Thing", id: 375 }, changeType: "Increased", type: "StandardQualityChangeMessage", message: "You've lost 10 x Piece of Rostygold (new total 97,877). " },
