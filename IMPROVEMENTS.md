@@ -8,6 +8,11 @@
   and annotate it normally.
 - **Rat Market Saturation hint** — after any action that changes Rat Market Saturation, show
   the current boost tier and distance to the next threshold inline next to the saturation line.
+- **Possessions tab — faction renown bar** — faction item icons injected at the top of the
+  Possessions tab with quantity badges, hover glow, click-to-scroll, and favours/7 · renown/55
+  stats under each icon. Also a "↓ Jump to items" link below the heading.
+- **Possessions tab — cross-conversion bar** — ordered T3 cross-conversion carousel below the
+  renown bar, showing current quantities; Making Waves items marked with a dashed glow.
 
 ---
 
@@ -31,12 +36,6 @@ On the map screen, surface shortcuts to recently used destinations:
 - Link to the most recent ship destination
 - Link to the most frequently visited location
 - Requires tracking travel history locally (chrome.storage)
-
-### ~~4. Possessions tab — faction renown at the top~~ ✓ Done
-Implemented: faction item icons injected right after the items search box, with quantity
-badges, matching the game's inventory icon style and hover glow. Click scrolls to and
-highlights the item in the inventory below. Also added a "↓ Jump to items" link just below
-the "My Possessions" heading.
 
 ### 5. Bone Market — skeleton quality tracker
 While building a skeleton at the Bone Market, track and display the current qualities of
@@ -100,3 +99,26 @@ so it works on desktop Firefox and, ideally, Firefox for Android (mobile).
 - See also item 1 (Mobile support — bookmarklet debugging) which has partially explored this path
 - Main concern: MV3 browser_action / content script support differences between Chrome and Firefox
 - Firefox for Android has limited extension support — verify which APIs are available
+
+### 15. Destructive action warnings
+For known costly or irreversible actions, show a warning icon before the player clicks and ideally a confirmation dialog when they do.
+- Examples: selling the boat, the action that converts many Cellars of Wine (losing ~120 echoes), actions that consume Favours for poor reward when the relevant companion item is absent (e.g. using Favours: Criminals without a Lucky Weasel)
+- Phase 1: static "danger" icon injected next to the branch name, driven by a hard-coded list of branch/storylet IDs
+- Phase 2: intercept the click and show a modal "Are you sure?" before letting the request through
+- Needs: a curated list of destructive branch IDs and the condition under which each is dangerous (unconditionally, or only when a quality is missing)
+
+### 16. Weekly opportunities dashboard
+Surface high-value periodic activities that the player hasn't done yet this week (or cycle), as a reminder panel.
+- Candidates: Balmoral boots, unused Bone Market Exhaustion headroom, uncashed Board Debts, unspent Khanate Reports, unused Rat Market Saturation boost, Time the Healer proximity warning
+- Display options: (a) a generated message injected at the top of the Messages tab once per week, or (b) a persistent banner/sidebar widget
+- Each item needs a rule: what quality / value / timestamp indicates it's "available" vs "done"
+- Time the Healer: warn when <X days remain until reset (requires tracking the last TtH date from API responses)
+- State stored in `browser.storage.local`, refreshed when relevant quality-change messages are intercepted
+
+### 17. Browser notifications — action candle full
+Push a browser notification when the action candle (action count) reaches its cap, so the player knows they're wasting regeneration.
+- Requires tracking current action count and cap from API responses (intercepted from `/api/character` or quality-change messages)
+- Use `browser.notifications` API (needs `"notifications"` permission in manifest)
+- Fire once per fill; suppress until at least one action is spent after the cap is hit
+- On Firefox for Android, browser notifications surface as system notifications — verify behaviour
+
