@@ -396,43 +396,51 @@ function annotateIconAriaLabels(root) {
   }
 }
 
-function annotateTooltip(tooltipEl) {
-  if (tooltipEl.dataset.flPriceAdded) return;
-
-  const tid = tooltipEl.id;
-  const source = tid ? document.querySelector(`[aria-describedby="${tid}"]`) : null;
+function annotateTooltip(root) {
+  // The added node is the data-tippy-root wrapper; role="tooltip" is on the inner .tippy-box
+  const tooltipBox = (root.getAttribute("role") === "tooltip")
+    ? root
+    : root.querySelector('[role="tooltip"]');
+  if (!tooltipBox) return;
+  if (tooltipBox.dataset.flPriceAdded) return;
 
   let echoValue = null;
 
-  // Try: data-quality-id ancestor → PRICES lookup
-  if (source) {
-    const container = source.closest("[data-quality-id]");
-    if (container) {
-      const id = parseInt(container.dataset.qualityId, 10);
-      const unitPrice = PRICES[id] ?? null;
-      if (unitPrice !== null) {
-        const qty = parseRequiredQty(source.getAttribute("aria-label") || "") ?? 1;
-        echoValue = qty * unitPrice;
-      }
-    }
+  // Primary: match span.quality-name inside the tooltip against _costByQuality
+  const qualityNameEl = tooltipBox.querySelector(".quality-name");
+  if (qualityNameEl) {
+    const name = qualityNameEl.textContent.trim();
+    if (_costByQuality.has(name)) echoValue = _costByQuality.get(name);
   }
 
-  // Try: match tooltip text against quality-requirement cost map
+  // Fallback: data-quality-id ancestor of the source element → PRICES
   if (echoValue === null) {
-    const text = tooltipEl.textContent || "";
-    for (const [name, val] of _costByQuality) {
-      if (text.includes(name)) { echoValue = val; break; }
+    const rootId = root.hasAttribute("data-tippy-root") ? root.id
+                 : (root.getAttribute("role") === "tooltip" ? root.id : null);
+    const source = rootId ? document.querySelector(`[aria-describedby="${rootId}"]`) : null;
+    if (source) {
+      const container = source.closest("[data-quality-id]");
+      if (container) {
+        const id = parseInt(container.dataset.qualityId, 10);
+        const unitPrice = PRICES[id] ?? null;
+        if (unitPrice !== null) {
+          const qty = parseRequiredQty(source.getAttribute("aria-label") || "") ?? 1;
+          echoValue = qty * unitPrice;
+        }
+      }
     }
   }
 
   if (echoValue === null) return;
 
-  tooltipEl.dataset.flPriceAdded = "1";
-  const contentEl = tooltipEl.querySelector(".tippy-content") || tooltipEl;
+  tooltipBox.dataset.flPriceAdded = "1";
+  const descEl = tooltipBox.querySelector(".tooltip__desc")
+              || tooltipBox.querySelector(".tippy-content")
+              || tooltipBox;
   const line = document.createElement("div");
   line.style.cssText = "color:#c9b25e;font-style:italic;margin-top:4px;font-size:0.9em";
   line.textContent = `worth ${echoValue.toFixed(2)} E`;
-  contentEl.appendChild(line);
+  descEl.appendChild(line);
 }
 
 // ── Possessions tab — renown bar + cross-conversion bar + jump link ──────────
@@ -845,7 +853,7 @@ const _iconObserver = new MutationObserver((mutations) => {
     for (const node of m.addedNodes) {
       if (node.nodeType !== 1) continue;
       annotateIconAriaLabels(node);
-      if (node.getAttribute("role") === "tooltip") annotateTooltip(node);
+      annotateTooltip(node);
     }
   }
 });
