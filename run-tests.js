@@ -1,8 +1,9 @@
 const fs = require("fs");
+const prices = fs.readFileSync("extension/prices.js", "utf8");
 const src = fs.readFileSync("extension/content.js", "utf8");
-const start = src.indexOf("const PRICES");
+const start = src.indexOf("// ── Parse choosebranch response");
 const end = src.indexOf("// ── Wire up");
-const fn = new Function(src.slice(start, end) + "; return { parseChanges, parseSaturation };");
+const fn = new Function(prices + src.slice(start, end) + "; return { parseChanges, parseSaturation };");
 const { parseChanges, parseSaturation } = fn();
 
 const fixtures = [
