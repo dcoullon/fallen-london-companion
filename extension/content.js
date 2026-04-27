@@ -318,7 +318,7 @@ function annotateBranchCosts(branchCosts) {
   setTimeout(() => { if (_branchCostObserver) { _branchCostObserver.disconnect(); _branchCostObserver = null; } }, 300000);
 }
 
-// ── Possessions tab — conversion items bar + jump link ────────────────────────
+// ── Possessions tab — renown bar + cross-conversion bar + jump link ──────────
 
 // Map: item id → faction label
 const CONVERSION_ITEMS = new Map([
@@ -368,18 +368,40 @@ const CONVERSION_ITEM_IMAGES = new Map([
   [751, "scarydoor"],
 ]);
 
+// Ordered T3 cross-conversion carousel. mw:true = converting this item yields 1-10 CP Making Waves.
+const CC_ITEMS = [
+  { id: 668,  name: "Brilliant Soul",                       icon: "bottledsoulblue", mw: false },
+  { id: 828,  name: "Tale of Terror!!",                     icon: "scaryeye",        mw: true  },
+  { id: 830,  name: "Compromising Document",                icon: "papers3",         mw: false },
+  { id: 589,  name: "Memory of Light",                      icon: "mirror",          mw: false },
+  { id: 831,  name: "Zee-Ztory",                            icon: "waves3",          mw: true  },
+  { id: 822,  name: "Bottle of Strangling Willow Absinthe", icon: "bottlewillow",    mw: false },
+  { id: 915,  name: "Whisper-Satin Scrap",                  icon: "scrap2",          mw: false },
+  { id: 525,  name: "Journal of Infamy",                    icon: "bookpurple",      mw: false },
+  { id: 932,  name: "Correspondence Plaque",                icon: "scrawl1",         mw: false },
+  { id: 827,  name: "Vision of the Surface",                icon: "sunset",          mw: true  },
+  { id: 587,  name: "Mystery of the Elder Continent",       icon: "mountainglow",    mw: false },
+  { id: 659,  name: "Scrap of Incendiary Gossip",           icon: "conversation",    mw: true  },
+  { id: 825,  name: "Memory of Distant Shores",             icon: "wake",            mw: false },
+];
+const CC_ITEM_IDS = new Set(CC_ITEMS.map(i => i.id));
+
 let _cachedConversionItems = null; // null = not yet received; Map after first myself
-let _possessionsObserver = null;
+let _cachedCCQtys = null;          // null = not yet received; Map<id,qty> after first myself
 
 function parseMyself(data) {
   if (!data || !Array.isArray(data.possessions)) return;
   const owned = new Map();
+  const ccQtys = new Map();
 
   function scan(categories) {
     for (const cat of categories) {
       for (const p of (cat.possessions || [])) {
         if (CONVERSION_ITEMS.has(p.id)) {
           owned.set(p.id, { id: p.id, name: p.name, qty: p.level || 1, image: p.image || null });
+        }
+        if (CC_ITEM_IDS.has(p.id)) {
+          ccQtys.set(p.id, p.level || 1);
         }
       }
       if (Array.isArray(cat.categories)) scan(cat.categories);
@@ -388,8 +410,10 @@ function parseMyself(data) {
 
   scan(data.possessions);
   _cachedConversionItems = owned;
-  // Remove stale bar so it re-injects with fresh data (qty now known)
-  document.querySelectorAll(".fl-renown-bar,.fl-jump-items").forEach(el => el.remove());
+  _cachedCCQtys = ccQtys;
+  // Remove stale bars so they re-inject with fresh data (qty now known)
+  document.getElementById("fl-renown-bar")?.remove();
+  document.getElementById("fl-cc-bar")?.remove();
 }
 
 function scrollToConversionItem(itemName) {
@@ -490,6 +514,87 @@ function injectRenownBar() {
   searchInput.insertAdjacentElement("afterend", bar);
 }
 
+// ── Possessions cross-conversion bar ─────────────────────────────────────────
+
+function injectCrossConversionBar() {
+  if (document.getElementById("fl-cc-bar")?.isConnected) return;
+
+  const renownBar = document.getElementById("fl-renown-bar");
+  if (!renownBar?.isConnected) return;
+
+  const possDiv = document.querySelector("div.possessions");
+  if (!possDiv) return;
+
+  // Build qty map: prefer API data, fall back to DOM tile scanning.
+  // Items absent from the API response are kept with qty=0 (show grayed out).
+  let qtys = _cachedCCQtys ? new Map(_cachedCCQtys) : null;
+  if (!qtys) {
+    qtys = new Map();
+    for (const item of CC_ITEMS) {
+      const tile = possDiv.querySelector(`[data-quality-id="${item.id}"]`);
+      if (!tile) continue;
+      const qtyEl = tile.querySelector(".icon__value");
+      qtys.set(item.id, qtyEl ? (parseInt(qtyEl.textContent, 10) || 1) : 1);
+    }
+    if (qtys.size === 0) return; // no API data and nothing visible in DOM yet
+  }
+
+  const bar = document.createElement("div");
+  bar.id = "fl-cc-bar";
+  bar.style.cssText = "margin:6px 0 4px;font-family:Georgia,serif";
+
+  const label = document.createElement("h2");
+  label.className = "heading heading--2 quality-group__name";
+  label.textContent = "Cross-conversion";
+  bar.appendChild(label);
+
+  const list = document.createElement("ul");
+  list.className = "items items--inline quality-group__items";
+
+  for (const item of CC_ITEMS) {
+    const qty = qtys.get(item.id) ?? 0;
+
+    const li = document.createElement("li");
+    li.className = "item";
+
+    const iconDiv = document.createElement("div");
+    iconDiv.className = "icon icon--inventory icon--emphasize" + (qty > 0 ? " icon--usable" : "") + (item.mw ? " fl-cc-mw" : "");
+    iconDiv.title = item.mw
+      ? `${item.name} — converts to next · gives 1–10 CP Making Waves`
+      : item.name;
+    if (qty === 0) iconDiv.style.opacity = "0.35";
+
+    const inner = document.createElement("div");
+    inner.setAttribute("role", "button");
+    inner.tabIndex = qty > 0 ? 0 : -1;
+    inner.style.cssText = "outline:0;" + (qty > 0 ? "cursor:pointer" : "cursor:default");
+
+    const img = document.createElement("img");
+    img.src = `//images.fallenlondon.com/icons/${item.icon}small.png`;
+    img.alt = item.name;
+    inner.appendChild(img);
+    iconDiv.appendChild(inner);
+
+    const badge = document.createElement("span");
+    badge.className = "js-item-value icon__value";
+    badge.textContent = qty;
+    iconDiv.appendChild(badge);
+
+    if (qty > 0) {
+      iconDiv.addEventListener("click", () => {
+        const realBtn = possDiv.querySelector(`[data-quality-id="${item.id}"] [role="button"]`);
+        if (realBtn) realBtn.click();
+      });
+    }
+
+    li.appendChild(iconDiv);
+    list.appendChild(li);
+  }
+
+  bar.appendChild(list);
+  renownBar.insertAdjacentElement("afterend", bar);
+}
+
 // ── Possessions jump link ────────────────────────────────────────────────────
 
 function injectPossessionsJumpLink() {
@@ -518,13 +623,15 @@ function injectPossessionsStyles() {
   if (document.getElementById("fl-poss-styles")) return;
   const style = document.createElement("style");
   style.id = "fl-poss-styles";
-  style.textContent =
-    "#fl-renown-bar .icon--usable:hover img{box-shadow:0 0 5px 5px #92d1d5;transform:scale(1.05) translateZ(0);transition:box-shadow .1s,transform .1s}";
+  style.textContent = [
+    "#fl-renown-bar .icon--usable:hover img,#fl-cc-bar .icon--usable:not(.fl-cc-mw):hover img{box-shadow:0 0 5px 5px #92d1d5;transform:scale(1.05) translateZ(0);transition:box-shadow .1s,transform .1s}",
+    "#fl-cc-bar .fl-cc-mw.icon--usable:hover img{outline:2px dashed #92d1d5;outline-offset:3px;transform:scale(1.05) translateZ(0);transition:outline .1s,transform .1s}",
+  ].join("");
   document.head.appendChild(style);
 }
 
 function startPossessionsObserver() {
-  setInterval(() => { injectPossessionsStyles(); injectPossessionsJumpLink(); injectRenownBar(); }, 1000);
+  setInterval(() => { injectPossessionsStyles(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); }, 1000);
 }
 
 // ── Wire up ───────────────────────────────────────────────────────────────────

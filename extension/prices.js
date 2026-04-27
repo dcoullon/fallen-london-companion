@@ -118,6 +118,7 @@ const PRICES = {
   374:    0.01,  // Foxfire Candle Stub
   476:    0.10,  // Flask of Abominable Salts
   144821: 0.10,  // Sample of Roof-Drip
+  589:    0.50,  // Memory of Light (sells for 25 Cryptic Clues = 0.50E)
   825:    0.50,  // Memory of Distant Shores
   144822: 0.50,  // Starved Expression
   140898: 0.50,  // Incisive Observation
