@@ -361,12 +361,9 @@ function annotateBranchCosts(branchCosts) {
         if (!label.includes(name)) continue;
 
         btn.dataset.flCostDone = "1";
-
-        const badge = document.createElement("div");
-        badge.className = "fl-cost-hint";
-        badge.style.cssText = "color:#b03030;font-size:0.7em;text-align:center;font-family:Georgia,serif;font-style:italic;pointer-events:none;line-height:1.3";
-        badge.textContent = `−${echoValue.toFixed(2)}E`;
-        container.appendChild(badge);
+        if (!label.includes(" worth ")) {
+          btn.setAttribute("aria-label", label + ` (worth ${echoValue.toFixed(2)} E)`);
+        }
         break;
       }
     }
@@ -376,6 +373,27 @@ function annotateBranchCosts(branchCosts) {
   _branchCostObserver.observe(document.body, { childList: true, subtree: true });
   // Clean up after 5 minutes (one storylet session is plenty)
   setTimeout(() => { if (_branchCostObserver) { _branchCostObserver.disconnect(); _branchCostObserver = null; } }, 300000);
+}
+
+// ── General icon aria-label annotation ───────────────────────────────────────
+
+function annotateIconAriaLabels(root) {
+  const containers = [];
+  if (root && root.matches && root.matches("[data-quality-id]")) containers.push(root);
+  if (root && root.querySelectorAll) {
+    for (const el of root.querySelectorAll("[data-quality-id]")) containers.push(el);
+  }
+  for (const container of containers) {
+    const id = parseInt(container.dataset.qualityId, 10);
+    const unitPrice = PRICES[id] ?? null;
+    if (unitPrice === null) continue;
+    const btn = container.querySelector("[role='button'][aria-label]");
+    if (!btn) continue;
+    const label = btn.getAttribute("aria-label") || "";
+    if (label.includes(" worth ")) continue;
+    const qty = parseRequiredQty(label) ?? 1;
+    btn.setAttribute("aria-label", label + ` (worth ${(qty * unitPrice).toFixed(2)} E)`);
+  }
 }
 
 // ── Possessions tab — renown bar + cross-conversion bar + jump link ──────────
@@ -782,4 +800,15 @@ window.addEventListener("message", (event) => {
 });
 
 startPossessionsObserver();
+
+const _iconObserver = new MutationObserver((mutations) => {
+  for (const m of mutations) {
+    for (const node of m.addedNodes) {
+      if (node.nodeType === 1) annotateIconAriaLabels(node);
+    }
+  }
+});
+
+annotateIconAriaLabels(document);
+_iconObserver.observe(document.documentElement, { childList: true, subtree: true });
 window.FL_HELPER_LOADED = true;
