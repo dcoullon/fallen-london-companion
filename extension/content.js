@@ -465,7 +465,14 @@ function injectRenownBar() {
 
   const label = document.createElement("h2");
   label.className = "heading heading--2 quality-group__name";
-  label.textContent = "Faction renown";
+  label.append("Faction renown ");
+  const renownWikiLink = document.createElement("a");
+  renownWikiLink.href = "https://fallenlondon.wiki/wiki/Factions_(Guide)#Renown_Items";
+  renownWikiLink.textContent = "(wiki)";
+  renownWikiLink.target = "_blank";
+  renownWikiLink.rel = "noopener noreferrer";
+  renownWikiLink.style.cssText = "font-size:0.7em;font-style:normal;font-weight:normal;color:#3f7277;text-decoration:underline;vertical-align:middle;margin-left:4px";
+  label.appendChild(renownWikiLink);
   bar.appendChild(label);
 
   const list = document.createElement("ul");
@@ -545,7 +552,14 @@ function injectCrossConversionBar() {
 
   const label = document.createElement("h2");
   label.className = "heading heading--2 quality-group__name";
-  label.textContent = "Cross-conversion";
+  label.append("Cross-conversion ");
+  const ccWikiLink = document.createElement("a");
+  ccWikiLink.href = "https://fallenlondon.wiki/wiki/Making_Waves_(Guide)#Cross-Conversion_Carousel";
+  ccWikiLink.textContent = "(wiki)";
+  ccWikiLink.target = "_blank";
+  ccWikiLink.rel = "noopener noreferrer";
+  ccWikiLink.style.cssText = "font-size:0.7em;font-style:normal;font-weight:normal;color:#3f7277;text-decoration:underline;vertical-align:middle;margin-left:4px";
+  label.appendChild(ccWikiLink);
   bar.appendChild(label);
 
   const list = document.createElement("ul");
