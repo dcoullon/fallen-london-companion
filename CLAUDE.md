@@ -66,7 +66,7 @@ Version: 0.3 (MV3, Firefox-first)
 **Never read speculatively.** If a task doesn't mention prices, don't open `prices.js`. If a task doesn't mention the DOM, don't open the HTML example.
 
 ## Wiki cache
-`wiki-cache/` holds scraped price JSON by category (one file per category). **Always check wiki-cache before making a WebFetch to fallenlondon.wiki.** If the data you need is already cached, read from the file instead.
+`wiki-cache/` holds scraped price JSON by category (one file per category) **and cached wiki article text** (`.md` files for reference pages). **Always check wiki-cache before making a WebFetch to fallenlondon.wiki.** If the data you need is already cached, read from the file instead. When you fetch a wiki article for the first time, save it to `wiki-cache/<topic>.md` so it doesn't need to be re-fetched in future sessions.
 
 ## Python
 Use `python` (not `python3`) — `python3` is not on PATH on this machine. `python` resolves to Python 3.15.
