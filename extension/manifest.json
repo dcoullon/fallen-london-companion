@@ -6,14 +6,10 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "fallen-london-companion@ext",
-      "strict_min_version": "140.0",
-      "data_collection_permissions": {
-        "required": ["none"],
-        "optional": []
-      }
+      "strict_min_version": "109.0"
     },
     "gecko_android": {
-      "strict_min_version": "142.0"
+      "strict_min_version": "109.0"
     }
   },
   "icons": {
@@ -25,7 +21,9 @@
     {
       "matches": ["*://www.fallenlondon.com/*"],
       "js": ["content.js"],
-      "run_at": "document_start"
+      "css": ["diagnostic.css"],
+      "run_at": "document_start",
+      "all_frames": true
     }
   ],
   "web_accessible_resources": [

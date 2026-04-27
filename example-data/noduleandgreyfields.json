@@ -1,0 +1,179 @@
+{
+    "canChangeOutfit": true,
+    "actions": 2,
+    "phase": "End",
+    "endStorylet": {
+        "rootEventId": 355789,
+        "event": {
+            "name": "Bottoms up! However many you may have!",
+            "description": "<p>The Starved Delegation accepts the gift with tentative enthusiasm. The bouquet, however, seems to be to their liking. </p>\r\n\r\n<p>A bored-looking Starved Man plonks a cauldron of amber onto the table. \"Amber...\" says the Starved Lithologer, looking to their compatriot for substantiation. \"...is very important to us. But, of course, you already know that. Every Londoner knows that by now.\"</p>\n\n<p>The Starved Man shrugs and shambles to the back of the group. </p>\r\n\r\n<p><span class=\"descriptive\">You will be able to join a fresh delegation once Time, the Healer comes.</span></p>",
+            "isInEventUseTree": false,
+            "deckType": "Always",
+            "image": "wineglass",
+            "id": 355799
+        },
+        "isLinkingEvent": false,
+        "isDirectLinkingEvent": false,
+        "canGoAgain": false
+    },
+    "messages": [
+        {
+            "setting": {
+                "mapRootArea": {
+                    "areaKey": "6037b99e5daf6b53b3257f8920b575fd"
+                },
+                "name": "The Fifth City",
+                "canChangeOutfit": true,
+                "canOpenMap": true,
+                "canTravel": true,
+                "itemsUsableHere": true,
+                "isInfiniteDraw": false,
+                "id": 2
+            },
+            "type": "SettingChangeMessage",
+            "message": "You moved to a new setting: The Fifth City."
+        },
+        {
+            "possession": {
+                "enhancements": [],
+                "qualityPossessedId": 197554633,
+                "name": "Recent Participant in a Starved Cultural Exchange",
+                "nameAndLevel": "Recent Participant in a Starved Cultural Exchange 1",
+                "description": "You've recently taken part in an exchange of cultural gifts with the Starved Men. <span class=\"descriptive\">This will go away with Time, the Healer.</span>",
+                "nature": "Status",
+                "category": "Story",
+                "effectiveLevel": 1,
+                "level": 1,
+                "himbleLevel": 0,
+                "equippable": false,
+                "progressAsPercentage": -1,
+                "allowedOn": "Character",
+                "image": "starvedmanhand",
+                "id": 144487
+            },
+            "changeType": "Gained",
+            "priority": 2,
+            "type": "QualityExplicitlySetMessage",
+            "message": "An occurrence! Your 'Recent Participant in a Starved Cultural Exchange' Quality is now 1!",
+            "image": "starvedmanhand",
+            "tooltip": "You've recently taken part in an exchange of cultural gifts with the Starved Men. <span class=\"descriptive\">This will go away with Time, the Healer.</span>"
+        },
+        {
+            "possession": {
+                "enhancements": [],
+                "qualityPossessedId": 197554634,
+                "name": "Starved Gifts",
+                "nameAndLevel": "Starved Gifts 5 - A vat of amber",
+                "levelDescription": "A vat of amber",
+                "description": "",
+                "nature": "Status",
+                "category": "Hidden",
+                "effectiveLevel": 5,
+                "level": 5,
+                "himbleLevel": 0,
+                "equippable": false,
+                "progressAsPercentage": -1,
+                "allowedOn": "Character",
+                "image": "placeholder2",
+                "id": 144489
+            },
+            "changeType": "Decreased",
+            "priority": 3,
+            "type": "QualityExplicitlySetMessage",
+            "message": "An occurrence! Your 'Starved Gifts' Quality is now 5 - A vat of amber!",
+            "tooltip": ""
+        },
+        {
+            "possession": {
+                "enhancements": [],
+                "qualityPossessedId": 197305246,
+                "name": "Nodule of Deep Amber",
+                "nameAndLevel": "54,805 x Nodule of Deep Amber",
+                "description": "<span class=\"descriptive\">Commonplace</span> Warmly glowing and, er, slightly warm.",
+                "nature": "Thing",
+                "category": "Rubbery",
+                "effectiveLevel": 54805,
+                "level": 54805,
+                "himbleLevel": 0,
+                "equippable": false,
+                "progressAsPercentage": -1,
+                "allowedOn": "Character",
+                "image": "amber",
+                "id": 385
+            },
+            "changeType": "Decreased",
+            "priority": 2,
+            "type": "StandardQualityChangeMessage",
+            "message": "You've gained 2,000 x Nodule of Deep Amber (new total 54,805). ",
+            "image": "amber",
+            "tooltip": "<span class=\"descriptive\">Commonplace</span> Warmly glowing and, er, slightly warm."
+        },
+        {
+            "possession": {
+                "enhancements": [],
+                "qualityPossessedId": 197369539,
+                "name": "Bottle of Greyfields 1882",
+                "nameAndLevel": "624 x Bottle of Greyfields 1882",
+                "description": "<span class=\"descriptive\">Commonplace</span> One of the better years. Tangy, with an agaric aftertaste.",
+                "nature": "Thing",
+                "category": "Wines",
+                "useEventId": 21084,
+                "effectiveLevel": 624,
+                "level": 624,
+                "himbleLevel": 1,
+                "equippable": false,
+                "progressAsPercentage": -1,
+                "allowedOn": "Character",
+                "image": "bottleandglassred",
+                "id": 383
+            },
+            "changeType": "Increased",
+            "priority": 2,
+            "type": "StandardQualityChangeMessage",
+            "message": "You've lost 375 x Bottle of Greyfields 1882 (new total 624). ",
+            "image": "bottleandglassred",
+            "tooltip": "<span class=\"descriptive\">Commonplace</span> One of the better years. Tangy, with an agaric aftertaste."
+        },
+        {
+            "possession": {
+                "enhancements": [],
+                "qualityPossessedId": 197554642,
+                "name": "A Shaper of Starved Culture",
+                "nameAndLevel": "A Shaper of Starved Culture 91 - Starved Men are occasionally glimpsed in the streets of London. They are polite, constrain their anatomical eccentricities to within London's tastes, and don't shape anyone or anything else without express permission. ",
+                "levelDescription": "Starved Men are occasionally glimpsed in the streets of London. They are polite, constrain their anatomical eccentricities to within London's tastes, and don't shape anyone or anything else without express permission. ",
+                "description": "You have facilitated the exchange of cultural tokens with some factions of the Starved Men.",
+                "nature": "Status",
+                "category": "Story",
+                "effectiveLevel": 91,
+                "level": 91,
+                "himbleLevel": 0,
+                "equippable": false,
+                "progressAsPercentage": -1,
+                "allowedOn": "Character",
+                "image": "starvedman2",
+                "id": 144494
+            },
+            "changeType": "Decreased",
+            "priority": 2,
+            "type": "StandardQualityChangeMessage",
+            "message": "<em>Starved Men are occasionally glimpsed in the streets of London. They are polite, constrain their anatomical eccentricities to within London's tastes, and don't shape anyone or anything else without express permission. </em>",
+            "image": "starvedman2",
+            "tooltip": "You have facilitated the exchange of cultural tokens with some factions of the Starved Men."
+        }
+    ],
+    "setting": {
+        "mapRootArea": {
+            "areaKey": "6037b99e5daf6b53b3257f8920b575fd"
+        },
+        "name": "The Fifth City",
+        "canChangeOutfit": true,
+        "canOpenMap": true,
+        "canTravel": true,
+        "itemsUsableHere": true,
+        "isInfiniteDraw": false,
+        "id": 2
+    },
+    "hasUpdatedCharacter": false,
+    "elapsed": 1,
+    "isSuccess": true
+}

@@ -600,49 +600,73 @@ function annotateResults(changes) {
   let attempts = 0;
 
   const tryAnnotate = () => {
+    const lastParents = [];
+
     for (const change of pricedChanges) {
-      if (annotated.has(change.name)) continue;
+      const escaped = CSS.escape(change.name);
+
+      // Check if span is already present and still connected in the live DOM.
+      // Don't rely on the annotated set alone — React can reconcile and remove
+      // our span between retries, in which case we must re-inject.
+      const existing = document.querySelector(`.fl-echo-val[data-item="${escaped}"]`);
+      if (existing && existing.isConnected) {
+        annotated.add(change.name);
+        lastParents.push(existing.parentElement);
+        continue;
+      }
 
       const searchText = ` x ${change.name}`;
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
 
-      let node;
-      while ((node = walker.nextNode())) {
-        if (!node.textContent.includes(searchText)) continue;
-
-        const parent = node.parentElement;
-        if (!parent) continue;
-        if (parent.querySelector(`.fl-echo-val[data-item="${CSS.escape(change.name)}"]`)) continue;
-
-        const sign = change.gained ? "+" : "−";
-        const color = change.gained ? "#4a7c59" : "#b03030";
-        const span = document.createElement("span");
-        span.className = "fl-echo-val";
-        span.dataset.item = change.name;
-        span.style.cssText = `color:${color};font-size:0.9em;margin-left:6px`;
-        span.textContent = `(${sign}${Math.abs(change.echoValue).toFixed(2)} echoes)`;
-        parent.appendChild(span);
-        annotated.add(change.name);
-        annotatedParents.push(parent);
-        break;
+      // Find the smallest element whose textContent contains the search string.
+      let targetEl = null;
+      let bestLen = Infinity;
+      for (const el of document.body.querySelectorAll('*')) {
+        const tc = el.textContent;
+        if (!tc.includes(searchText)) continue;
+        if (tc.length >= bestLen) continue;
+        bestLen = tc.length;
+        targetEl = el;
       }
+
+      if (!targetEl) continue;
+
+      const sign = change.gained ? "+" : "−";
+      const color = change.gained ? "#4a7c59" : "#b03030";
+      const span = document.createElement("span");
+      span.className = "fl-echo-val";
+      span.dataset.item = change.name;
+      span.style.cssText = `color:${color};font-size:0.9em;margin-left:6px`;
+      span.textContent = `(${sign}${Math.abs(change.echoValue).toFixed(2)} echoes)`;
+      targetEl.appendChild(span);
+      // If the span has no visible height the container's CSS is hiding it
+      // (overflow:hidden, fixed height, etc.). Fall back to inserting after
+      // the element so it sits outside those constraints.
+      if (span.getBoundingClientRect().height === 0) {
+        span.remove();
+        targetEl.insertAdjacentElement("afterend", span);
+      }
+      annotated.add(change.name);
+      lastParents.push(targetEl);
     }
 
     attempts++;
-    if (annotated.size < pricedChanges.length && attempts < 20) {
+    // Retry if any span is missing from the live DOM (React may have removed it).
+    const allPresent = pricedChanges.every(c => {
+      const s = document.querySelector(`.fl-echo-val[data-item="${CSS.escape(c.name)}"]`);
+      return s && s.isConnected;
+    });
+    if (!allPresent && attempts < 20) {
       setTimeout(tryAnnotate, 150);
       return;
     }
 
     const net = pricedChanges.reduce((sum, c) => sum + c.echoValue, 0);
-    const unknownCount = changes.length - pricedChanges.length;
 
-    // Inline net total after the last annotated item — only when multiple priced items
-    if (annotatedParents.length > 1) {
+    if (lastParents.length >= 1 && pricedChanges.length > 1) {
       const existing = document.getElementById("fl-net-inline");
       if (existing) existing.remove();
 
-      const lastParent = annotatedParents[annotatedParents.length - 1];
+      const lastParent = lastParents[lastParents.length - 1];
       const netColor = net >= 0 ? "#4a7c59" : "#b03030";
       const netSign = net >= 0 ? "+" : "";
 
@@ -652,7 +676,6 @@ function annotateResults(changes) {
       netEl.textContent = `Net total: ${netSign}${net.toFixed(2)} echoes`;
       lastParent.insertAdjacentElement("afterend", netEl);
     }
-
   };
 
   setTimeout(tryAnnotate, 300);
@@ -877,11 +900,7 @@ let _cachedConversionItems = null; // null = not yet received; Map after first m
 let _possessionsObserver = null;
 
 function parseMyself(data) {
-  console.log("[fl] parseMyself called, data keys:", data ? Object.keys(data) : "null");
-  if (!data || !Array.isArray(data.possessions)) {
-    console.log("[fl] parseMyself: possessions is not an array:", typeof data?.possessions);
-    return;
-  }
+  if (!data || !Array.isArray(data.possessions)) return;
   const owned = new Map();
 
   function scan(categories) {
@@ -896,9 +915,8 @@ function parseMyself(data) {
   }
 
   scan(data.possessions);
-  console.log("[fl] parseMyself: found", owned.size, "conversion items:", [...owned.values()].map(v => v.name));
   _cachedConversionItems = owned;
-  // Remove any stale bar so it gets re-injected with fresh data
+  // Remove stale bar so it re-injects with fresh data (qty now known)
   document.querySelectorAll(".fl-renown-bar,.fl-jump-items").forEach(el => el.remove());
 }
 
@@ -917,79 +935,13 @@ function scrollToConversionItem(itemName) {
   }
 }
 
-function injectPossessionsUI() {
-  const searchBox = document.querySelector("input.form__control.input--item-search");
-  console.log("[fl] injectPossessionsUI: searchBox=", !!searchBox, "cached=", _cachedConversionItems);
-  if (!searchBox) return;
-  if (_cachedConversionItems === null) return;
-
-  const searchWrapper = searchBox.closest("div") || searchBox.parentElement;
-  if (searchWrapper.nextElementSibling?.classList.contains("fl-renown-bar")) return;
-
-  // Jump link — prepended to nearest scrollable ancestor
-  let scrollParent = searchBox.parentElement;
-  while (scrollParent && scrollParent !== document.body) {
-    const ov = window.getComputedStyle(scrollParent).overflowY;
-    if (ov === "auto" || ov === "scroll") break;
-    scrollParent = scrollParent.parentElement;
-  }
-  if (scrollParent && scrollParent !== document.body && !scrollParent.querySelector(".fl-jump-items")) {
-    const link = document.createElement("div");
-    link.className = "fl-jump-items";
-    link.style.cssText = "padding:3px 8px;font-size:0.75em;font-family:Georgia,serif;text-align:right;cursor:pointer;color:#c9a84c;border-bottom:1px solid #2a2a2a;";
-    link.textContent = "↓ Items";
-    link.addEventListener("click", () => searchBox.scrollIntoView({ behavior: "smooth", block: "start" }));
-    scrollParent.prepend(link);
-  }
-
-  // Conversion items bar (right after the search box)
-  const bar = document.createElement("div");
-  bar.className = "fl-renown-bar";
-  bar.style.cssText = "padding:4px 8px 6px;font-size:0.8em;font-family:Georgia,serif;border-bottom:1px solid #444;";
-
-  const heading = document.createElement("div");
-  heading.style.cssText = "color:#888;font-style:italic;margin-bottom:4px;";
-  heading.textContent = "Favour → Renown";
-  bar.appendChild(heading);
-
-  const pills = document.createElement("div");
-  pills.style.cssText = "display:flex;flex-wrap:wrap;gap:3px 6px;";
-  bar.appendChild(pills);
-
-  for (const [id, faction] of CONVERSION_ITEMS) {
-    const owned = _cachedConversionItems.get(id);
-    const pill = document.createElement("span");
-    if (owned) {
-      pill.style.cssText = "color:#c9a84c;cursor:pointer;padding:1px 5px;border:1px solid #6b5a3e;border-radius:3px;";
-      pill.textContent = `${faction} ${owned.qty}`;
-      pill.title = owned.name;
-      pill.addEventListener("click", () => scrollToConversionItem(CONVERSION_ITEM_NAMES.get(id)));
-    } else {
-      pill.style.cssText = "color:#555;padding:1px 5px;border:1px solid #333;border-radius:3px;";
-      pill.textContent = `${faction} —`;
-      pill.title = CONVERSION_ITEM_NAMES.get(id);
-    }
-    pills.appendChild(pill);
-  }
-
-  searchWrapper.after(bar);
-}
-
-function startPossessionsObserver() {
-  if (_possessionsObserver) return;
-  _possessionsObserver = new MutationObserver(injectPossessionsUI);
-  _possessionsObserver.observe(document.body, { childList: true, subtree: true });
-}
-
-// Start observer immediately so we catch the possessions tab opening regardless of message order
-startPossessionsObserver();
+function startPossessionsObserver() {}  // no-op, kept for call-site compat
 
 // ── Wire up ───────────────────────────────────────────────────────────────────
 
 window.addEventListener("message", (event) => {
   if (event.source !== window) return;
   if (!event.data || event.data.source !== "fl-helper") return;
-  console.log("[fl] message received:", event.data.type);
 
   if (event.data.type === "choosebranch") {
     const data = event.data.data;
@@ -1000,7 +952,5 @@ window.addEventListener("message", (event) => {
     annotateBranchCosts(parseBranchCosts(event.data.data));
   } else if (event.data.type === "myself") {
     parseMyself(event.data.data);
-    startPossessionsObserver();
-    injectPossessionsUI();
   }
 });
