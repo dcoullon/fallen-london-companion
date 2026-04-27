@@ -336,18 +336,19 @@ function parseBranchCosts(data) {
 }
 
 let _branchCostObserver = null;
+let _costByQuality = new Map();   // module-level; shared with tooltip annotator
 
 function annotateBranchCosts(branchCosts) {
   if (_branchCostObserver) { _branchCostObserver.disconnect(); _branchCostObserver = null; }
   if (branchCosts.length === 0) return;
 
-  // Map quality name → individual echo cost (shown per tooltip)
-  const costByQuality = new Map();
+  _costByQuality = new Map();
   for (const branch of branchCosts) {
     for (const cost of branch.costs) {
-      costByQuality.set(cost.name, cost.echoValue);
+      _costByQuality.set(cost.name, cost.echoValue);
     }
   }
+  const costByQuality = _costByQuality;
 
   function tryInject() {
     for (const container of document.querySelectorAll("div.icon.quality-requirement")) {
@@ -393,6 +394,45 @@ function annotateIconAriaLabels(root) {
     const qty = parseRequiredQty(label) ?? 1;
     btn.setAttribute("aria-label", label + ` (worth ${(qty * unitPrice).toFixed(2)} E)`);
   }
+}
+
+function annotateTooltip(tooltipEl) {
+  if (tooltipEl.dataset.flPriceAdded) return;
+
+  const tid = tooltipEl.id;
+  const source = tid ? document.querySelector(`[aria-describedby="${tid}"]`) : null;
+
+  let echoValue = null;
+
+  // Try: data-quality-id ancestor → PRICES lookup
+  if (source) {
+    const container = source.closest("[data-quality-id]");
+    if (container) {
+      const id = parseInt(container.dataset.qualityId, 10);
+      const unitPrice = PRICES[id] ?? null;
+      if (unitPrice !== null) {
+        const qty = parseRequiredQty(source.getAttribute("aria-label") || "") ?? 1;
+        echoValue = qty * unitPrice;
+      }
+    }
+  }
+
+  // Try: match tooltip text against quality-requirement cost map
+  if (echoValue === null) {
+    const text = tooltipEl.textContent || "";
+    for (const [name, val] of _costByQuality) {
+      if (text.includes(name)) { echoValue = val; break; }
+    }
+  }
+
+  if (echoValue === null) return;
+
+  tooltipEl.dataset.flPriceAdded = "1";
+  const contentEl = tooltipEl.querySelector(".tippy-content") || tooltipEl;
+  const line = document.createElement("div");
+  line.style.cssText = "color:#c9b25e;font-style:italic;margin-top:4px;font-size:0.9em";
+  line.textContent = `worth ${echoValue.toFixed(2)} E`;
+  contentEl.appendChild(line);
 }
 
 // ── Possessions tab — renown bar + cross-conversion bar + jump link ──────────
@@ -803,7 +843,9 @@ startPossessionsObserver();
 const _iconObserver = new MutationObserver((mutations) => {
   for (const m of mutations) {
     for (const node of m.addedNodes) {
-      if (node.nodeType === 1) annotateIconAriaLabels(node);
+      if (node.nodeType !== 1) continue;
+      annotateIconAriaLabels(node);
+      if (node.getAttribute("role") === "tooltip") annotateTooltip(node);
     }
   }
 });
