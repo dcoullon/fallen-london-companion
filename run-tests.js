@@ -3,8 +3,16 @@ const prices = fs.readFileSync("extension/prices.js", "utf8");
 const src = fs.readFileSync("extension/content.js", "utf8");
 const start = src.indexOf("// ── Parse choosebranch response");
 const end = src.indexOf("// ── Wire up");
-const fn = new Function(prices + src.slice(start, end) + "; return { parseChanges, parseSaturation };");
-const { parseChanges, parseSaturation } = fn();
+const fn = new Function(prices + src.slice(start, end) + "; return { parseChanges, parseSaturation, evaluateBuyers, _updateSkeletonFromChoosebranch, _skeletonState };");
+const { parseChanges, parseSaturation, evaluateBuyers, _updateSkeletonFromChoosebranch, _skeletonState } = fn();
+
+// Helper: reset skeleton state and set specific fields
+function setSkelState(fields) {
+  Object.assign(_skeletonState, {
+    approximateValue: 0, amalgamy: 0, antiquity: 0, menace: 0, exhaustion: 0,
+    respectable: 0, dreaded: 0, bizarre: 0,
+  }, fields);
+}
 
 const fixtures = [
   {
@@ -129,6 +137,86 @@ for (const f of satFixtures) {
   const level = parseSaturation(f.data);
   const ok = level === f.expected;
   console.log((ok ? "PASS" : "FAIL") + "  " + f.label + (ok ? "" : "\n      => got " + level + ", expected " + f.expected));
+  ok ? pass++ : fail++;
+}
+
+// ── Bone Market buyer evaluation tests ───────────────────────────────────────
+
+const bmFixtures = [
+  {
+    label: "No-attribute skeleton: Naive Collector is top buyer",
+    check() {
+      setSkelState({ approximateValue: 250 }); // 2.50ε, no attributes
+      const buyers = evaluateBuyers(_skeletonState);
+      if (buyers.length === 0) return "no eligible buyers";
+      if (buyers[0].name !== "Naive Collector") return "top buyer: " + buyers[0].name;
+    },
+  },
+  {
+    label: "High-Antiquity skeleton: Ambassador beats Ancient Enthusiast",
+    check() {
+      setSkelState({ approximateValue: 500, antiquity: 5, respectable: 20 });
+      const buyers = evaluateBuyers(_skeletonState);
+      const ambassador = buyers.find(b => b.name === "Ambassador");
+      const enthusiast = buyers.find(b => b.name === "Ancient Enthusiast");
+      if (!ambassador) return "Ambassador not eligible";
+      if (!enthusiast) return "Ancient Enthusiast not eligible";
+      if (ambassador.echoes <= enthusiast.echoes) return `Ambassador (${ambassador.echoes.toFixed(1)}) should beat Enthusiast (${enthusiast.echoes.toFixed(1)})`;
+    },
+  },
+  {
+    label: "Mixed Antiquity×Menace: Gothic Author beats Ambassador",
+    check() {
+      setSkelState({ approximateValue: 500, antiquity: 5, menace: 5, respectable: 20, dreaded: 20 });
+      const buyers = evaluateBuyers(_skeletonState);
+      const author = buyers.find(b => b.name === "Gothic Author");
+      const ambassador = buyers.find(b => b.name === "Ambassador");
+      if (!author) return "Gothic Author not eligible";
+      if (!ambassador) return "Ambassador not eligible";
+      if (author.echoes <= ambassador.echoes) return `Gothic Author (${author.echoes.toFixed(1)}) should beat Ambassador (${ambassador.echoes.toFixed(1)})`;
+    },
+  },
+  {
+    label: "Exhaustion = 4: Ambassador excluded, Ancient Enthusiast still eligible",
+    check() {
+      setSkelState({ approximateValue: 500, antiquity: 5, exhaustion: 4, respectable: 20 });
+      const buyers = evaluateBuyers(_skeletonState);
+      const ambassador = buyers.find(b => b.name === "Ambassador");
+      const enthusiast = buyers.find(b => b.name === "Ancient Enthusiast");
+      if (ambassador) return "Ambassador should be excluded at Exhaustion 4";
+      if (!enthusiast) return "Ancient Enthusiast should still be eligible";
+    },
+  },
+  {
+    label: "_updateSkeletonFromChoosebranch updates approximateValue",
+    check() {
+      setSkelState({});
+      _updateSkeletonFromChoosebranch({ messages: [
+        { possession: { id: 140812, level: 375 } },
+        { possession: { id: 140825, level: 3 } },
+      ]});
+      if (_skeletonState.approximateValue !== 375) return "approximateValue " + _skeletonState.approximateValue;
+      if (_skeletonState.amalgamy !== 3) return "amalgamy " + _skeletonState.amalgamy;
+    },
+  },
+  {
+    label: "_updateSkeletonFromChoosebranch resets to 0 when level=0",
+    check() {
+      setSkelState({ approximateValue: 500, amalgamy: 4 });
+      _updateSkeletonFromChoosebranch({ messages: [
+        { possession: { id: 140812, level: 0 } },  // skeleton sold/reset
+        { possession: { id: 140825, level: 0 } },
+      ]});
+      if (_skeletonState.approximateValue !== 0) return "approximateValue should be 0";
+      if (_skeletonState.amalgamy !== 0) return "amalgamy should be 0";
+    },
+  },
+];
+
+for (const f of bmFixtures) {
+  const reason = f.check();
+  const ok = !reason;
+  console.log((ok ? "PASS" : "FAIL") + "  " + f.label + (ok ? "" : "\n      => " + reason));
   ok ? pass++ : fail++;
 }
 

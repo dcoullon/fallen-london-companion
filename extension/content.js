@@ -668,6 +668,35 @@ let _cachedFactionStats = null;    // null = not yet received; Map<id,{favours,r
 let _cachedFavoursQtys = null;     // Map<favoursQualityId, qty> — used to recover qty when quality goes to 0
 const _cpState = new Map();        // Map<qualityId, {level, cp, totalCP}> — pre-action CP state for delta calculation
 
+// ── Bone Market skeleton state ────────────────────────────────────────────────
+// Known quality IDs for skeleton-in-progress attributes (from wiki research).
+// Limb-count IDs (skulls, arms, etc.) are unknown until a dev session captures them;
+// they will be logged to console the first time they appear.
+const SKEL_QUALITY_IDS = {
+  140812: "approximateValue",
+  140825: "amalgamy",
+  140834: "menace",
+  140835: "antiquity",
+  141648: "exhaustion",
+};
+const SKEL_KNOWN_IDS = new Set(Object.keys(SKEL_QUALITY_IDS).map(Number));
+
+const _skeletonState = {
+  approximateValue: 0, // in pennies (divide by 100 for echoes)
+  amalgamy: 0,
+  antiquity: 0,
+  menace: 0,
+  exhaustion: 0,
+  // Player social qualities — seeded from /myself, used for buyer eligibility checks
+  respectable: 0,
+  dreaded: 0,
+  bizarre: 0,
+};
+
+// TEMP: Set to log all bone-related quality changes to console for quality-ID discovery.
+// Remove once limb-count IDs and other unknowns are confirmed.
+const _bmLogEnabled = true;
+
 function parseMyself(data) {
   if (!data || !Array.isArray(data.possessions)) return;
   const owned = new Map();
@@ -723,6 +752,7 @@ function parseMyself(data) {
   _cachedCCQtys = ccQtys;
   _cachedFactionStats = factionStats;
   _cachedFavoursQtys = favoursQtys;
+  _updateSkeletonFromPossessions(data.possessions);
   // Remove stale bars so they re-inject with fresh data (qty and faction stats now known)
   document.getElementById("fl-renown-bar")?.remove();
   document.getElementById("fl-cc-bar")?.remove();
@@ -968,7 +998,235 @@ function injectPossessionsStyles() {
 }
 
 function startPossessionsObserver() {
-  setInterval(() => { injectPossessionsStyles(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); }, 1000);
+  setInterval(() => { injectPossessionsStyles(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); injectSkeletonTracker(); }, 1000);
+}
+
+// ── Bone Market — skeleton tracker + buyer suggestion ─────────────────────────
+
+function _updateSkeletonFromPossessions(categories) {
+  function scan(cats) {
+    for (const cat of cats) {
+      for (const p of (cat.possessions || [])) {
+        const field = SKEL_QUALITY_IDS[p.id];
+        if (field) _skeletonState[field] = p.level ?? 0;
+        if (p.name === "Respectable") _skeletonState.respectable = p.level ?? 0;
+        if (p.name === "Dreaded")     _skeletonState.dreaded     = p.level ?? 0;
+        if (p.name === "Bizarre")     _skeletonState.bizarre     = p.level ?? 0;
+      }
+      if (Array.isArray(cat.categories)) scan(cat.categories);
+    }
+  }
+  scan(categories);
+}
+
+function _updateSkeletonFromChoosebranch(data) {
+  if (!data || !Array.isArray(data.messages)) return false;
+  let changed = false;
+  for (const msg of data.messages) {
+    if (!msg.possession) continue;
+    const id = msg.possession.id;
+    const field = SKEL_QUALITY_IDS[id];
+    if (field) {
+      const newLevel = msg.possession.level ?? 0;
+      if (_skeletonState[field] !== newLevel) { _skeletonState[field] = newLevel; changed = true; }
+    } else if (_bmLogEnabled) {
+      // Log unrecognised quality changes that might be skeleton limb counts or implausibility.
+      // Scan for qualities whose names contain bone-market keywords.
+      const name = msg.possession.name || "";
+      if (/skeleton|amalgamy|antiquity|menace|implausib|limb|skull|arm|wing|fin|tail|tentacle/i.test(name)) {
+        console.log(`[FL-BM] unknown skel quality: id=${id} name="${name}" level=${msg.possession.level} type=${msg.type}`);
+      }
+    }
+  }
+  return changed;
+}
+
+// Secondary reward prices are sourced directly from prices.js values:
+//   Tailfeather Brilliant as Flame (141160): 2.50ε  Royal-Blue Feather (122494): 0.50ε
+//   Final Breath (141161): 0.50ε                    Carved Ball of Stygian Ivory (122483): 2.50ε
+//   Knob of Scintillack (122495): 2.50ε              Basket of Rubbery Pies (140894): 2.50ε
+//   Ambiguous Eolith (122485): 0.50ε
+//
+// Payout formulas are based on wiki documentation and may not be exact;
+// the relative ranking across buyers is reliable. Use "~" prefix in UI.
+const BONE_MARKET_BUYERS = [
+  {
+    name: "Naive Collector",
+    check: (s) => true,  // note: Suspicion < 4 required; skipped (almost always met)
+    payout: (s) => s.approximateValue / 100,
+    note: null,
+  },
+  {
+    name: "Bohemian Sculptress",
+    check: (s) => s.respectable === 0 && s.antiquity === 0,
+    payout: (s) => s.approximateValue / 100,
+    note: "Antiquity = 0",
+  },
+  {
+    name: "Grandmother",
+    check: (s) => s.dreaded === 0 && s.menace === 0,
+    payout: (s) => s.approximateValue / 100,
+    note: "Menace = 0",
+  },
+  {
+    name: "Theologian",
+    check: (s) => s.bizarre === 0 && s.amalgamy === 0,
+    payout: (s) => s.approximateValue / 100,
+    note: "Amalgamy = 0",
+  },
+  {
+    name: "Ancient Enthusiast",
+    check: (s) => s.respectable >= 3 && s.antiquity >= 1,
+    payout: (s) => s.approximateValue / 100 + s.antiquity * 3.00,
+    note: "Antiquity",
+  },
+  {
+    name: "Mrs Plenty",
+    check: (s) => s.dreaded >= 3 && s.menace >= 1,
+    payout: (s) => s.approximateValue / 100 + s.menace * 3.00,
+    note: "Menace",
+  },
+  {
+    name: "Tentacled Servant",
+    check: (s) => s.bizarre >= 3 && s.amalgamy >= 1,
+    payout: (s) => s.approximateValue / 100 + s.amalgamy * 5 * 0.50,
+    note: "Amalgamy",
+  },
+  {
+    name: "Ambassador",
+    check: (s) => s.respectable >= 15 && s.exhaustion < 4 && s.antiquity >= 1,
+    payout: (s) => s.approximateValue / 100 + Math.floor(0.8 * s.antiquity * s.antiquity) * 2.50,
+    note: "Antiquity²",
+  },
+  {
+    name: "Teller of Terrors",
+    check: (s) => s.dreaded >= 15 && s.exhaustion < 4 && s.menace >= 1,
+    payout: (s) => s.approximateValue / 100 + Math.floor(4 * s.menace * s.menace) * 0.50,
+    note: "Menace²",
+  },
+  {
+    name: "Entrepreneur",
+    check: (s) => s.bizarre >= 15 && s.exhaustion < 4 && s.amalgamy >= 1,
+    payout: (s) => s.approximateValue / 100 + Math.floor(4 * s.amalgamy * s.amalgamy) * 0.50,
+    note: "Amalgamy²",
+  },
+  {
+    name: "Gothic Author",
+    check: (s) => s.respectable >= 7 && s.dreaded >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
+    payout: (s) => s.approximateValue / 100 + s.antiquity * s.menace * 2.50,
+    note: "Antiquity×Menace",
+  },
+  {
+    name: "Zailor",
+    check: (s) => s.respectable >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
+    payout: (s) => s.approximateValue / 100 + s.antiquity * s.amalgamy * 2.50,
+    note: "Antiquity×Amalgamy",
+  },
+  {
+    name: "Rubbery Collector",
+    check: (s) => s.dreaded >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.menace >= 1 && s.amalgamy >= 1,
+    payout: (s) => s.approximateValue / 100 + s.menace * s.amalgamy * 2.50,
+    note: "Menace×Amalgamy",
+  },
+];
+
+function evaluateBuyers(state) {
+  return BONE_MARKET_BUYERS
+    .filter(b => b.check(state))
+    .map(b => ({ name: b.name, echoes: b.payout(state), note: b.note }))
+    .sort((a, b) => b.echoes - a.echoes);
+}
+
+let _lastSkeletonRenderHash = "";
+let _skeletonTrackerCollapsed = false;
+
+function injectSkeletonTracker() {
+  const active = _skeletonState.approximateValue > 0;
+  const existing = document.getElementById("fl-skeleton-tracker");
+
+  if (!active) {
+    if (existing) { existing.remove(); _lastSkeletonRenderHash = ""; }
+    return;
+  }
+
+  const hash = `${_skeletonState.approximateValue}|${_skeletonState.amalgamy}|${_skeletonState.antiquity}|${_skeletonState.menace}|${_skeletonState.exhaustion}|${_skeletonState.respectable}|${_skeletonState.dreaded}|${_skeletonState.bizarre}|${_skeletonTrackerCollapsed}`;
+  if (existing?.isConnected && hash === _lastSkeletonRenderHash) return;
+  existing?.remove();
+  _lastSkeletonRenderHash = hash;
+
+  const buyers = evaluateBuyers(_skeletonState);
+  const echoes = (_skeletonState.approximateValue / 100).toFixed(2);
+
+  const panel = document.createElement("div");
+  panel.id = "fl-skeleton-tracker";
+
+  // Header row: value + collapse toggle
+  const header = document.createElement("div");
+  header.className = "fl-skel-header";
+  const titleSpan = document.createElement("span");
+  titleSpan.textContent = `🦴 ~${echoes}ε`;  // 🦴 ~X.XXε
+  const toggleSpan = document.createElement("span");
+  toggleSpan.className = "fl-skel-toggle";
+  toggleSpan.textContent = _skeletonTrackerCollapsed ? "▲" : "▼";
+  header.appendChild(titleSpan);
+  header.appendChild(toggleSpan);
+  panel.appendChild(header);
+
+  panel.addEventListener("click", () => {
+    _skeletonTrackerCollapsed = !_skeletonTrackerCollapsed;
+    document.getElementById("fl-skeleton-tracker")?.remove();
+    _lastSkeletonRenderHash = "";
+    injectSkeletonTracker();
+  });
+
+  if (!_skeletonTrackerCollapsed) {
+    // Attribute row
+    const parts = [];
+    if (_skeletonState.amalgamy)  parts.push(`Amal ${_skeletonState.amalgamy}`);
+    if (_skeletonState.antiquity) parts.push(`Antiq ${_skeletonState.antiquity}`);
+    if (_skeletonState.menace)    parts.push(`Men ${_skeletonState.menace}`);
+    if (parts.length) {
+      const attrs = document.createElement("div");
+      attrs.className = "fl-skel-attrs";
+      attrs.textContent = parts.join("  ·  ");
+      panel.appendChild(attrs);
+    }
+
+    // Exhaustion (only show if > 0)
+    if (_skeletonState.exhaustion > 0) {
+      const exh = document.createElement("div");
+      exh.className = "fl-skel-exh" + (_skeletonState.exhaustion >= 3 ? " fl-skel-exh--warn" : "");
+      exh.textContent = `Exhaustion: ${_skeletonState.exhaustion}`;
+      panel.appendChild(exh);
+    }
+
+    // Buyer list
+    if (buyers.length > 0) {
+      const divider = document.createElement("div");
+      divider.className = "fl-skel-divider";
+      panel.appendChild(divider);
+      for (const b of buyers.slice(0, 5)) {
+        const row = document.createElement("div");
+        row.className = "fl-skel-buyer";
+        const nameEl = document.createElement("span");
+        nameEl.className = "fl-skel-buyer-name";
+        nameEl.textContent = b.name + (b.note ? ` (${b.note})` : "");
+        const echoEl = document.createElement("span");
+        echoEl.className = "fl-skel-buyer-echo";
+        echoEl.textContent = `~${b.echoes.toFixed(1)}ε`;
+        row.appendChild(nameEl);
+        row.appendChild(echoEl);
+        panel.appendChild(row);
+      }
+    } else {
+      const none = document.createElement("div");
+      none.className = "fl-skel-attrs";
+      none.textContent = "No eligible buyers";
+      panel.appendChild(none);
+    }
+  }
+
+  document.body.appendChild(panel);
 }
 
 // ── Wire up ───────────────────────────────────────────────────────────────────
@@ -982,6 +1240,12 @@ window.addEventListener("message", (event) => {
     annotateResults(parseChanges(data), parseCPChanges(data));
     const satLevel = parseSaturation(data);
     if (satLevel !== null) annotateSaturation(satLevel);
+    if (_updateSkeletonFromChoosebranch(data)) {
+      // Re-render tracker immediately on state change rather than waiting for next interval tick
+      document.getElementById("fl-skeleton-tracker")?.remove();
+      _lastSkeletonRenderHash = "";
+      injectSkeletonTracker();
+    }
   } else if (event.data.type === "storylet-begin") {
     annotateBranchCosts(parseBranchCosts(event.data.data));
   } else if (event.data.type === "myself") {

@@ -1,0 +1,47 @@
+config: version 6.5.106 for environment 'production' index.ts:16:9
+WebGL context was lost. isWebGLSupported.ts:35:25
+Bootstrapping: WebGL looks OK shouldUserBeFunnelledToCompatibilityMap.ts:36:13
+Removing Service Worker... registerServiceWorker.ts:54:13
+Bootstrapping took 1.88s index.js:140:17
+current version:  6.5.106 index.js:70:11
+Empty string passed to getElementById(). www.fallenlondon.com
+The value of the attribute “expires” for the cookie “_ga_7ZBF3LYSFQ” has been overwritten. www.fallenlondon.com
+[FL-BM] unknown skel quality: id=140816 name="Skeleton: Limbs Needed" level=1 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140824 name="Skeleton: Self-Evident Implausibility" level=2 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140819 name="Skeleton: Arms" level=1 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140816 name="Skeleton: Limbs Needed" level=0 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140824 name="Skeleton: Self-Evident Implausibility" level=4 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140819 name="Skeleton: Arms" level=2 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140811 name="Skeleton in Progress" level=111 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140819 name="Skeleton: Arms" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140811 name="Skeleton in Progress" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140820 name="Skeleton: Legs" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140818 name="Skeleton: Skulls" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140824 name="Skeleton: Self-Evident Implausibility" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140836 name="Skeleton: Torso Style" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140811 name="Skeleton in Progress" level=10 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140815 name="Skeleton: Skulls Needed" level=1 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140816 name="Skeleton: Limbs Needed" level=4 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140836 name="Skeleton: Torso Style" level=15 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=749 name="Bright Brass Skull" level=0 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140815 name="Skeleton: Skulls Needed" level=0 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140818 name="Skeleton: Skulls" level=1 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140824 name="Skeleton: Self-Evident Implausibility" level=2 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140816 name="Skeleton: Limbs Needed" level=3 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140820 name="Skeleton: Legs" level=1 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140816 name="Skeleton: Limbs Needed" level=2 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140820 name="Skeleton: Legs" level=2 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140816 name="Skeleton: Limbs Needed" level=1 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140820 name="Skeleton: Legs" level=3 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140816 name="Skeleton: Limbs Needed" level=0 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140820 name="Skeleton: Legs" level=4 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140824 name="Skeleton: Self-Evident Implausibility" level=8 type=StandardQualityChangeMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140811 name="Skeleton in Progress" level=100 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140811 name="Skeleton in Progress" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140820 name="Skeleton: Legs" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140818 name="Skeleton: Skulls" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140824 name="Skeleton: Self-Evident Implausibility" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140836 name="Skeleton: Torso Style" level=0 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140811 name="Skeleton in Progress" level=10 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140815 name="Skeleton: Skulls Needed" level=1 type=QualityExplicitlySetMessage content.js:1037:17
+[FL-BM] unknown skel quality: id=140816 name="Skeleton: Limbs Needed" level=4 type=QualityExplicitlySetMessage content.js:1037:17
