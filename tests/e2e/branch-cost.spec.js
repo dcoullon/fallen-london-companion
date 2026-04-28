@@ -232,4 +232,159 @@ test.describe('branch cost hover annotation', () => {
       { timeout: 3000 }
     );
   });
+
+  test('re-annotates after Tippy hide/show cycle (content cleared on hide)', async ({ page }) => {
+    await page.evaluate(() => {
+      window.postMessage({
+        source: 'fl-helper', type: 'storylet-begin',
+        data: {
+          storylet: {
+            childBranches: [{
+              name: 'Take the Risk',
+              qualityRequirements: [{
+                qualityId: 375,
+                qualityName: 'Piece of Rostygold',
+                tooltip: 'you need 1 x Piece of Rostygold',
+                category: 'Thing',
+              }],
+            }],
+          },
+        },
+      }, '*');
+    });
+
+    await page.evaluate(() => {
+      const source = document.createElement('img');
+      source.setAttribute('aria-label', 'you need 1 x Piece of Rostygold');
+      source.setAttribute('aria-describedby', 'tippy-cycle');
+      document.body.appendChild(source);
+
+      const wrapper = document.createElement('div');
+      wrapper.setAttribute('data-tippy-root', '');
+      wrapper.id = 'tippy-cycle';
+      const box = document.createElement('div');
+      box.className = 'tippy-box';
+      box.setAttribute('role', 'tooltip');
+      box.setAttribute('data-state', 'visible');
+      const content = document.createElement('div');
+      content.className = 'tippy-content';
+      const desc = document.createElement('div');
+      desc.className = 'tooltip__desc';
+      const p = document.createElement('p');
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'quality-name';
+      nameSpan.textContent = 'Piece of Rostygold';
+      p.appendChild(nameSpan);
+      desc.appendChild(p);
+      content.appendChild(desc);
+      box.appendChild(content);
+      wrapper.appendChild(box);
+      document.body.appendChild(wrapper);
+    });
+
+    await page.waitForFunction(
+      () => !!document.querySelector('#tippy-cycle [data-fl-worth]'),
+      { timeout: 3000 }
+    );
+
+    // Simulate Tippy hide: clears inner content
+    await page.evaluate(() => {
+      const box = document.querySelector('#tippy-cycle [role="tooltip"]');
+      box.querySelector('.tippy-content').innerHTML = '';
+      box.setAttribute('data-state', 'hidden');
+    });
+
+    // Simulate Tippy show: restores inner content
+    await page.evaluate(() => {
+      const box = document.querySelector('#tippy-cycle [role="tooltip"]');
+      const content = box.querySelector('.tippy-content');
+      const desc = document.createElement('div');
+      desc.className = 'tooltip__desc';
+      const p = document.createElement('p');
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'quality-name';
+      nameSpan.textContent = 'Piece of Rostygold';
+      p.appendChild(nameSpan);
+      desc.appendChild(p);
+      content.appendChild(desc);
+      box.setAttribute('data-state', 'visible');
+    });
+
+    await page.waitForFunction(
+      () => {
+        const box = document.querySelector('#tippy-cycle [role="tooltip"]');
+        return box && box.textContent.includes('worth 0.01 E');
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  test('does not inject duplicate annotation when tooltip shown twice without clearing', async ({ page }) => {
+    await page.evaluate(() => {
+      window.postMessage({
+        source: 'fl-helper', type: 'storylet-begin',
+        data: {
+          storylet: {
+            childBranches: [{
+              name: 'Take the Risk',
+              qualityRequirements: [{
+                qualityId: 375,
+                qualityName: 'Piece of Rostygold',
+                tooltip: 'you need 1 x Piece of Rostygold',
+                category: 'Thing',
+              }],
+            }],
+          },
+        },
+      }, '*');
+    });
+
+    await page.evaluate(() => {
+      const source = document.createElement('img');
+      source.setAttribute('aria-label', 'you need 1 x Piece of Rostygold');
+      source.setAttribute('aria-describedby', 'tippy-nodedup');
+      document.body.appendChild(source);
+
+      const wrapper = document.createElement('div');
+      wrapper.setAttribute('data-tippy-root', '');
+      wrapper.id = 'tippy-nodedup';
+      const box = document.createElement('div');
+      box.className = 'tippy-box';
+      box.setAttribute('role', 'tooltip');
+      box.setAttribute('data-state', 'visible');
+      const content = document.createElement('div');
+      content.className = 'tippy-content';
+      const desc = document.createElement('div');
+      desc.className = 'tooltip__desc';
+      const p = document.createElement('p');
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'quality-name';
+      nameSpan.textContent = 'Piece of Rostygold';
+      p.appendChild(nameSpan);
+      desc.appendChild(p);
+      content.appendChild(desc);
+      box.appendChild(content);
+      wrapper.appendChild(box);
+      document.body.appendChild(wrapper);
+    });
+
+    await page.waitForFunction(
+      () => !!document.querySelector('#tippy-nodedup [data-fl-worth]'),
+      { timeout: 3000 }
+    );
+
+    // Toggle data-state without clearing content (simulate quick re-show)
+    await page.evaluate(() => {
+      const box = document.querySelector('#tippy-nodedup [role="tooltip"]');
+      box.setAttribute('data-state', 'hidden');
+      box.setAttribute('data-state', 'visible');
+    });
+
+    await page.waitForTimeout(500);
+
+    const count = await page.evaluate(
+      () => document.querySelectorAll('#tippy-nodedup [data-fl-worth]').length
+    );
+    expect(count).toBe(1);
+  });
 });
