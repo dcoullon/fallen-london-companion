@@ -401,7 +401,15 @@ function parseBranchCosts(data) {
   } else if (data && data.event && Array.isArray(data.event.childBranches)) {
     nodes = [data.event];
   } else if (data && Array.isArray(data.displayCards)) {
-    nodes = data.displayCards.filter(c => Array.isArray(c.childBranches));
+    const withBranches = data.displayCards.filter(c => Array.isArray(c.childBranches));
+    if (withBranches.length > 0) {
+      nodes = withBranches;
+    } else {
+      // New API format: qualityRequirements sit directly on the card, no childBranches wrapper
+      nodes = data.displayCards
+        .filter(c => Array.isArray(c.qualityRequirements) && c.qualityRequirements.length > 0)
+        .map(c => ({ name: c.name, childBranches: [c] }));
+    }
   }
   if (nodes.length === 0) return [];
 
