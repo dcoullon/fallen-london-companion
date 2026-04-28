@@ -11,9 +11,9 @@ if (typeof FL_TEST_MODE === "undefined") {
   window.fetch = async function (...args) {
     const response = await originalFetch.apply(this, args);
     const url = typeof args[0] === "string" ? args[0] : (args[0] && args[0].url) || "";
-    if (url.includes("choosebranch") || url.includes("storylet/begin") || url.includes("character/myself")) {
+    if (url.includes("choosebranch") || url.includes("storylet/begin") || url.includes("character/myself") || url.includes("/opportunity")) {
       const type = url.includes("choosebranch") ? "choosebranch"
-                 : url.includes("storylet/begin") ? "storylet-begin"
+                 : (url.includes("storylet/begin") || url.includes("/opportunity")) ? "storylet-begin"
                  : "myself";
       response.clone().json().then((data) => {
         window.postMessage({ source: "fl-helper", type, data }, "*");
@@ -28,9 +28,9 @@ if (typeof FL_TEST_MODE === "undefined") {
     return originalOpen.call(this, method, url, ...rest);
   };
   XMLHttpRequest.prototype.send = function (...args) {
-    if (this._flUrl && (this._flUrl.includes("choosebranch") || this._flUrl.includes("storylet/begin") || this._flUrl.includes("character/myself"))) {
+    if (this._flUrl && (this._flUrl.includes("choosebranch") || this._flUrl.includes("storylet/begin") || this._flUrl.includes("character/myself") || this._flUrl.includes("/opportunity"))) {
       const type = this._flUrl.includes("choosebranch") ? "choosebranch"
-                 : this._flUrl.includes("storylet/begin") ? "storylet-begin"
+                 : (this._flUrl.includes("storylet/begin") || this._flUrl.includes("/opportunity")) ? "storylet-begin"
                  : "myself";
       this.addEventListener("load", () => {
         try {
@@ -93,9 +93,53 @@ function parseChanges(data) {
   return changes;
 }
 
+// ── Parse CP changes from choosebranch response ───────────────────────────────
+function parseCPChanges(data) {
+  if (!data || !Array.isArray(data.messages)) return [];
+  const results = [];
+  for (const msg of data.messages) {
+    if (msg.type !== "PyramidQualityChangeMessage") continue;
+    if (!msg.progressBar || !msg.tooltip || !msg.possession) continue;
+    const m = msg.tooltip.match(/(\d+) change points, (\d+) more needed/);
+    if (!m) continue;
+    const endCP   = parseInt(m[1]);
+    const totalCP = endCP + parseInt(m[2]);
+    const newLevel = msg.possession.level;
+    const id = msg.possession.id;
+    const prev = _cpState.get(id);
+
+    let delta;
+    if (prev) {
+      if (newLevel === prev.level) {
+        delta = endCP - prev.cp;
+      } else if (newLevel === prev.level + 1) {
+        delta = (prev.totalCP - prev.cp) + endCP;
+      } else if (newLevel === prev.level - 1) {
+        delta = -(prev.cp + (totalCP - endCP));
+      } else {
+        delta = 0; // multi-level jump (programmatic set) — skip
+      }
+    } else if (msg.changeType === "Unaltered") {
+      // No cache yet: fall back to percentage formula (exact for same-level gains)
+      const startBar = Math.round(msg.progressBar.startPercentage / 100 * totalCP);
+      const endBar   = Math.round(msg.progressBar.endPercentage   / 100 * totalCP);
+      delta = endBar - startBar;
+    } else {
+      delta = 0; // level changed with no cache — skip
+    }
+
+    // Always update cache with exact post-action values from tooltip
+    _cpState.set(id, { level: newLevel, cp: endCP, totalCP });
+
+    if (delta === 0) continue;
+    results.push({ name: msg.possession.name, delta });
+  }
+  return results;
+}
+
 // ── DOM annotation ────────────────────────────────────────────────────────────
-function annotateResults(changes) {
-  if (changes.length === 0) return;
+function annotateResults(changes, cpChanges = []) {
+  if (changes.length === 0 && cpChanges.length === 0) return;
 
   const pricedChanges = changes.filter((c) => c.echoValue !== null);
   const annotated = new Set();
@@ -164,12 +208,45 @@ function annotateResults(changes) {
       lastParents.push(targetEl);
     }
 
+    // CP annotation pass — find span.quality-name matching the quality name
+    // (the game wraps stat names in that class in result messages), then append
+    // the CP delta to the end of the parent sentence element.
+    for (const cpChange of cpChanges) {
+      const escaped = CSS.escape(cpChange.name);
+      const existing = document.querySelector(`.fl-cp-val[data-item="${escaped}"]`);
+      if (existing && existing.isConnected) continue;
+
+      let nameSpan = null;
+      for (const el of document.body.querySelectorAll('span.quality-name')) {
+        if (el.textContent.trim() === cpChange.name) { nameSpan = el; break; }
+      }
+      if (!nameSpan) continue;
+
+      // Append to the parent so the annotation follows the full sentence text
+      // e.g. "Shadowy is increasing... (+1 CP)"
+      const targetEl = nameSpan.parentElement || nameSpan;
+      const sign = cpChange.delta > 0 ? "+" : "−";
+      const span = document.createElement("span");
+      span.className = "fl-cp-val";
+      span.dataset.item = cpChange.name;
+      span.style.cssText = "color:inherit;font-size:1em;margin-left:4px";
+      span.textContent = `(${sign}${Math.abs(cpChange.delta)} CP)`;
+      targetEl.appendChild(span);
+      if (span.getBoundingClientRect().height === 0) {
+        span.remove();
+        targetEl.insertAdjacentElement("afterend", span);
+      }
+    }
+
     attempts++;
     // Retry if any span is missing from the live DOM (React may have removed it).
     // qualityGone items use static text that's already in the DOM — don't retry for them.
     const allPresent = pricedChanges.every(c => {
       const s = document.querySelector(`.fl-echo-val[data-item="${CSS.escape(c.name)}"]`);
       return (s && s.isConnected) || c.qualityGone;
+    }) && cpChanges.every(c => {
+      const s = document.querySelector(`.fl-cp-val[data-item="${CSS.escape(c.name)}"]`);
+      return s && s.isConnected;
     });
     if (!allPresent && attempts < 20) {
       setTimeout(tryAnnotate, 150);
@@ -312,10 +389,21 @@ function parseRequiredQty(tooltip) {
 }
 
 function parseBranchCosts(data) {
-  if (!data || !data.storylet || !Array.isArray(data.storylet.childBranches)) return [];
+  // Collect all storylet nodes that have childBranches from various response structures
+  let nodes = [];
+  if (data && Array.isArray(data.childBranches)) {
+    nodes = [data];
+  } else if (data && data.storylet && Array.isArray(data.storylet.childBranches)) {
+    nodes = [data.storylet];
+  } else if (data && data.event && Array.isArray(data.event.childBranches)) {
+    nodes = [data.event];
+  } else if (data && Array.isArray(data.displayCards)) {
+    nodes = data.displayCards.filter(c => Array.isArray(c.childBranches));
+  }
+  if (nodes.length === 0) return [];
 
   const results = [];
-  for (const branch of data.storylet.childBranches) {
+  for (const storyletNode of nodes) for (const branch of storyletNode.childBranches) {
     if (!Array.isArray(branch.qualityRequirements) || branch.qualityRequirements.length === 0) continue;
 
     const costs = [];
@@ -371,6 +459,13 @@ function annotateBranchCosts(branchCosts) {
   _branchCostObserver.observe(document.body, { childList: true, subtree: true });
   tryInject();                   // handle icons already in DOM when message arrives
   setTimeout(tryInject, 300);    // handle icons React renders asynchronously
+
+  // Re-annotate any Tippy tooltips already in the DOM — handles the race where
+  // Tippy pre-creates tooltip elements before this message handler fires.
+  for (const el of document.querySelectorAll("[data-tippy-root]")) {
+    annotateTooltip(el);
+  }
+
   // Clean up after 5 minutes (one storylet session is plenty)
   setTimeout(() => { if (_branchCostObserver) { _branchCostObserver.disconnect(); _branchCostObserver = null; } }, 300000);
 }
@@ -398,9 +493,9 @@ function annotateIconAriaLabels(root) {
 
 function annotateTooltip(root) {
   // The added node is the data-tippy-root wrapper; role="tooltip" is on the inner .tippy-box
-  const tooltipBox = (root.getAttribute("role") === "tooltip")
+  const tooltipBox = (root.getAttribute && root.getAttribute("role") === "tooltip")
     ? root
-    : root.querySelector('[role="tooltip"]');
+    : root.querySelector && root.querySelector('[role="tooltip"]');
   if (!tooltipBox) return;
   if (tooltipBox.dataset.flPriceAdded) return;
 
@@ -532,6 +627,7 @@ let _cachedConversionItems = null; // null = not yet received; Map after first m
 let _cachedCCQtys = null;          // null = not yet received; Map<id,qty> after first myself
 let _cachedFactionStats = null;    // null = not yet received; Map<id,{favours,renown}> after first myself
 let _cachedFavoursQtys = null;     // Map<favoursQualityId, qty> — used to recover qty when quality goes to 0
+const _cpState = new Map();        // Map<qualityId, {level, cp, totalCP}> — pre-action CP state for delta calculation
 
 function parseMyself(data) {
   if (!data || !Array.isArray(data.possessions)) return;
@@ -548,6 +644,14 @@ function parseMyself(data) {
         }
         if (CC_ITEM_IDS.has(p.id)) {
           ccQtys.set(p.id, p.level || 1);
+        }
+        // Seed CP state from pyramid qualities. progressAsPercentage >= 0 means
+        // pyramid type; -1 means non-pyramid. Formula: level N → N+1 costs min(N+1, cap).
+        if (p.progressAsPercentage >= 0 && p.level > 0) {
+          const cap = p.category === "BasicAbility" ? 70 : 50;
+          const totalCP = Math.min(p.level + 1, cap);
+          const cp = Math.round(p.progressAsPercentage / 100 * totalCP);
+          _cpState.set(p.id, { level: p.level, cp, totalCP });
         }
         if (p.name) {
           const favM = p.name.match(/^Favours: (.+)$/);
@@ -836,7 +940,7 @@ window.addEventListener("message", (event) => {
 
   if (event.data.type === "choosebranch") {
     const data = event.data.data;
-    annotateResults(parseChanges(data));
+    annotateResults(parseChanges(data), parseCPChanges(data));
     const satLevel = parseSaturation(data);
     if (satLevel !== null) annotateSaturation(satLevel);
   } else if (event.data.type === "storylet-begin") {
@@ -850,6 +954,14 @@ startPossessionsObserver();
 
 const _iconObserver = new MutationObserver((mutations) => {
   for (const m of mutations) {
+    if (m.type === "attributes") {
+      // Tippy showing a pre-existing tooltip via data-state change instead of DOM insertion
+      if (m.target.getAttribute("data-state") === "visible") {
+        const root = m.target.closest("[data-tippy-root]") || m.target;
+        annotateTooltip(root);
+      }
+      continue;
+    }
     for (const node of m.addedNodes) {
       if (node.nodeType !== 1) continue;
       annotateIconAriaLabels(node);
@@ -859,5 +971,8 @@ const _iconObserver = new MutationObserver((mutations) => {
 });
 
 annotateIconAriaLabels(document);
-_iconObserver.observe(document.documentElement, { childList: true, subtree: true });
+_iconObserver.observe(document.documentElement, {
+  childList: true, subtree: true,
+  attributes: true, attributeFilter: ["data-state"],
+});
 window.FL_HELPER_LOADED = true;

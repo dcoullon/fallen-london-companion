@@ -81,6 +81,45 @@ test.describe('branch cost hover annotation', () => {
     );
   });
 
+  test('opportunity /api/opportunity displayCards structure populates _costByQuality', async ({ page }) => {
+    // Real FL API: GET /api/opportunity returns { displayCards: [{ childBranches: [{ qualityRequirements: [...] }] }] }
+    // Piece of Rostygold id=375, need 25 → worth 0.25 E
+    await page.evaluate(() => {
+      window.postMessage({
+        source: 'fl-helper', type: 'storylet-begin',
+        data: {
+          displayCards: [{
+            name: 'Some Card',
+            childBranches: [{
+              name: 'Take the Risk',
+              qualityRequirements: [{
+                qualityId: 375,
+                qualityName: 'Piece of Rostygold',
+                tooltip: 'you need 25 x Piece of Rostygold',
+                category: 'Thing',
+              }],
+            }],
+          }],
+        },
+      }, '*');
+    });
+
+    await page.evaluate(() => {
+      const container = document.createElement('div');
+      container.className = 'icon quality-requirement';
+      const btn = document.createElement('div');
+      btn.setAttribute('role', 'button');
+      btn.setAttribute('aria-label', 'you need 25 x Piece of Rostygold');
+      container.appendChild(btn);
+      document.getElementById('test-branch').appendChild(container);
+    });
+
+    await page.waitForFunction(
+      () => !!document.querySelector('[role="button"][aria-label*="worth 0.25 E"]'),
+      { timeout: 3000 }
+    );
+  });
+
   test('data-quality-id icon gets unit price annotation', async ({ page }) => {
     // Inject a generic icon with data-quality-id — no "you need" text, shows unit price
     await page.evaluate(() => {
