@@ -506,7 +506,9 @@ function annotateTooltip(root) {
     ? root
     : root.querySelector && root.querySelector('[role="tooltip"]');
   if (!tooltipBox) return;
-  if (tooltipBox.dataset.flPriceAdded) return;
+  // Tippy clears tooltip content on hide, so the div may be gone even if the flag is set.
+  if (tooltipBox.dataset.flPriceAdded && tooltipBox.querySelector("[data-fl-worth]")) return;
+  if (tooltipBox.dataset.flPriceAdded) delete tooltipBox.dataset.flPriceAdded;
 
   // Resolve the trigger element (the img/button with aria-describedby) once
   const rootId = root.hasAttribute("data-tippy-root") ? root.id
@@ -561,6 +563,7 @@ function annotateTooltip(root) {
               || tooltipBox.querySelector(".tippy-content")
               || tooltipBox;
   const line = document.createElement("div");
+  line.dataset.flWorth = "1";
   line.style.cssText = "color:#c9b25e;font-style:italic;margin-top:4px;font-size:0.9em";
   line.textContent = `worth ${echoValue.toFixed(2)} E`;
   descEl.appendChild(line);
