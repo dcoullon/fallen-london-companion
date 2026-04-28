@@ -384,7 +384,10 @@ function parseRequiredQty(tooltip) {
   if (/at most/i.test(tooltip)) return null;                         // upper cap — skip
   const m = tooltip.match(/you need(?:ed)? ([\d,]+)/i);
   if (m) return parseInt(m[1].replace(/,/g, ""), 10);
+  const m2 = tooltip.match(/you unlocked this with ([\d,]+)/i);     // "with 23,724 pieces of..."
+  if (m2) return parseInt(m2[1].replace(/,/g, ""), 10);
   if (/you unlocked this with an?\s/i.test(tooltip)) return 1;      // "with a Sulky Bat" — singular
+  if (/you need an?\s/i.test(tooltip)) return 1;                    // "you need a Portfolio of Souls"
   return null;                                                        // unknown pattern — skip
 }
 
@@ -408,11 +411,11 @@ function parseBranchCosts(data) {
 
     const costs = [];
     for (const req of branch.qualityRequirements) {
-      if (req.category === "Companion") continue;          // companions aren't consumed
+      if (req.category === "Companion") continue;
       const unitPrice = PRICES[req.qualityId] ?? null;
-      if (unitPrice === null) continue;                    // not in price table
       const qty = parseRequiredQty(req.tooltip);
-      if (qty === null) continue;                          // "at most" cap
+      if (unitPrice === null) continue;
+      if (qty === null) continue;
       costs.push({ name: req.qualityName, qty, echoValue: qty * unitPrice });
     }
 
@@ -492,36 +495,61 @@ function annotateIconAriaLabels(root) {
 }
 
 function annotateTooltip(root) {
-  // The added node is the data-tippy-root wrapper; role="tooltip" is on the inner .tippy-box
+  // If called on an inner element, walk up to the enclosing [data-tippy-root].
+  if (root && root.closest && !root.hasAttribute("data-tippy-root")
+      && root.getAttribute("role") !== "tooltip") {
+    const ancestor = root.closest("[data-tippy-root]");
+    if (ancestor) root = ancestor;
+  }
+
   const tooltipBox = (root.getAttribute && root.getAttribute("role") === "tooltip")
     ? root
     : root.querySelector && root.querySelector('[role="tooltip"]');
   if (!tooltipBox) return;
   if (tooltipBox.dataset.flPriceAdded) return;
 
+  // Resolve the trigger element (the img/button with aria-describedby) once
+  const rootId = root.hasAttribute("data-tippy-root") ? root.id
+               : (root.getAttribute("role") === "tooltip" ? root.id : null);
+  const source = rootId ? document.querySelector(`[aria-describedby="${rootId}"]`) : null;
+  const sourceLabel = source ? (source.getAttribute("aria-label") || "") : "";
+
   let echoValue = null;
 
-  // Primary: match span.quality-name inside the tooltip against _costByQuality
-  const qualityNameEl = tooltipBox.querySelector(".quality-name");
-  if (qualityNameEl) {
-    const name = qualityNameEl.textContent.trim();
-    if (_costByQuality.has(name)) echoValue = _costByQuality.get(name);
+  // Primary: .quality-name text → _costByQuality exact match, then singular-first-word fallback
+  if (_costByQuality.size > 0) {
+    const qualityNameEl = tooltipBox.querySelector(".quality-name");
+    if (qualityNameEl) {
+      const name = qualityNameEl.textContent.trim();
+      if (_costByQuality.has(name)) {
+        echoValue = _costByQuality.get(name);
+      } else {
+        // "Pieces of Rostygold" → "Piece of Rostygold": strip trailing 's' from first word
+        const sp = name.indexOf(" ");
+        if (sp > 3 && name[sp - 1] === "s") {
+          const singular = name.slice(0, sp - 1) + name.slice(sp);
+          if (_costByQuality.has(singular)) echoValue = _costByQuality.get(singular);
+        }
+      }
+    }
   }
 
-  // Fallback: data-quality-id ancestor of the source element → PRICES
-  if (echoValue === null) {
-    const rootId = root.hasAttribute("data-tippy-root") ? root.id
-                 : (root.getAttribute("role") === "tooltip" ? root.id : null);
-    const source = rootId ? document.querySelector(`[aria-describedby="${rootId}"]`) : null;
-    if (source) {
-      const container = source.closest("[data-quality-id]");
-      if (container) {
-        const id = parseInt(container.dataset.qualityId, 10);
-        const unitPrice = PRICES[id] ?? null;
-        if (unitPrice !== null) {
-          const qty = parseRequiredQty(source.getAttribute("aria-label") || "") ?? 1;
-          echoValue = qty * unitPrice;
-        }
+  // Secondary: scan source aria-label for any _costByQuality key (handles DOM/API name drift)
+  if (echoValue === null && sourceLabel && _costByQuality.size > 0) {
+    for (const [name, val] of _costByQuality) {
+      if (sourceLabel.includes(name)) { echoValue = val; break; }
+    }
+  }
+
+  // Tertiary: data-quality-id ancestor → PRICES (works for inventory icons)
+  if (echoValue === null && source) {
+    const container = source.closest("[data-quality-id]");
+    if (container) {
+      const id = parseInt(container.dataset.qualityId, 10);
+      const unitPrice = PRICES[id] ?? null;
+      if (unitPrice !== null) {
+        const qty = parseRequiredQty(sourceLabel) ?? 1;
+        echoValue = qty * unitPrice;
       }
     }
   }
