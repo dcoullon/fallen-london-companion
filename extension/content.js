@@ -11,10 +11,12 @@ if (typeof FL_TEST_MODE === "undefined") {
   window.fetch = async function (...args) {
     const response = await originalFetch.apply(this, args);
     const url = typeof args[0] === "string" ? args[0] : (args[0] && args[0].url) || "";
-    if (url.includes("choosebranch") || url.includes("storylet/begin") || url.includes("character/myself") || url.includes("/opportunity")) {
-      const type = url.includes("choosebranch") ? "choosebranch"
-                 : (url.includes("storylet/begin") || url.includes("/opportunity")) ? "storylet-begin"
-                 : "myself";
+    const isChooseBranch = url.includes("choosebranch");
+    const isBegin = url.includes("storylet/begin") || url.includes("/opportunity");
+    const isMyself = url.includes("character/myself");
+    const isStoryletList = url.includes("/storylet") && !url.includes("/storylet/");
+    if (isChooseBranch || isBegin || isMyself || isStoryletList) {
+      const type = isChooseBranch ? "choosebranch" : isBegin ? "storylet-begin" : isStoryletList ? "storylet-list" : "myself";
       response.clone().json().then((data) => {
         window.postMessage({ source: "fl-helper", type, data }, "*");
       }).catch(() => {});
@@ -28,10 +30,12 @@ if (typeof FL_TEST_MODE === "undefined") {
     return originalOpen.call(this, method, url, ...rest);
   };
   XMLHttpRequest.prototype.send = function (...args) {
-    if (this._flUrl && (this._flUrl.includes("choosebranch") || this._flUrl.includes("storylet/begin") || this._flUrl.includes("character/myself") || this._flUrl.includes("/opportunity"))) {
-      const type = this._flUrl.includes("choosebranch") ? "choosebranch"
-                 : (this._flUrl.includes("storylet/begin") || this._flUrl.includes("/opportunity")) ? "storylet-begin"
-                 : "myself";
+    const _xhrIsChooseBranch = this._flUrl && this._flUrl.includes("choosebranch");
+    const _xhrIsBegin = this._flUrl && (this._flUrl.includes("storylet/begin") || this._flUrl.includes("/opportunity"));
+    const _xhrIsMyself = this._flUrl && this._flUrl.includes("character/myself");
+    const _xhrIsStoryletList = this._flUrl && this._flUrl.includes("/storylet") && !this._flUrl.includes("/storylet/");
+    if (_xhrIsChooseBranch || _xhrIsBegin || _xhrIsMyself || _xhrIsStoryletList) {
+      const type = _xhrIsChooseBranch ? "choosebranch" : _xhrIsBegin ? "storylet-begin" : _xhrIsStoryletList ? "storylet-list" : "myself";
       this.addEventListener("load", () => {
         try {
           const data = JSON.parse(this.responseText);
@@ -703,7 +707,7 @@ const SKEL_QUALITY_IDS = {
 
 const _skeletonState = {
   approximateValue: 0, amalgamy: 0, antiquity: 0, menace: 0,
-  exhaustion: 0, respectable: 0, dreaded: 0, bizarre: 0,
+  exhaustion: 0,
   zoologicalMania: 0,          // auto-captured from choosebranch when type is declared
   boneMarketFluctuations: 0,   // 1=Antiquity, 2=Amalgamy, 3=Menace; 0=unknown
   skeletonInProgress: 0,
@@ -1074,9 +1078,6 @@ function _updateSkeletonFromPossessions(categories) {
       for (const p of (cat.possessions || [])) {
         const field = SKEL_QUALITY_IDS[p.id];
         if (field) _skeletonState[field] = p.level ?? 0;
-        if (p.name === "Respectable") _skeletonState.respectable = p.level ?? 0;
-        if (p.name === "Dreaded")     _skeletonState.dreaded     = p.level ?? 0;
-        if (p.name === "Bizarre")     _skeletonState.bizarre     = p.level ?? 0;
       }
       if (Array.isArray(cat.categories)) scan(cat.categories);
     }
@@ -1105,55 +1106,55 @@ const BONE_MARKET_BUYERS = [
   { name: "Naive Collector", check: () => true,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 250) * 2.50,
     note: null },
-  { name: "Bohemian Sculptress", check: (s) => s.respectable === 0 && s.antiquity === 0,
+  { name: "Bohemian Sculptress", check: (s) => s.antiquity === 0,
     payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
     note: null },
-  { name: "Grandmother", check: (s) => s.dreaded === 0 && s.menace === 0,
+  { name: "Grandmother", check: (s) => s.menace === 0,
     payout: (s) => (20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50,
     note: null },
-  { name: "Theologian", check: (s) => s.bizarre === 0 && s.amalgamy === 0,
+  { name: "Theologian", check: (s) => s.amalgamy === 0,
     payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
     note: null },
   { name: "Palaeontologist", check: () => true,
     payout: (s) => (s.approximateValue + s.zoologicalMania + 5) * 0.01 + 5.00,
     note: "Bone Fragments" },
-  { name: "Ancient Enthusiast", check: (s) => s.respectable >= 3 && s.antiquity >= 1,
+  { name: "Ancient Enthusiast", check: (s) => s.antiquity >= 1,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50
                + (s.antiquity + (s.boneMarketFluctuations === 1 ? 1 : 0)) * 2.50,
     note: "Antiquity" },
-  { name: "Mrs Plenty", check: (s) => s.dreaded >= 3 && s.menace >= 1,
+  { name: "Mrs Plenty", check: (s) => s.menace >= 1,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50
                + (s.menace + (s.boneMarketFluctuations === 3 ? 1 : 0)) * 2.50,
     note: "Menace" },
-  { name: "Tentacled Servant", check: (s) => s.bizarre >= 3 && s.amalgamy >= 1,
+  { name: "Tentacled Servant", check: (s) => s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
                + (s.amalgamy + (s.boneMarketFluctuations === 2 ? 1 : 0)) * 2.50,
     note: "Amalgamy" },
-  { name: "Ambassador", check: (s) => s.respectable >= 15 && s.exhaustion < 4 && s.antiquity >= 1,
+  { name: "Ambassador", check: (s) => s.exhaustion < 4 && s.antiquity >= 1,
     payout: (s) => Math.ceil(5 + (s.approximateValue + s.zoologicalMania) / 50) * 0.50
-               + Math.floor(0.8 * Math.pow(s.antiquity, s.boneMarketFluctuations === 1 ? 2.1 : 2)) * 2.50,
+               + Math.round(0.8 * Math.pow(s.antiquity, s.boneMarketFluctuations === 1 ? 2.1 : 2)) * 2.50,
     note: "Antiquity²" },
-  { name: "Teller of Terrors", check: (s) => s.dreaded >= 15 && s.exhaustion < 4 && s.menace >= 1,
+  { name: "Teller of Terrors", check: (s) => s.exhaustion < 4 && s.menace >= 1,
     payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 0.10
-               + Math.floor(4 * Math.pow(s.menace, s.boneMarketFluctuations === 3 ? 2.1 : 2)) * 0.50,
+               + Math.round(4 * Math.pow(s.menace, s.boneMarketFluctuations === 3 ? 2.1 : 2)) * 0.50,
     note: "Menace²" },
-  { name: "Tentacled Entrepreneur", check: (s) => s.bizarre >= 15 && s.exhaustion < 4 && s.amalgamy >= 1,
+  { name: "Tentacled Entrepreneur", check: (s) => s.exhaustion < 4 && s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
-               + Math.floor(4 * Math.pow(s.amalgamy, s.boneMarketFluctuations === 2 ? 2.1 : 2)) * 0.50,
+               + Math.round(4 * Math.pow(s.amalgamy, s.boneMarketFluctuations === 2 ? 2.1 : 2)) * 0.50,
     note: "Amalgamy²" },
-  { name: "Gothic Author", check: (s) => s.respectable >= 7 && s.dreaded >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
+  { name: "Gothic Author", check: (s) => s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
                + (s.boneMarketFluctuations === 1 ? Math.floor(s.antiquity * (s.menace + 0.5))
                 : s.boneMarketFluctuations === 3 ? Math.floor((s.antiquity + 0.5) * s.menace)
                 : s.antiquity * s.menace) * 2.50,
     note: "Antiquity×Menace" },
-  { name: "Zailor", check: (s) => s.respectable >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
+  { name: "Zailor", check: (s) => s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
     payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 2.50 + (
       s.boneMarketFluctuations === 1 ? Math.floor((s.amalgamy + 0.5) * s.antiquity)
       : s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.antiquity + 0.5))
       : s.antiquity * s.amalgamy) * 2.50,
     note: "Antiquity×Amalgamy" },
-  { name: "Rubbery Collector", check: (s) => s.dreaded >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.menace >= 1 && s.amalgamy >= 1,
+  { name: "Rubbery Collector", check: (s) => s.exhaustion < 4 && s.menace >= 1 && s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + (
       s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.menace + 0.5))
       : s.boneMarketFluctuations === 3 ? Math.floor((s.amalgamy + 0.5) * s.menace)
@@ -1166,6 +1167,23 @@ const BONE_MARKET_BUYERS = [
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 250) * 2.50,
     note: "Bird" },
 ];
+
+function _detectManiaFromStorylets(storylets) {
+  if (!Array.isArray(storylets)) return;
+  for (const s of storylets) {
+    const text = [s.name, s.teaser, s.description].filter(Boolean).join(" ");
+    const m = text.match(/predilection for (antique|amalgam|menac)/i);
+    if (!m) continue;
+    const t = m[1].toLowerCase();
+    const val = t === "antique" ? 1 : t.startsWith("amalgam") ? 2 : 3;
+    if (_skeletonState.boneMarketFluctuations !== val) {
+      _skeletonState.boneMarketFluctuations = val;
+      document.getElementById("fl-skeleton-tracker")?.remove();
+      _lastSkeletonRenderHash = "";
+    }
+    return;
+  }
+}
 
 function evaluateBuyers(state) {
   return BONE_MARKET_BUYERS
@@ -1193,7 +1211,7 @@ function injectSkeletonTracker() {
     return;
   }
 
-  const hash = `${s.approximateValue}|${s.amalgamy}|${s.antiquity}|${s.menace}|${s.exhaustion}|${s.respectable}|${s.dreaded}|${s.bizarre}|${s.skeletonInProgress}|${s.skulls}|${s.arms}|${s.legs}|${s.wings}|${s.fins}|${s.tails}|${s.tentacles}|${s.skullsNeeded}|${s.limbsNeeded}|${s.implausibility}|${s.zoologicalMania}|${s.boneMarketFluctuations}|${_skeletonTrackerCollapsed}`;
+  const hash = `${s.approximateValue}|${s.amalgamy}|${s.antiquity}|${s.menace}|${s.exhaustion}|${s.skeletonInProgress}|${s.skulls}|${s.arms}|${s.legs}|${s.wings}|${s.fins}|${s.tails}|${s.tentacles}|${s.skullsNeeded}|${s.limbsNeeded}|${s.implausibility}|${s.zoologicalMania}|${s.boneMarketFluctuations}|${_skeletonTrackerCollapsed}`;
   if (existing?.isConnected && hash === _lastSkeletonRenderHash) return;
   existing?.remove();
   _lastSkeletonRenderHash = hash;
@@ -1353,6 +1371,8 @@ window.addEventListener("message", (event) => {
     }
   } else if (event.data.type === "storylet-begin") {
     annotateBranchCosts(parseBranchCosts(event.data.data));
+  } else if (event.data.type === "storylet-list") {
+    _detectManiaFromStorylets(event.data.data.storylets);
   } else if (event.data.type === "myself") {
     parseMyself(event.data.data);
   }
