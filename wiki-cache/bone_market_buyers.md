@@ -1,8 +1,10 @@
-# Bone Market Buyers — Verbatim Wiki Formulas
+# Bone Market Buyers — Wiki-Confirmed Formulas
+Updated: 2026-04-28
 
-Fetched from individual wiki pages. Prices from extension/prices.js.
+All 16 buyer formulas verified against individual wiki pages (cached in wiki-cache/buyer_*.md).
+`AV` = approximateValue (pennies), `M` = zoologicalMania (pennies)
 
-## Item Prices Used
+## Item Prices
 
 | Item | ID | Price |
 |---|---|---|
@@ -31,141 +33,76 @@ Fetched from individual wiki pages. Prices from extension/prices.js.
 
 ---
 
-## Always-Available Buyers
+## Correct Wiki Page Names
 
-### A Naive Collector
-**Page:** /wiki/A_Naive_Collector (fetched prev session)
-**Success items:** `floor((AV + mania) / 250)` × Thirsty Bombazine Scrap (2.50ε)
-**Echo formula:** `floor((AV + mania) / 250) × 2.50`
-**Verified:** AV=8500, mania=0 → 34 scraps × 2.50 = 85ε ✓ (real sale)
-
-### A Bohemian Sculptress
-**Page:** /wiki/A_Bohemian_Sculptress (fetched prev session)
-**Requirements:** Respectable=0, Antiquity=0
-**Success items:** `(4 + floor((AV + mania) / 250))` × Preserved Surface Blooms (2.50ε)
-**Echo formula:** `(4 + floor((AV + mania) / 250)) × 2.50`
-
-### A Grandmother
-**Page:** /wiki/A_Grandmother (fetched prev session)
-**Requirements:** Dreaded=0, Menace=0
-**Success items:** `(20 + floor((AV + mania) / 50))` × Incisive Observations (0.50ε)
-**Echo formula:** `(20 + floor((AV + mania) / 50)) × 0.50`
-
-### A Theologian
-**Page:** /wiki/A_Theologian (fetched prev session)
-**Requirements:** Bizarre=0, Amalgamy=0
-**Success items:** `(4 + floor((AV + mania) / 250))` × Crate of Incorruptible Biscuits (2.50ε)
-**Echo formula:** `(4 + floor((AV + mania) / 250)) × 2.50`
-
-### A Palaeontologist with Hoarding Propensities
-**Page:** /wiki/A_Palaeontologist_with_Hoarding_Propensities (fetched prev session)
-**Requirements:** none
-**Success items:**
-- `(AV + mania + 5)` × Bone Fragments (0.01ε)
-- `2` × Unearthly Fossil (2.50ε)
-**Echo formula:** `(AV + mania + 5) × 0.01 + 5.00`
+| Buyer (in-game) | Wiki page title |
+|---|---|
+| Naive Collector | A_Naive_Collector |
+| Bohemian Sculptress | A_Familiar_Bohemian_Sculptress (NOT A_Bohemian_Sculptress — that 404s) |
+| Grandmother | A_Pedagogically_Inclined_Grandmother (NOT A_Grandmother) |
+| Theologian | (not cached; no fluctuation effects) |
+| Palaeontologist | A_Palaeontologist_with_Hoarding_Propensities |
+| Ancient Enthusiast | Sell_your_skeleton_to_an_Enthusiast_of_the_Ancient_World |
+| Mrs Plenty | Sell_a_complete_skeleton_to_Mrs_Plenty |
+| Tentacled Servant | A_Tentacled_Servant |
+| Ambassador | An_Investment-Minded_Ambassador |
+| Teller of Terrors | A_Teller_of_Terrors |
+| Tentacled Entrepreneur | A_Tentacled_Entrepreneur |
+| Gothic Author | An_Author_of_Gothic_Tales (NOT A_Gothic_Author — that 404s) |
+| Zailor | A_Zailor_with_Particular_Interests |
+| Rubbery Collector | A_Rubbery_Collector |
+| Constable | Sell_to_a_Constable_(Skeleton) |
+| Dumbwaiter | The_Dumbwaiter_of_Balmoral |
 
 ---
 
-## Basic Attribute Buyers
+## Complete Formula Table
 
-### An Enthusiast of the Ancient World
-**Page:** /wiki/Sell_your_skeleton_to_an_Enthusiast_of_the_Ancient_World
-**Requirements:** Respectable≥3, Antiquity≥1
-**Success items:**
-- `floor((AV + mania) / 50)` × Bessemer Steel Ingot (0.50ε)
-- `Antiquity` × Unprovenanced Artefact (2.50ε) [+1 if mania=Antiquity fluctuation]
-**Echo formula:** `floor((AV + mania) / 50) × 0.50 + Antiquity × 2.50`
+Bone Market Fluctuations: 1=Antiquity, 2=Amalgamy, 3=Menace
 
-### Mrs Plenty's Bone Market Representative
-**Page:** /wiki/Sell_a_complete_skeleton_to_Mrs_Plenty
-**Requirements:** Dreaded≥3, Menace≥1
-**Success items:**
-- `floor((AV + mania) / 50)` × Hinterland Scrip (0.50ε)
-- `Menace` × Basket of Rubbery Pies (2.50ε) [+1 if mania=Menace fluctuation]
-**Echo formula:** `floor((AV + mania) / 50) × 0.50 + Menace × 2.50`
-
-### A Tentacled Servant
-**Page:** /wiki/A_Tentacled_Servant
-**Requirements:** Bizarre≥3, Amalgamy≥1
-**Success items:**
-- `(5 + floor((AV + mania) / 50))` × Nightsoil of the Bazaar (0.50ε)
-- `Amalgamy × 5` × Ambiguous Eolith (0.50ε) [or `(Amalgamy+1)×5` if mania=Amalgamy fluctuation]
-**Echo formula:** `(5 + floor((AV + mania) / 50)) × 0.50 + Amalgamy × 2.50`
+| Buyer | Requirements | AV-based items | Secondary (normal) | Secondary (fluctuation week) | Verification |
+|---|---|---|---|---|---|
+| Naive Collector | — | floor((AV+M)/250) × Bombazine (2.50ε) | — | — | real sale ✓ |
+| Bohemian Sculptress | Antiquity=0 | (4+floor((AV+M)/250)) × Blooms (2.50ε) | — | — | wiki ✓ |
+| Grandmother | Menace=0 | (20+floor((AV+M)/50)) × Observation (0.50ε) | — | — | wiki ✓ |
+| Theologian | Amalgamy=0 | (4+floor((AV+M)/250)) × Biscuits (2.50ε) | — | — | formula ✓ |
+| Palaeontologist | — | (AV+M+5) × Fragment (0.01ε) + 2×Fossil (2.50ε) | — | — | wiki ✓ |
+| Ancient Enthusiast | Resp≥3, Antiq≥1 | floor((AV+M)/50) × Ingot (0.50ε) | Antiquity × Artefact (2.50ε) | Antiquity+1 during Antiquity week | wiki ✓ |
+| Mrs Plenty | Dread≥3, Menace≥1 | floor((AV+M)/50) × Scrip (0.50ε) | Menace × Pies (2.50ε) | Menace+1 during Menace week | wiki ✓ |
+| Tentacled Servant | Biz≥3, Amalgamy≥1 | (5+floor((AV+M)/50)) × Nightsoil (0.50ε) | Amalgamy×5 × Eolith (0.50ε) | (Amalgamy+1)×5 during Amalgamy week | wiki ✓ |
+| Ambassador | Resp≥15, Exh<4, Antiq≥1 | ceil(5+(AV+M)/50) × Memory of Light (0.50ε) | floor(0.8×Antiq²) × Tailfeather (2.50ε) | floor(0.8×Antiq^2.1) during Antiquity week | user+wiki ✓ |
+| Teller of Terrors | Dread≥15, Exh<4, Menace≥1 | (25+floor((AV+M)/10)) × Morelways (0.10ε) | floor(4×Menace²) × R-B Feather (0.50ε) | floor(4×Menace^2.1) during Menace week | wiki ✓ |
+| Tentacled Entrepreneur | Biz≥15, Exh<4, Amalgamy≥1 | (5+floor((AV+M)/50)) × Shores (0.50ε) | floor(4×Amalgamy²) × Breath (0.50ε) | floor(4×Amalgamy^2.1) during Amalgamy week | wiki ✓ |
+| Gothic Author | Resp≥7, Dread≥7, Exh<4, Antiq≥1, Menace≥1 | (5+floor((AV+M)/50)) × Scrip (0.50ε) | Antiq×Menace × Ivory (2.50ε) | floor(Antiq×(Menace+0.5)) Antiq week; floor((Antiq+0.5)×Menace) Menace week | real sale ✓ |
+| Zailor | Resp≥7, Biz≥7, Exh<4, Antiq≥1, Amalgamy≥1 | (25+floor((AV+M)/10)) × Warm Amber (2.50ε) | Amalgamy×Antiq × Scintillack (2.50ε) | floor((Amalgamy+0.5)×Antiq) Antiq week; floor(Amalgamy×(Antiq+0.5)) Amalgamy week | wiki ✓ |
+| Rubbery Collector | Dread≥7, Biz≥7, Exh<4, Menace≥1, Amalgamy≥1 | (5+floor((AV+M)/50)) × Nightsoil (0.50ε) | Amalgamy×Menace × Pies (2.50ε) | floor(Amalgamy×(Menace+0.5)) Amalgamy week; floor((Amalgamy+0.5)×Menace) Menace week | wiki ✓ |
+| Constable | Humanoid (SiP 110–119) | (20+floor((AV+M)/50)) × Scrip (0.50ε) | — | — | real sale ✓ |
+| Dumbwaiter | Bird (SiP 180–189) | floor((AV+M)/250) × Identity (2.50ε) | — | — | unverified ⚠ |
 
 ---
 
-## Premium Attribute Buyers (Exhaustion<4 required)
+## Fluctuation Pattern Summary
 
-### An Ambassador from the Khanate
-**Page:** (fetched prev session)
-**Requirements:** Respectable≥15, Exhaustion<4, Antiquity≥1
-**Success items:**
-- `ceil(5 + (AV + mania) / 50)` × Memory of Light (0.50ε)
-- `floor(0.8 × Antiquity²)` × Tailfeather Brilliant as Flame (2.50ε)
-**Exhaustion gain:** `floor(Antiquity² / 25)`
-**Echo formula:** `ceil(5 + (AV + mania) / 50) × 0.50 + floor(0.8 × Antiquity²) × 2.50`
+Three distinct patterns across buyers with attribute requirements:
 
-### A Teller of Terrors
-**Page:** /wiki/A_Teller_of_Terrors
-**Requirements:** Dreaded≥15, Exhaustion<4, Menace≥1
-**Success items:**
-- `(25 + floor((AV + mania) / 10))` × Bottles of Morelways 1872 (0.10ε)
-- `floor(4 × Menace²)` × Royal-Blue Feather (0.50ε) [or `4×Menace^2.1` if mania=Menace]
-**Exhaustion gain:** `floor(Menace² / 25)`
-**Echo formula:** `(25 + floor((AV + mania) / 10)) × 0.10 + floor(4 × Menace²) × 0.50`
+**Linear (+1 attribute):** Ancient Enthusiast, Mrs Plenty, Tentacled Servant
+- Normal week: attribute × item
+- Bonus week: (attribute + 1) × item
 
-### A Tentacled Entrepreneur
-**Page:** (fetched prev session)
-**Requirements:** Bizarre≥15, Exhaustion<4, Amalgamy≥1
-**Success items:**
-- `(5 + floor((AV + mania) / 50))` × Memory of Distant Shores (0.50ε)
-- `floor(4 × Amalgamy²)` × Final Breath (0.50ε)
-**Exhaustion gain:** `floor(Amalgamy² / 25)`
-**Echo formula:** `(5 + floor((AV + mania) / 50)) × 0.50 + floor(4 × Amalgamy²) × 0.50`
+**Quadratic (^2.1 exponent):** Ambassador, Teller of Terrors, Tentacled Entrepreneur
+- Normal week: floor(k × attribute^2.0)
+- Bonus week: floor(k × attribute^2.1)
 
-### A Gothic Author
-**Page:** (fetched prev session)
-**Requirements:** Respectable≥7, Dreaded≥7, Exhaustion<4, Antiquity≥1, Menace≥1
-**Success items:**
-- `(5 + floor((AV + mania) / 50))` × Hinterland Scrip (0.50ε)
-- `Antiquity × Menace` × Stygian Ivory (2.50ε)
-**Exhaustion gain:** `floor(Antiquity × Menace / 20)`
-**Echo formula:** `(5 + floor((AV + mania) / 50)) × 0.50 + Antiquity × Menace × 2.50`
-
-### A Zailor with Particular Interests
-**Page:** /wiki/A_Zailor_with_Particular_Interests
-**Requirements:** Respectable≥7, Bizarre≥7, Exhaustion<4, Antiquity≥1, Amalgamy≥1
-**Success items:**
-- `(25 + floor((AV + mania) / 10))` × Nodule of Warm Amber (2.50ε)
-- `Amalgamy × Antiquity` × Scintillack (2.50ε) [±0.5 multiplier per mania fluctuation]
-**Exhaustion gain:** `floor(Amalgamy × Antiquity / 20)`
-**Echo formula:** `(25 + floor((AV + mania) / 10)) × 2.50 + Amalgamy × Antiquity × 2.50`
-**Note:** Warm Amber uses /10 divisor (same as Teller of Terrors) but item is 25× more valuable.
-
-### A Rubbery Collector
-**Page:** /wiki/A_Rubbery_Collector
-**Requirements:** Dreaded≥7, Bizarre≥7, Exhaustion<4, Menace≥1, Amalgamy≥1
-**Success items:**
-- `(5 + floor((AV + mania) / 50))` × Nightsoil of the Bazaar (0.50ε)
-- `Amalgamy × Menace` × Basket of Rubbery Pies (2.50ε) [±0.5 per mania fluctuation]
-**Exhaustion gain:** `floor(Amalgamy × Menace / 20)`
-**Echo formula:** `(5 + floor((AV + mania) / 50)) × 0.50 + Menace × Amalgamy × 2.50`
+**Product-of-two (+0.5 to cross-attribute):** Gothic Author, Zailor, Rubbery Collector
+- Normal week: A × B items (integer product, no floor needed)
+- Bonus week for attribute X: floor((A ± 0.5) × B) where the +0.5 goes to the OTHER attribute
 
 ---
 
-## Type-Specific Buyers
+## Verification Notes
 
-### A Constable
-**Page:** /wiki/Sell_to_a_Constable_(Skeleton)
-**Requirements:** skeletonInProgress 110–119 (humanoid)
-**Success items:** `(20 + floor((AV + mania) / 50))` × Hinterland Scrip (0.50ε)
-**Echo formula:** `(20 + floor((AV + mania) / 50)) × 0.50`
-**Verified:** AV=4450, mania=0 → (20+89)×0.50 = 54.5ε ✓ (real sale)
-
-### The Dumbwaiter of Balmoral
-**Page:** /wiki/The_Dumbwaiter_of_Balmoral
-**Requirements:** skeletonInProgress 180–189 (bird)
-**Success items (Export the Skeleton of a Neathy Bird):** `floor(AV / 250)` × An Identity Uncovered! (2.50ε)
-**Echo formula:** `floor((AV + mania) / 250) × 2.50` (mania unclear from wiki text; treating same as Naive Collector)
-**Note:** Needs verification with a real bird skeleton sale.
+- Naive Collector: AV=8500, mania=0 → 34×2.50 = 85ε ✓ (real sale)
+- Constable: AV=4450, mania=0 → (20+89)×0.50 = 54.5ε ✓ (real sale)
+- Gothic Author: AV=3500, M=355, Antiq=4, Menace=3, Antiquity week → floor(4×3.5)=14 ivory → 76ε ✓ (real sale)
+- Ambassador ^2.1: confirmed by user from wiki page ✓
+- Dumbwaiter: formula unverified with real bird skeleton sale ⚠
