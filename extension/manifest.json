@@ -26,6 +26,7 @@
       "all_frames": true
     }
   ],
+  "permissions": ["storage"],
   "web_accessible_resources": [
     {
       "resources": ["injected.js"],

@@ -668,6 +668,16 @@ let _cachedFactionStats = null;    // null = not yet received; Map<id,{favours,r
 let _cachedFavoursQtys = null;     // Map<favoursQualityId, qty> — used to recover qty when quality goes to 0
 const _cpState = new Map();        // Map<qualityId, {level, cp, totalCP}> — pre-action CP state for delta calculation
 
+// ── EPA counter state ─────────────────────────────────────────────────────────
+let _epa = { lifetime: { actions: 0, echoes: 0 }, session: { actions: 0, echoes: 0, running: false } };
+
+function _saveEpa() {
+  browser.storage.local.set({ epa: _epa }).catch(() => {});
+}
+async function _loadEpa() {
+  try { const r = await browser.storage.local.get("epa"); if (r?.epa) _epa = r.epa; } catch(e) {}
+}
+
 // ── Bone Market skeleton state ────────────────────────────────────────────────
 const SKEL_QUALITY_IDS = {
   140811: "skeletonInProgress",
@@ -866,7 +876,11 @@ function injectRenownBar() {
     const s = _cachedFactionStats?.get(id) ?? { favours: 0, renown: 0 };
     const statsDiv = document.createElement("div");
     statsDiv.className = "fl-faction-stats";
-    statsDiv.textContent = `${s.favours}/7 · ${s.renown}/55`;
+    const favoursSpan = document.createElement("span");
+    favoursSpan.textContent = `${s.favours}/7`;
+    if (s.favours === 7) favoursSpan.style.fontWeight = "bold";
+    statsDiv.appendChild(favoursSpan);
+    statsDiv.appendChild(document.createTextNode(` · ${s.renown}/55`));
     li.appendChild(statsDiv);
 
     list.appendChild(li);
@@ -998,12 +1012,58 @@ function injectPossessionsStyles() {
     "#fl-cc-bar .fl-cc-mw.icon--usable:hover img{outline:2px dashed #92d1d5;outline-offset:3px;transform:scale(1.05) translateZ(0);transition:outline .1s,transform .1s}",
     "#fl-renown-bar li.item{display:inline-flex;flex-direction:column;align-items:center;overflow:visible;height:auto;vertical-align:top}",
     "#fl-renown-bar .fl-faction-stats{font-size:10px;color:#282520;text-align:center;margin-top:2px;font-family:Georgia,serif;line-height:1.4}",
+    "#fl-epa-panel{font-size:11px;font-family:Georgia,serif;color:inherit;padding:4px 10px 6px}",
+    "#fl-epa-panel a{color:#3f7277}",
   ].join("");
   document.head.appendChild(style);
 }
 
+function injectEpaPanel() {
+  const lede = document.querySelector("div#main p.lede");
+  if (!lede) return;
+  const hr = lede.nextElementSibling;
+  if (!hr || hr.tagName !== "HR") return;
+
+  let panel = document.getElementById("fl-epa-panel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "fl-epa-panel";
+    panel.addEventListener("click", e => {
+      if (!e.target.classList.contains("fl-epa-btn")) return;
+      e.preventDefault();
+      if (_epa.session.running) {
+        _epa.session.running = false;
+      } else {
+        _epa.session = { actions: 0, echoes: 0, running: true };
+      }
+      _saveEpa();
+      injectEpaPanel();
+    });
+    hr.insertAdjacentElement("afterend", panel);
+  }
+
+  const la = _epa.lifetime.actions;
+  const le = _epa.lifetime.echoes;
+  const lifeEpa = la > 0 ? (le / la).toFixed(2) : "—";
+  const s = _epa.session;
+  const sEpa = s.actions > 0 ? (s.echoes / s.actions).toFixed(2) : "—";
+
+  let html = "";
+  if (s.running) {
+    html += `<div>Session: ${s.actions.toLocaleString()} actions &middot; ${s.echoes.toFixed(2)}&#949; &middot; ${sEpa}&#949;/act &nbsp;<a class="fl-epa-btn" href="#">stop</a></div>`;
+  } else if (s.actions > 0) {
+    html += `<div>Session (stopped): ${s.actions.toLocaleString()} actions &middot; ${s.echoes.toFixed(2)}&#949; &middot; ${sEpa}&#949;/act &nbsp;<a class="fl-epa-btn" href="#">new session</a></div>`;
+  } else {
+    html += `<div><a class="fl-epa-btn" href="#">Start session</a></div>`;
+  }
+  if (la > 0 || s.running || s.actions > 0) {
+    html += `<div>Lifetime: ${la.toLocaleString()} actions &middot; ${le.toFixed(2)}&#949; &middot; ${lifeEpa}&#949;/act</div>`;
+  }
+  panel.innerHTML = `<div class="fl-epa-content">${html}</div>`;
+}
+
 function startPossessionsObserver() {
-  setInterval(() => { injectPossessionsStyles(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); injectSkeletonTracker(); }, 1000);
+  setInterval(() => { injectPossessionsStyles(); injectEpaPanel(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); injectSkeletonTracker(); }, 1000);
 }
 
 // ── Bone Market — skeleton tracker + buyer suggestion ─────────────────────────
@@ -1218,7 +1278,7 @@ function injectSkeletonTracker() {
     }
 
     // Implausibility warning
-    if (s.implausibility > 0) {
+    if (s.implausibility >= 4) {
       const impl = document.createElement("div");
       impl.className = "fl-skel-exh";
       impl.textContent = `Implausibility: ${s.implausibility} (check penalty)`;
@@ -1270,9 +1330,21 @@ window.addEventListener("message", (event) => {
 
   if (event.data.type === "choosebranch") {
     const data = event.data.data;
-    annotateResults(parseChanges(data), parseCPChanges(data));
+    const changes = parseChanges(data);
+    annotateResults(changes, parseCPChanges(data));
     const satLevel = parseSaturation(data);
     if (satLevel !== null) annotateSaturation(satLevel);
+    const elapsed = data.elapsed ?? 0;
+    if (elapsed > 0) {
+      const net = changes.reduce((sum, c) => sum + (c.echoValue ?? 0), 0);
+      _epa.lifetime.actions += elapsed;
+      _epa.lifetime.echoes += net;
+      if (_epa.session.running) {
+        _epa.session.actions += elapsed;
+        _epa.session.echoes += net;
+      }
+      _saveEpa();
+    }
     if (_updateSkeletonFromChoosebranch(data)) {
       // Re-render tracker immediately on state change rather than waiting for next interval tick
       document.getElementById("fl-skeleton-tracker")?.remove();
@@ -1287,6 +1359,7 @@ window.addEventListener("message", (event) => {
 });
 
 startPossessionsObserver();
+_loadEpa();
 
 const _iconObserver = new MutationObserver((mutations) => {
   for (const m of mutations) {
