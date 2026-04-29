@@ -1071,15 +1071,15 @@ const BONE_MARKET_BUYERS = [
     note: "Amalgamy" },
   { name: "Ambassador", check: (s) => s.respectable >= 15 && s.exhaustion < 4 && s.antiquity >= 1,
     payout: (s) => Math.ceil(5 + (s.approximateValue + s.zoologicalMania) / 50) * 0.50
-               + Math.floor(0.8 * s.antiquity * s.antiquity) * 2.50,
+               + Math.floor(0.8 * Math.pow(s.antiquity, s.boneMarketFluctuations === 1 ? 2.1 : 2)) * 2.50,
     note: "Antiquity²" },
   { name: "Teller of Terrors", check: (s) => s.dreaded >= 15 && s.exhaustion < 4 && s.menace >= 1,
     payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 0.10
-               + Math.floor(4 * s.menace * s.menace) * 0.50,
+               + Math.floor(4 * Math.pow(s.menace, s.boneMarketFluctuations === 3 ? 2.1 : 2)) * 0.50,
     note: "Menace²" },
   { name: "Tentacled Entrepreneur", check: (s) => s.bizarre >= 15 && s.exhaustion < 4 && s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
-               + Math.floor(4 * s.amalgamy * s.amalgamy) * 0.50,
+               + Math.floor(4 * Math.pow(s.amalgamy, s.boneMarketFluctuations === 2 ? 2.1 : 2)) * 0.50,
     note: "Amalgamy²" },
   { name: "Gothic Author", check: (s) => s.respectable >= 7 && s.dreaded >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50

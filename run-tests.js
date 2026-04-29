@@ -11,6 +11,7 @@ function setSkelState(fields) {
   Object.assign(_skeletonState, {
     approximateValue: 0, amalgamy: 0, antiquity: 0, menace: 0, exhaustion: 0,
     respectable: 0, dreaded: 0, bizarre: 0, zoologicalMania: 0,
+    boneMarketFluctuations: 0,
     skeletonInProgress: 0, skullsNeeded: 0, limbsNeeded: 0,
     skulls: 0, arms: 0, legs: 0, wings: 0, fins: 0, tails: 0, tentacles: 0,
     implausibility: 0, torsoStyle: 0,
@@ -358,6 +359,23 @@ const bmFixtures = [
       const fluct = evaluateBuyers(_skeletonState).find(b => b.name === "Mrs Plenty");
       if (!fluct) return "Mrs Plenty missing (fluctuation=3)";
       if (Math.abs(fluct.echoes - 57.50) > 0.01) return `fluctuation echoes ${fluct.echoes.toFixed(2)} != 57.50`;
+    },
+  },
+  {
+    label: "Bone Market Fluctuations=3 (Menace week): Teller of Terrors uses Menace^2.1 (wiki-documented)",
+    check() {
+      // Normal: floor(4 × 3²) = 36 feathers × 0.50 = 18ε; total = (25+floor(5000/10))×0.10 + 18 = 52.5 + 18 = 70.5ε
+      setSkelState({ approximateValue: 5000, menace: 3, dreaded: 20 });
+      const base = evaluateBuyers(_skeletonState).find(b => b.name === "Teller of Terrors");
+      if (!base) return "Teller missing (no fluctuation)";
+      const baseExpected = (25 + Math.floor(5000/10)) * 0.10 + Math.floor(4 * 9) * 0.50; // 70.5
+      if (Math.abs(base.echoes - baseExpected) > 0.01) return `base echoes ${base.echoes.toFixed(2)} != ${baseExpected.toFixed(2)}`;
+      // Menace week: floor(4 × 3^2.1) = floor(40.2) = 40 feathers × 0.50 = 20ε
+      setSkelState({ approximateValue: 5000, menace: 3, dreaded: 20, boneMarketFluctuations: 3 });
+      const fluct = evaluateBuyers(_skeletonState).find(b => b.name === "Teller of Terrors");
+      if (!fluct) return "Teller missing (fluctuation=3)";
+      const fluctExpected = (25 + Math.floor(5000/10)) * 0.10 + Math.floor(4 * Math.pow(3, 2.1)) * 0.50;
+      if (Math.abs(fluct.echoes - fluctExpected) > 0.01) return `fluctuation echoes ${fluct.echoes.toFixed(2)} != ${fluctExpected.toFixed(2)}`;
     },
   },
 ];
