@@ -1033,7 +1033,7 @@ function _updateSkeletonFromChoosebranch(data) {
     const field = SKEL_QUALITY_IDS[id];
     if (field) {
       const newLevel = msg.possession.level ?? 0;
-      if (_skeletonState[field] !== newLevel) { _skeletonState[field] = newLevel; changed = true; }
+if (_skeletonState[field] !== newLevel) { _skeletonState[field] = newLevel; changed = true; }
     }
   }
   return changed;
@@ -1083,7 +1083,9 @@ const BONE_MARKET_BUYERS = [
     note: "Amalgamy²" },
   { name: "Gothic Author", check: (s) => s.respectable >= 7 && s.dreaded >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
-               + s.antiquity * s.menace * 2.50,
+               + (s.boneMarketFluctuations === 1 ? Math.floor(s.antiquity * (s.menace + 0.5))
+                : s.boneMarketFluctuations === 3 ? Math.floor((s.antiquity + 0.5) * s.menace)
+                : s.antiquity * s.menace) * 2.50,
     note: "Antiquity×Menace" },
   { name: "Zailor", check: (s) => s.respectable >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
     payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 2.50 + (

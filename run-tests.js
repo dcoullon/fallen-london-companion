@@ -334,6 +334,18 @@ const bmFixtures = [
     },
   },
   {
+    label: "Bone Market Fluctuations=1 (Antiquity week): Gothic Author — verified sale Antiq=4 Menace=3 → 14 ivory",
+    check() {
+      // Real sale: AV=3500, mania=355, Antiq=4, Menace=3, fluctuations=1 → 14 Stygian Ivory × 2.50 + 82 Scrip × 0.50 = 76ε
+      setSkelState({ approximateValue: 3500, zoologicalMania: 355, antiquity: 4, menace: 3,
+                     respectable: 20, dreaded: 20, boneMarketFluctuations: 1 });
+      const ga = evaluateBuyers(_skeletonState).find(b => b.name === "Gothic Author");
+      if (!ga) return "Gothic Author missing";
+      // (5 + floor(3855/50)) * 0.50 + floor(4 * 3.5) * 2.50 = 82*0.50 + 14*2.50 = 41 + 35 = 76
+      if (Math.abs(ga.echoes - 76.00) > 0.01) return `echoes ${ga.echoes.toFixed(2)} != 76.00`;
+    },
+  },
+  {
     label: "Bone Market Fluctuations=3 (Menace week): Mrs Plenty +2.50ε",
     check() {
       // Without fluctuations: floor(5000/50)*0.50 + 2*2.50 = 50 + 5 = 55.00
