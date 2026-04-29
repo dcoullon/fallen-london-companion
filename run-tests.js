@@ -303,6 +303,51 @@ const bmFixtures = [
       if (Math.abs(nc.echoes - 85.00) > 0.01) return `Naive Collector echoes ${nc.echoes.toFixed(2)} != 85.00 (implausibility leaked into formula)`;
     },
   },
+  {
+    label: "Bone Market Fluctuations=1 (Antiquity week): Ancient Enthusiast +2.50ε",
+    check() {
+      // Without fluctuations: floor(5000/50)*0.50 + 3*2.50 = 50 + 7.50 = 57.50
+      setSkelState({ approximateValue: 5000, antiquity: 3, respectable: 5 });
+      const base = evaluateBuyers(_skeletonState).find(b => b.name === "Ancient Enthusiast");
+      if (!base) return "Ancient Enthusiast missing (no fluctuation)";
+      if (Math.abs(base.echoes - 57.50) > 0.01) return `base echoes ${base.echoes.toFixed(2)} != 57.50`;
+      // With fluctuations=1: +1 Artefact → antiquity+1 = 4*2.50 = +2.50
+      setSkelState({ approximateValue: 5000, antiquity: 3, respectable: 5, boneMarketFluctuations: 1 });
+      const fluct = evaluateBuyers(_skeletonState).find(b => b.name === "Ancient Enthusiast");
+      if (!fluct) return "Ancient Enthusiast missing (fluctuation=1)";
+      if (Math.abs(fluct.echoes - 60.00) > 0.01) return `fluctuation echoes ${fluct.echoes.toFixed(2)} != 60.00`;
+    },
+  },
+  {
+    label: "Bone Market Fluctuations=2 (Amalgamy week): Tentacled Servant +2.50ε",
+    check() {
+      // Without fluctuations: (5 + floor(5000/50))*0.50 + 2*2.50 = 105*0.50 + 5 = 52.50 + 5 = 57.50
+      setSkelState({ approximateValue: 5000, amalgamy: 2, bizarre: 5 });
+      const base = evaluateBuyers(_skeletonState).find(b => b.name === "Tentacled Servant");
+      if (!base) return "Tentacled Servant missing (no fluctuation)";
+      if (Math.abs(base.echoes - 57.50) > 0.01) return `base echoes ${base.echoes.toFixed(2)} != 57.50`;
+      // With fluctuations=2: amalgamy+1 = 3*2.50 = 7.50 → total 60.00
+      setSkelState({ approximateValue: 5000, amalgamy: 2, bizarre: 5, boneMarketFluctuations: 2 });
+      const fluct = evaluateBuyers(_skeletonState).find(b => b.name === "Tentacled Servant");
+      if (!fluct) return "Tentacled Servant missing (fluctuation=2)";
+      if (Math.abs(fluct.echoes - 60.00) > 0.01) return `fluctuation echoes ${fluct.echoes.toFixed(2)} != 60.00`;
+    },
+  },
+  {
+    label: "Bone Market Fluctuations=3 (Menace week): Mrs Plenty +2.50ε",
+    check() {
+      // Without fluctuations: floor(5000/50)*0.50 + 2*2.50 = 50 + 5 = 55.00
+      setSkelState({ approximateValue: 5000, menace: 2, dreaded: 5 });
+      const base = evaluateBuyers(_skeletonState).find(b => b.name === "Mrs Plenty");
+      if (!base) return "Mrs Plenty missing (no fluctuation)";
+      if (Math.abs(base.echoes - 55.00) > 0.01) return `base echoes ${base.echoes.toFixed(2)} != 55.00`;
+      // With fluctuations=3: menace+1 = 3*2.50 = +2.50
+      setSkelState({ approximateValue: 5000, menace: 2, dreaded: 5, boneMarketFluctuations: 3 });
+      const fluct = evaluateBuyers(_skeletonState).find(b => b.name === "Mrs Plenty");
+      if (!fluct) return "Mrs Plenty missing (fluctuation=3)";
+      if (Math.abs(fluct.echoes - 57.50) > 0.01) return `fluctuation echoes ${fluct.echoes.toFixed(2)} != 57.50`;
+    },
+  },
 ];
 
 for (const f of bmFixtures) {

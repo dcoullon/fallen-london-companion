@@ -687,12 +687,15 @@ const SKEL_QUALITY_IDS = {
   140836: "torsoStyle",
   141377: "tentacles",
   141648: "exhaustion",
+  143141: "zoologicalMania",     // pennies bonus added to AV when skeleton type matches weekly mania
+  142798: "boneMarketFluctuations", // 1=Antiquity, 2=Amalgamy, 3=Menace — secondary item bonus type
 };
 
 const _skeletonState = {
   approximateValue: 0, amalgamy: 0, antiquity: 0, menace: 0,
   exhaustion: 0, respectable: 0, dreaded: 0, bizarre: 0,
-  zoologicalMania: 0,
+  zoologicalMania: 0,          // auto-captured from choosebranch when type is declared
+  boneMarketFluctuations: 0,   // 1=Antiquity, 2=Amalgamy, 3=Menace; 0=unknown
   skeletonInProgress: 0,
   skullsNeeded: 0, limbsNeeded: 0,
   skulls: 0, arms: 0, legs: 0, wings: 0, fins: 0, tails: 0, tentacles: 0,
@@ -1036,50 +1039,63 @@ function _updateSkeletonFromChoosebranch(data) {
   return changed;
 }
 
-// Payout formulas verified from wiki buyer pages. All use (AV + zoologicalMania) in pennies.
-// zoologicalMania defaults to 0 (world quality; ID unknown, needs API capture).
+// Payout formulas verified from wiki buyer pages.
+// (AV + zoologicalMania) in pennies; boneMarketFluctuations: 1=Antiquity, 2=Amalgamy, 3=Menace.
 const BONE_MARKET_BUYERS = [
   { name: "Naive Collector", check: () => true,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 250) * 2.50,
     note: null },
   { name: "Bohemian Sculptress", check: (s) => s.respectable === 0 && s.antiquity === 0,
     payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
-    note: "Antiquity=0" },
+    note: null },
   { name: "Grandmother", check: (s) => s.dreaded === 0 && s.menace === 0,
     payout: (s) => (20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50,
-    note: "Menace=0" },
+    note: null },
   { name: "Theologian", check: (s) => s.bizarre === 0 && s.amalgamy === 0,
     payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
-    note: "Amalgamy=0" },
+    note: null },
   { name: "Palaeontologist", check: () => true,
     payout: (s) => (s.approximateValue + s.zoologicalMania + 5) * 0.01 + 5.00,
     note: "Bone Fragments" },
   { name: "Ancient Enthusiast", check: (s) => s.respectable >= 3 && s.antiquity >= 1,
-    payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50 + s.antiquity * 2.50,
+    payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50
+               + (s.antiquity + (s.boneMarketFluctuations === 1 ? 1 : 0)) * 2.50,
     note: "Antiquity" },
   { name: "Mrs Plenty", check: (s) => s.dreaded >= 3 && s.menace >= 1,
-    payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50 + s.menace * 2.50,
+    payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50
+               + (s.menace + (s.boneMarketFluctuations === 3 ? 1 : 0)) * 2.50,
     note: "Menace" },
   { name: "Tentacled Servant", check: (s) => s.bizarre >= 3 && s.amalgamy >= 1,
-    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + s.amalgamy * 2.50,
+    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
+               + (s.amalgamy + (s.boneMarketFluctuations === 2 ? 1 : 0)) * 2.50,
     note: "Amalgamy" },
   { name: "Ambassador", check: (s) => s.respectable >= 15 && s.exhaustion < 4 && s.antiquity >= 1,
-    payout: (s) => Math.ceil(5 + (s.approximateValue + s.zoologicalMania) / 50) * 0.50 + Math.floor(0.8 * s.antiquity * s.antiquity) * 2.50,
+    payout: (s) => Math.ceil(5 + (s.approximateValue + s.zoologicalMania) / 50) * 0.50
+               + Math.floor(0.8 * s.antiquity * s.antiquity) * 2.50,
     note: "Antiquity²" },
   { name: "Teller of Terrors", check: (s) => s.dreaded >= 15 && s.exhaustion < 4 && s.menace >= 1,
-    payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 0.10 + Math.floor(4 * s.menace * s.menace) * 0.50,
+    payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 0.10
+               + Math.floor(4 * s.menace * s.menace) * 0.50,
     note: "Menace²" },
   { name: "Tentacled Entrepreneur", check: (s) => s.bizarre >= 15 && s.exhaustion < 4 && s.amalgamy >= 1,
-    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + Math.floor(4 * s.amalgamy * s.amalgamy) * 0.50,
+    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
+               + Math.floor(4 * s.amalgamy * s.amalgamy) * 0.50,
     note: "Amalgamy²" },
   { name: "Gothic Author", check: (s) => s.respectable >= 7 && s.dreaded >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
-    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + s.antiquity * s.menace * 2.50,
+    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
+               + s.antiquity * s.menace * 2.50,
     note: "Antiquity×Menace" },
   { name: "Zailor", check: (s) => s.respectable >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
-    payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 2.50 + s.antiquity * s.amalgamy * 2.50,
+    payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 2.50 + (
+      s.boneMarketFluctuations === 1 ? Math.floor((s.amalgamy + 0.5) * s.antiquity)
+      : s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.antiquity + 0.5))
+      : s.antiquity * s.amalgamy) * 2.50,
     note: "Antiquity×Amalgamy" },
   { name: "Rubbery Collector", check: (s) => s.dreaded >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.menace >= 1 && s.amalgamy >= 1,
-    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + s.menace * s.amalgamy * 2.50,
+    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + (
+      s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.menace + 0.5))
+      : s.boneMarketFluctuations === 3 ? Math.floor((s.amalgamy + 0.5) * s.menace)
+      : s.menace * s.amalgamy) * 2.50,
     note: "Menace×Amalgamy" },
   { name: "Constable", check: (s) => s.skeletonInProgress >= 110 && s.skeletonInProgress <= 119,
     payout: (s) => (20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50,
@@ -1115,7 +1131,7 @@ function injectSkeletonTracker() {
     return;
   }
 
-  const hash = `${s.approximateValue}|${s.amalgamy}|${s.antiquity}|${s.menace}|${s.exhaustion}|${s.respectable}|${s.dreaded}|${s.bizarre}|${s.skeletonInProgress}|${s.skulls}|${s.arms}|${s.legs}|${s.wings}|${s.fins}|${s.tails}|${s.tentacles}|${s.skullsNeeded}|${s.limbsNeeded}|${s.implausibility}|${_skeletonTrackerCollapsed}`;
+  const hash = `${s.approximateValue}|${s.amalgamy}|${s.antiquity}|${s.menace}|${s.exhaustion}|${s.respectable}|${s.dreaded}|${s.bizarre}|${s.skeletonInProgress}|${s.skulls}|${s.arms}|${s.legs}|${s.wings}|${s.fins}|${s.tails}|${s.tentacles}|${s.skullsNeeded}|${s.limbsNeeded}|${s.implausibility}|${s.zoologicalMania}|${s.boneMarketFluctuations}|${_skeletonTrackerCollapsed}`;
   if (existing?.isConnected && hash === _lastSkeletonRenderHash) return;
   existing?.remove();
   _lastSkeletonRenderHash = hash;
@@ -1149,27 +1165,38 @@ function injectSkeletonTracker() {
   });
 
   if (!_skeletonTrackerCollapsed) {
-    // Attribute row (amalgamy / antiquity / menace)
-    const attrParts = [];
-    if (s.amalgamy)  attrParts.push(`Amal ${s.amalgamy}`);
-    if (s.antiquity) attrParts.push(`Antiq ${s.antiquity}`);
-    if (s.menace)    attrParts.push(`Men ${s.menace}`);
-    if (attrParts.length) {
+    // Attribute row (amalgamy / antiquity / menace) - full names when ≤3 fit, abbreviated when more
+    const attrRaw = [];
+    if (s.amalgamy)  attrRaw.push(["Amalgamy", "Amal", s.amalgamy]);
+    if (s.antiquity) attrRaw.push(["Antiquity", "Antiq", s.antiquity]);
+    if (s.menace)    attrRaw.push(["Menace", "Men", s.menace]);
+    if (attrRaw.length) {
+      const useShort = attrRaw.length > 3;
+      const attrParts = attrRaw.map(([full, short, v]) => `${useShort ? short : full} ${v}`);
       const attrs = document.createElement("div");
       attrs.className = "fl-skel-attrs";
       attrs.textContent = attrParts.join("  ·  ");
       panel.appendChild(attrs);
     }
+    // Bone Market Fluctuations indicator
+    if (s.boneMarketFluctuations > 0) {
+      const fluctNames = ["", "Antiquity", "Amalgamy", "Menace"];
+      const fluct = document.createElement("div");
+      fluct.className = "fl-skel-attrs";
+      fluct.textContent = `Mania: ${fluctNames[s.boneMarketFluctuations] || "?"}+`;
+      panel.appendChild(fluct);
+    }
 
-    // Limb count row (non-zero only)
+    // Limb count row: skulls and tails always shown (even 0) when frame placed; others non-zero only
     const limbParts = [];
-    if (s.skulls)    limbParts.push(`Skulls ${s.skulls}`);
-    if (s.arms)      limbParts.push(`Arms ${s.arms}`);
-    if (s.legs)      limbParts.push(`Legs ${s.legs}`);
-    if (s.wings)     limbParts.push(`Wings ${s.wings}`);
-    if (s.fins)      limbParts.push(`Fins ${s.fins}`);
-    if (s.tails)     limbParts.push(`Tails ${s.tails}`);
-    if (s.tentacles) limbParts.push(`Tent ${s.tentacles}`);
+    const frameDown = s.skeletonInProgress > 0;
+    if (frameDown || s.skulls)    limbParts.push(`Skulls ${s.skulls}`);
+    if (s.arms)                   limbParts.push(`Arms ${s.arms}`);
+    if (s.legs)                   limbParts.push(`Legs ${s.legs}`);
+    if (s.wings)                  limbParts.push(`Wings ${s.wings}`);
+    if (s.fins)                   limbParts.push(`Fins ${s.fins}`);
+    if (frameDown || s.tails)     limbParts.push(`Tails ${s.tails}`);
+    if (s.tentacles)              limbParts.push(`Tent ${s.tentacles}`);
     if (limbParts.length) {
       const limbs = document.createElement("div");
       limbs.className = "fl-skel-attrs";
