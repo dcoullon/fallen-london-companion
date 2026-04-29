@@ -92,7 +92,10 @@ same plot without having to navigate back manually.
   stats (Antiquity, Amalgamy, Menace, Implausibility, all limb counts, skeleton type) while
   building at the Bone Market.
 - **Bone Market — buyer suggestion** — top 5 eligible buyers ranked by payout shown in the
-  skeleton tracker panel, with echo values and Exhaustion filtering applied.
+  skeleton tracker panel, with echo values and Exhaustion filtering applied. Buyer eligibility
+  based on skeleton attributes only (Respectable/Dreaded/Bizarre removed — player can swap gear).
+  Quadratic secondary formulas use `Math.round` (not floor), confirmed against real sales.
+  Mania week captured from `/api/storylet` storylets via "predilection for" text regex.
 - **Firefox extension** — MV3 Firefox-first extension with gecko_android support; packaged and
   ready for AMO submission.
 - **EPA counter** — two persistent counters (lifetime + session) injected into the Myself tab
