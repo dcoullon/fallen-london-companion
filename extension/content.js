@@ -669,33 +669,35 @@ let _cachedFavoursQtys = null;     // Map<favoursQualityId, qty> — used to rec
 const _cpState = new Map();        // Map<qualityId, {level, cp, totalCP}> — pre-action CP state for delta calculation
 
 // ── Bone Market skeleton state ────────────────────────────────────────────────
-// Known quality IDs for skeleton-in-progress attributes (from wiki research).
-// Limb-count IDs (skulls, arms, etc.) are unknown until a dev session captures them;
-// they will be logged to console the first time they appear.
 const SKEL_QUALITY_IDS = {
+  140811: "skeletonInProgress",
   140812: "approximateValue",
+  140815: "skullsNeeded",
+  140816: "limbsNeeded",
+  140818: "skulls",
+  140819: "arms",
+  140820: "legs",
+  140821: "wings",
+  140822: "fins",
+  140823: "tails",
+  140824: "implausibility",
   140825: "amalgamy",
   140834: "menace",
   140835: "antiquity",
+  140836: "torsoStyle",
+  141377: "tentacles",
   141648: "exhaustion",
 };
-const SKEL_KNOWN_IDS = new Set(Object.keys(SKEL_QUALITY_IDS).map(Number));
 
 const _skeletonState = {
-  approximateValue: 0, // in pennies (divide by 100 for echoes)
-  amalgamy: 0,
-  antiquity: 0,
-  menace: 0,
-  exhaustion: 0,
-  // Player social qualities — seeded from /myself, used for buyer eligibility checks
-  respectable: 0,
-  dreaded: 0,
-  bizarre: 0,
+  approximateValue: 0, amalgamy: 0, antiquity: 0, menace: 0,
+  exhaustion: 0, respectable: 0, dreaded: 0, bizarre: 0,
+  zoologicalMania: 0,
+  skeletonInProgress: 0,
+  skullsNeeded: 0, limbsNeeded: 0,
+  skulls: 0, arms: 0, legs: 0, wings: 0, fins: 0, tails: 0, tentacles: 0,
+  implausibility: 0, torsoStyle: 0,
 };
-
-// TEMP: Set to log all bone-related quality changes to console for quality-ID discovery.
-// Remove once limb-count IDs and other unknowns are confirmed.
-const _bmLogEnabled = true;
 
 function parseMyself(data) {
   if (!data || !Array.isArray(data.possessions)) return;
@@ -1029,105 +1031,62 @@ function _updateSkeletonFromChoosebranch(data) {
     if (field) {
       const newLevel = msg.possession.level ?? 0;
       if (_skeletonState[field] !== newLevel) { _skeletonState[field] = newLevel; changed = true; }
-    } else if (_bmLogEnabled) {
-      // Log unrecognised quality changes that might be skeleton limb counts or implausibility.
-      // Scan for qualities whose names contain bone-market keywords.
-      const name = msg.possession.name || "";
-      if (/skeleton|amalgamy|antiquity|menace|implausib|limb|skull|arm|wing|fin|tail|tentacle/i.test(name)) {
-        console.log(`[FL-BM] unknown skel quality: id=${id} name="${name}" level=${msg.possession.level} type=${msg.type}`);
-      }
     }
   }
   return changed;
 }
 
-// Secondary reward prices are sourced directly from prices.js values:
-//   Tailfeather Brilliant as Flame (141160): 2.50ε  Royal-Blue Feather (122494): 0.50ε
-//   Final Breath (141161): 0.50ε                    Carved Ball of Stygian Ivory (122483): 2.50ε
-//   Knob of Scintillack (122495): 2.50ε              Basket of Rubbery Pies (140894): 2.50ε
-//   Ambiguous Eolith (122485): 0.50ε
-//
-// Payout formulas are based on wiki documentation and may not be exact;
-// the relative ranking across buyers is reliable. Use "~" prefix in UI.
+// Payout formulas verified from wiki buyer pages. All use (AV + zoologicalMania) in pennies.
+// zoologicalMania defaults to 0 (world quality; ID unknown, needs API capture).
 const BONE_MARKET_BUYERS = [
-  {
-    name: "Naive Collector",
-    check: (s) => true,  // note: Suspicion < 4 required; skipped (almost always met)
-    payout: (s) => s.approximateValue / 100,
-    note: null,
-  },
-  {
-    name: "Bohemian Sculptress",
-    check: (s) => s.respectable === 0 && s.antiquity === 0,
-    payout: (s) => s.approximateValue / 100,
-    note: "Antiquity = 0",
-  },
-  {
-    name: "Grandmother",
-    check: (s) => s.dreaded === 0 && s.menace === 0,
-    payout: (s) => s.approximateValue / 100,
-    note: "Menace = 0",
-  },
-  {
-    name: "Theologian",
-    check: (s) => s.bizarre === 0 && s.amalgamy === 0,
-    payout: (s) => s.approximateValue / 100,
-    note: "Amalgamy = 0",
-  },
-  {
-    name: "Ancient Enthusiast",
-    check: (s) => s.respectable >= 3 && s.antiquity >= 1,
-    payout: (s) => s.approximateValue / 100 + s.antiquity * 3.00,
-    note: "Antiquity",
-  },
-  {
-    name: "Mrs Plenty",
-    check: (s) => s.dreaded >= 3 && s.menace >= 1,
-    payout: (s) => s.approximateValue / 100 + s.menace * 3.00,
-    note: "Menace",
-  },
-  {
-    name: "Tentacled Servant",
-    check: (s) => s.bizarre >= 3 && s.amalgamy >= 1,
-    payout: (s) => s.approximateValue / 100 + s.amalgamy * 5 * 0.50,
-    note: "Amalgamy",
-  },
-  {
-    name: "Ambassador",
-    check: (s) => s.respectable >= 15 && s.exhaustion < 4 && s.antiquity >= 1,
-    payout: (s) => s.approximateValue / 100 + Math.floor(0.8 * s.antiquity * s.antiquity) * 2.50,
-    note: "Antiquity²",
-  },
-  {
-    name: "Teller of Terrors",
-    check: (s) => s.dreaded >= 15 && s.exhaustion < 4 && s.menace >= 1,
-    payout: (s) => s.approximateValue / 100 + Math.floor(4 * s.menace * s.menace) * 0.50,
-    note: "Menace²",
-  },
-  {
-    name: "Entrepreneur",
-    check: (s) => s.bizarre >= 15 && s.exhaustion < 4 && s.amalgamy >= 1,
-    payout: (s) => s.approximateValue / 100 + Math.floor(4 * s.amalgamy * s.amalgamy) * 0.50,
-    note: "Amalgamy²",
-  },
-  {
-    name: "Gothic Author",
-    check: (s) => s.respectable >= 7 && s.dreaded >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
-    payout: (s) => s.approximateValue / 100 + s.antiquity * s.menace * 2.50,
-    note: "Antiquity×Menace",
-  },
-  {
-    name: "Zailor",
-    check: (s) => s.respectable >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
-    payout: (s) => s.approximateValue / 100 + s.antiquity * s.amalgamy * 2.50,
-    note: "Antiquity×Amalgamy",
-  },
-  {
-    name: "Rubbery Collector",
-    check: (s) => s.dreaded >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.menace >= 1 && s.amalgamy >= 1,
-    payout: (s) => s.approximateValue / 100 + s.menace * s.amalgamy * 2.50,
-    note: "Menace×Amalgamy",
-  },
+  { name: "Naive Collector", check: () => true,
+    payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 250) * 2.50,
+    note: null },
+  { name: "Bohemian Sculptress", check: (s) => s.respectable === 0 && s.antiquity === 0,
+    payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
+    note: "Antiquity=0" },
+  { name: "Grandmother", check: (s) => s.dreaded === 0 && s.menace === 0,
+    payout: (s) => (20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50,
+    note: "Menace=0" },
+  { name: "Theologian", check: (s) => s.bizarre === 0 && s.amalgamy === 0,
+    payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
+    note: "Amalgamy=0" },
+  { name: "Palaeontologist", check: () => true,
+    payout: (s) => (s.approximateValue + s.zoologicalMania + 5) * 0.01 + 5.00,
+    note: "Bone Fragments" },
+  { name: "Ancient Enthusiast", check: (s) => s.respectable >= 3 && s.antiquity >= 1,
+    payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50 + s.antiquity * 2.50,
+    note: "Antiquity" },
+  { name: "Mrs Plenty", check: (s) => s.dreaded >= 3 && s.menace >= 1,
+    payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50 + s.menace * 2.50,
+    note: "Menace" },
+  { name: "Tentacled Servant", check: (s) => s.bizarre >= 3 && s.amalgamy >= 1,
+    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + s.amalgamy * 2.50,
+    note: "Amalgamy" },
+  { name: "Ambassador", check: (s) => s.respectable >= 15 && s.exhaustion < 4 && s.antiquity >= 1,
+    payout: (s) => Math.ceil(5 + (s.approximateValue + s.zoologicalMania) / 50) * 0.50 + Math.floor(0.8 * s.antiquity * s.antiquity) * 2.50,
+    note: "Antiquity²" },
+  { name: "Teller of Terrors", check: (s) => s.dreaded >= 15 && s.exhaustion < 4 && s.menace >= 1,
+    payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 0.10 + Math.floor(4 * s.menace * s.menace) * 0.50,
+    note: "Menace²" },
+  { name: "Tentacled Entrepreneur", check: (s) => s.bizarre >= 15 && s.exhaustion < 4 && s.amalgamy >= 1,
+    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + Math.floor(4 * s.amalgamy * s.amalgamy) * 0.50,
+    note: "Amalgamy²" },
+  { name: "Gothic Author", check: (s) => s.respectable >= 7 && s.dreaded >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
+    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + s.antiquity * s.menace * 2.50,
+    note: "Antiquity×Menace" },
+  { name: "Zailor", check: (s) => s.respectable >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
+    payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 2.50 + s.antiquity * s.amalgamy * 2.50,
+    note: "Antiquity×Amalgamy" },
+  { name: "Rubbery Collector", check: (s) => s.dreaded >= 7 && s.bizarre >= 7 && s.exhaustion < 4 && s.menace >= 1 && s.amalgamy >= 1,
+    payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + s.menace * s.amalgamy * 2.50,
+    note: "Menace×Amalgamy" },
+  { name: "Constable", check: (s) => s.skeletonInProgress >= 110 && s.skeletonInProgress <= 119,
+    payout: (s) => (20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50,
+    note: "Humanoid" },
+  { name: "Dumbwaiter", check: (s) => s.skeletonInProgress >= 180 && s.skeletonInProgress <= 189,
+    payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 250) * 2.50,
+    note: "Bird" },
 ];
 
 function evaluateBuyers(state) {
@@ -1137,11 +1096,18 @@ function evaluateBuyers(state) {
     .sort((a, b) => b.echoes - a.echoes);
 }
 
+const SKEL_TYPE_LABELS = {
+  100: "Chimera", 110: "Humanoid", 120: "Ape", 130: "Monkey",
+  140: "Amphibian", 150: "Reptile", 160: "Amphibian", 170: "Reptile",
+  180: "Bird", 190: "Fish", 200: "Insect", 210: "Spider",
+};
+
 let _lastSkeletonRenderHash = "";
 let _skeletonTrackerCollapsed = false;
 
 function injectSkeletonTracker() {
-  const active = _skeletonState.approximateValue > 0;
+  const s = _skeletonState;
+  const active = s.approximateValue > 0;
   const existing = document.getElementById("fl-skeleton-tracker");
 
   if (!active) {
@@ -1149,22 +1115,25 @@ function injectSkeletonTracker() {
     return;
   }
 
-  const hash = `${_skeletonState.approximateValue}|${_skeletonState.amalgamy}|${_skeletonState.antiquity}|${_skeletonState.menace}|${_skeletonState.exhaustion}|${_skeletonState.respectable}|${_skeletonState.dreaded}|${_skeletonState.bizarre}|${_skeletonTrackerCollapsed}`;
+  const hash = `${s.approximateValue}|${s.amalgamy}|${s.antiquity}|${s.menace}|${s.exhaustion}|${s.respectable}|${s.dreaded}|${s.bizarre}|${s.skeletonInProgress}|${s.skulls}|${s.arms}|${s.legs}|${s.wings}|${s.fins}|${s.tails}|${s.tentacles}|${s.skullsNeeded}|${s.limbsNeeded}|${s.implausibility}|${_skeletonTrackerCollapsed}`;
   if (existing?.isConnected && hash === _lastSkeletonRenderHash) return;
   existing?.remove();
   _lastSkeletonRenderHash = hash;
 
-  const buyers = evaluateBuyers(_skeletonState);
-  const echoes = (_skeletonState.approximateValue / 100).toFixed(2);
+  const buyers = evaluateBuyers(s);
+  const typePrefix = Math.floor(s.skeletonInProgress / 10) * 10;
+  const typeLabel = s.skeletonInProgress >= 100 ? (SKEL_TYPE_LABELS[typePrefix] || "Unknown") : null;
+  const bestEchoes = buyers.length > 0 ? buyers[0].echoes : s.approximateValue / 100;
+  const echoesStr = bestEchoes.toFixed(1);
 
   const panel = document.createElement("div");
   panel.id = "fl-skeleton-tracker";
 
-  // Header row: value + collapse toggle
+  // Header: type label + best buyer value + collapse toggle
   const header = document.createElement("div");
   header.className = "fl-skel-header";
   const titleSpan = document.createElement("span");
-  titleSpan.textContent = `🦴 ~${echoes}ε`;  // 🦴 ~X.XXε
+  titleSpan.textContent = (typeLabel ?? "🦴") + ` ~${echoesStr}ε`;
   const toggleSpan = document.createElement("span");
   toggleSpan.className = "fl-skel-toggle";
   toggleSpan.textContent = _skeletonTrackerCollapsed ? "▲" : "▼";
@@ -1180,23 +1149,58 @@ function injectSkeletonTracker() {
   });
 
   if (!_skeletonTrackerCollapsed) {
-    // Attribute row
-    const parts = [];
-    if (_skeletonState.amalgamy)  parts.push(`Amal ${_skeletonState.amalgamy}`);
-    if (_skeletonState.antiquity) parts.push(`Antiq ${_skeletonState.antiquity}`);
-    if (_skeletonState.menace)    parts.push(`Men ${_skeletonState.menace}`);
-    if (parts.length) {
+    // Attribute row (amalgamy / antiquity / menace)
+    const attrParts = [];
+    if (s.amalgamy)  attrParts.push(`Amal ${s.amalgamy}`);
+    if (s.antiquity) attrParts.push(`Antiq ${s.antiquity}`);
+    if (s.menace)    attrParts.push(`Men ${s.menace}`);
+    if (attrParts.length) {
       const attrs = document.createElement("div");
       attrs.className = "fl-skel-attrs";
-      attrs.textContent = parts.join("  ·  ");
+      attrs.textContent = attrParts.join("  ·  ");
       panel.appendChild(attrs);
     }
 
-    // Exhaustion (only show if > 0)
-    if (_skeletonState.exhaustion > 0) {
+    // Limb count row (non-zero only)
+    const limbParts = [];
+    if (s.skulls)    limbParts.push(`Skulls ${s.skulls}`);
+    if (s.arms)      limbParts.push(`Arms ${s.arms}`);
+    if (s.legs)      limbParts.push(`Legs ${s.legs}`);
+    if (s.wings)     limbParts.push(`Wings ${s.wings}`);
+    if (s.fins)      limbParts.push(`Fins ${s.fins}`);
+    if (s.tails)     limbParts.push(`Tails ${s.tails}`);
+    if (s.tentacles) limbParts.push(`Tent ${s.tentacles}`);
+    if (limbParts.length) {
+      const limbs = document.createElement("div");
+      limbs.className = "fl-skel-attrs";
+      limbs.textContent = limbParts.join("  ·  ");
+      panel.appendChild(limbs);
+    }
+
+    // Needs hint
+    if (s.skullsNeeded > 0 || s.limbsNeeded > 0) {
+      const needsParts = [];
+      if (s.skullsNeeded > 0) needsParts.push(`${s.skullsNeeded} skull${s.skullsNeeded > 1 ? "s" : ""}`);
+      if (s.limbsNeeded > 0)  needsParts.push(`${s.limbsNeeded} limb${s.limbsNeeded > 1 ? "s" : ""}`);
+      const needs = document.createElement("div");
+      needs.className = "fl-skel-attrs";
+      needs.textContent = `Needs: ${needsParts.join("  ·  ")}`;
+      panel.appendChild(needs);
+    }
+
+    // Implausibility warning
+    if (s.implausibility > 0) {
+      const impl = document.createElement("div");
+      impl.className = "fl-skel-exh";
+      impl.textContent = `Implausibility: ${s.implausibility} (check penalty)`;
+      panel.appendChild(impl);
+    }
+
+    // Exhaustion
+    if (s.exhaustion > 0) {
       const exh = document.createElement("div");
-      exh.className = "fl-skel-exh" + (_skeletonState.exhaustion >= 3 ? " fl-skel-exh--warn" : "");
-      exh.textContent = `Exhaustion: ${_skeletonState.exhaustion}`;
+      exh.className = "fl-skel-exh" + (s.exhaustion >= 3 ? " fl-skel-exh--warn" : "");
+      exh.textContent = `Exhaustion: ${s.exhaustion}`;
       panel.appendChild(exh);
     }
 

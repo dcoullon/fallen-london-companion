@@ -10,7 +10,10 @@ const { parseChanges, parseSaturation, evaluateBuyers, _updateSkeletonFromChoose
 function setSkelState(fields) {
   Object.assign(_skeletonState, {
     approximateValue: 0, amalgamy: 0, antiquity: 0, menace: 0, exhaustion: 0,
-    respectable: 0, dreaded: 0, bizarre: 0,
+    respectable: 0, dreaded: 0, bizarre: 0, zoologicalMania: 0,
+    skeletonInProgress: 0, skullsNeeded: 0, limbsNeeded: 0,
+    skulls: 0, arms: 0, legs: 0, wings: 0, fins: 0, tails: 0, tentacles: 0,
+    implausibility: 0, torsoStyle: 0,
   }, fields);
 }
 
@@ -144,12 +147,86 @@ for (const f of satFixtures) {
 
 const bmFixtures = [
   {
-    label: "No-attribute skeleton: Naive Collector is top buyer",
+    label: "No-attribute skeleton: Grandmother beats Naive Collector",
     check() {
-      setSkelState({ approximateValue: 250 }); // 2.50ε, no attributes
+      setSkelState({ approximateValue: 8500 }); // 85ε face value, no attributes
       const buyers = evaluateBuyers(_skeletonState);
-      if (buyers.length === 0) return "no eligible buyers";
-      if (buyers[0].name !== "Naive Collector") return "top buyer: " + buyers[0].name;
+      const nc = buyers.find(b => b.name === "Naive Collector");
+      const gm = buyers.find(b => b.name === "Grandmother");
+      if (!nc) return "Naive Collector missing";
+      if (!gm) return "Grandmother missing";
+      // Naive Collector: floor(8500/250)*2.50 = 34*2.50 = 85ε (verified real sale)
+      if (Math.abs(nc.echoes - 85.00) > 0.01) return `Naive Collector echoes ${nc.echoes.toFixed(2)} != 85.00`;
+      // Grandmother: (20+floor(8500/50))*0.50 = (20+170)*0.50 = 95ε
+      if (Math.abs(gm.echoes - 95.00) > 0.01) return `Grandmother echoes ${gm.echoes.toFixed(2)} != 95.00`;
+      if (gm.echoes <= nc.echoes) return `Grandmother (${gm.echoes}) should beat Naive Collector (${nc.echoes})`;
+    },
+  },
+  {
+    label: "Naive Collector formula verified (AV=8500, mania=0 → 85.00ε)",
+    check() {
+      setSkelState({ approximateValue: 8500 });
+      const buyers = evaluateBuyers(_skeletonState);
+      const nc = buyers.find(b => b.name === "Naive Collector");
+      if (!nc) return "Naive Collector missing";
+      if (Math.abs(nc.echoes - 85.00) > 0.01) return `got ${nc.echoes.toFixed(2)}, expected 85.00`;
+    },
+  },
+  {
+    label: "Palaeontologist: always eligible, beats Naive Collector for same AV",
+    check() {
+      setSkelState({ approximateValue: 8500 });
+      const buyers = evaluateBuyers(_skeletonState);
+      const palaeo = buyers.find(b => b.name === "Palaeontologist");
+      const nc = buyers.find(b => b.name === "Naive Collector");
+      if (!palaeo) return "Palaeontologist missing";
+      if (!nc) return "Naive Collector missing";
+      // Palaeontologist: (8500+5)*0.01 + 5.00 = 85.05 + 5.00 = 90.05ε
+      if (Math.abs(palaeo.echoes - 90.05) > 0.01) return `Palaeontologist echoes ${palaeo.echoes.toFixed(2)} != 90.05`;
+      if (palaeo.echoes <= nc.echoes) return `Palaeontologist (${palaeo.echoes.toFixed(1)}) should beat Naive Collector (${nc.echoes.toFixed(1)})`;
+    },
+  },
+  {
+    label: "Constable formula verified (AV=4450, mania=0 → 54.50ε)",
+    check() {
+      setSkelState({ approximateValue: 4450, skeletonInProgress: 111 });
+      const buyers = evaluateBuyers(_skeletonState);
+      const constable = buyers.find(b => b.name === "Constable");
+      if (!constable) return "Constable not eligible for humanoid";
+      if (Math.abs(constable.echoes - 54.50) > 0.01) return `got ${constable.echoes.toFixed(2)}, expected 54.50`;
+    },
+  },
+  {
+    label: "Constable: excluded for non-humanoid (skeletonInProgress=10)",
+    check() {
+      setSkelState({ approximateValue: 4450, skeletonInProgress: 10 });
+      const buyers = evaluateBuyers(_skeletonState);
+      const constable = buyers.find(b => b.name === "Constable");
+      if (constable) return "Constable should not be eligible when skeletonInProgress=10";
+    },
+  },
+  {
+    label: "Dumbwaiter: eligible for bird (180–189), not humanoid (110–119)",
+    check() {
+      setSkelState({ approximateValue: 5000, skeletonInProgress: 183 });
+      const buyers1 = evaluateBuyers(_skeletonState);
+      const dw1 = buyers1.find(b => b.name === "Dumbwaiter");
+      if (!dw1) return "Dumbwaiter should be eligible for skeletonInProgress=183";
+      setSkelState({ approximateValue: 5000, skeletonInProgress: 111 });
+      const buyers2 = evaluateBuyers(_skeletonState);
+      const dw2 = buyers2.find(b => b.name === "Dumbwaiter");
+      if (dw2) return "Dumbwaiter should NOT be eligible for skeletonInProgress=111";
+    },
+  },
+  {
+    label: "Zoological mania shifts Naive Collector up (AV=8500, mania=250 → 87.50ε)",
+    check() {
+      setSkelState({ approximateValue: 8500, zoologicalMania: 250 });
+      const buyers = evaluateBuyers(_skeletonState);
+      const nc = buyers.find(b => b.name === "Naive Collector");
+      if (!nc) return "Naive Collector missing";
+      // floor((8500+250)/250)*2.50 = 35*2.50 = 87.50
+      if (Math.abs(nc.echoes - 87.50) > 0.01) return `got ${nc.echoes.toFixed(2)}, expected 87.50`;
     },
   },
   {
@@ -188,15 +265,19 @@ const bmFixtures = [
     },
   },
   {
-    label: "_updateSkeletonFromChoosebranch updates approximateValue",
+    label: "_updateSkeletonFromChoosebranch updates approximateValue + limb fields",
     check() {
       setSkelState({});
       _updateSkeletonFromChoosebranch({ messages: [
         { possession: { id: 140812, level: 375 } },
         { possession: { id: 140825, level: 3 } },
+        { possession: { id: 140819, level: 2 } },  // arms
+        { possession: { id: 140820, level: 4 } },  // legs
       ]});
       if (_skeletonState.approximateValue !== 375) return "approximateValue " + _skeletonState.approximateValue;
       if (_skeletonState.amalgamy !== 3) return "amalgamy " + _skeletonState.amalgamy;
+      if (_skeletonState.arms !== 2) return "arms " + _skeletonState.arms;
+      if (_skeletonState.legs !== 4) return "legs " + _skeletonState.legs;
     },
   },
   {
@@ -204,11 +285,22 @@ const bmFixtures = [
     check() {
       setSkelState({ approximateValue: 500, amalgamy: 4 });
       _updateSkeletonFromChoosebranch({ messages: [
-        { possession: { id: 140812, level: 0 } },  // skeleton sold/reset
+        { possession: { id: 140812, level: 0 } },
         { possession: { id: 140825, level: 0 } },
       ]});
       if (_skeletonState.approximateValue !== 0) return "approximateValue should be 0";
       if (_skeletonState.amalgamy !== 0) return "amalgamy should be 0";
+    },
+  },
+  {
+    label: "Implausibility tracked in state but not in any payout formula",
+    check() {
+      setSkelState({ approximateValue: 8500, implausibility: 5 });
+      const buyers = evaluateBuyers(_skeletonState);
+      const nc = buyers.find(b => b.name === "Naive Collector");
+      if (!nc) return "Naive Collector missing";
+      // Implausibility should NOT affect payout — same as no implausibility
+      if (Math.abs(nc.echoes - 85.00) > 0.01) return `Naive Collector echoes ${nc.echoes.toFixed(2)} != 85.00 (implausibility leaked into formula)`;
     },
   },
 ];
