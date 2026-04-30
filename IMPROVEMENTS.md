@@ -2,6 +2,15 @@
 
 ## Pending (highest ROI first)
 
+### setInterval — performance / battery guard
+Currently the 1 s polling interval runs all injection functions on every tick regardless of which
+tab the player is on. Add a page-context check at the top of each injector so work is skipped
+when the relevant UI isn't present (e.g. skip injectRenownBar / injectCrossConversionBar
+unless document.querySelector('#main.possessions') is present; skip injectSkeletonTracker
+unless on a Bone Market storylet).
+Also worth retesting MutationObserver as a replacement — the previous conclusion (it fails due to
+React timing) was reached during a period of extension-loading issues and may not be reliable.
+
 ### Destructive action warnings
 For known costly or irreversible actions, show a warning icon before the player clicks and ideally a confirmation dialog when they do.
 - Examples: selling the boat, the action that converts many Cellars of Wine (losing ~120 echoes), actions that consume Favours for poor reward when the relevant companion item is absent (e.g. using Favours: Criminals without a Lucky Weasel)
