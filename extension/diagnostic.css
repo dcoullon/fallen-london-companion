@@ -1,5 +1,8 @@
 /* diagnostic.css — overlay and debug styles */
 
+/* Faction bar — bold maxed favours (game CSS resets font-weight on .item children) */
+.fl-faction-stats b { color: #3f7277; }
+
 /* ── Bone Market skeleton tracker ── */
 #fl-skeleton-tracker {
   position: fixed;

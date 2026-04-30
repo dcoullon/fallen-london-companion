@@ -892,10 +892,9 @@ function injectRenownBar() {
     const s = _cachedFactionStats?.get(id) ?? { favours: 0, renown: 0 };
     const statsDiv = document.createElement("div");
     statsDiv.className = "fl-faction-stats";
-    const favoursSpan = document.createElement("span");
-    favoursSpan.textContent = `${s.favours}/7`;
-    if (s.favours === 7) favoursSpan.style.fontWeight = "bold";
-    statsDiv.appendChild(favoursSpan);
+    const favoursEl = document.createElement(s.favours === 7 ? "b" : "span");
+    favoursEl.textContent = s.favours === 7 ? `[${s.favours}/7]` : `${s.favours}/7`;
+    statsDiv.appendChild(favoursEl);
     statsDiv.appendChild(document.createTextNode(` · ${s.renown}/55`));
     li.appendChild(statsDiv);
 
