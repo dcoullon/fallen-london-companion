@@ -674,12 +674,19 @@ const _cpState = new Map();        // Map<qualityId, {level, cp, totalCP}> — p
 
 // ── EPA counter state ─────────────────────────────────────────────────────────
 let _epa = { lifetime: { actions: 0, echoes: 0 }, session: { actions: 0, echoes: 0, running: false } };
+let _currentCharId = null;
 
+function _epaKey() { return _currentCharId ? `epa_${_currentCharId}` : null; }
 function _saveEpa() {
-  browser.storage.local.set({ epa: _epa }).catch(() => {});
+  const key = _epaKey(); if (!key) return;
+  browser.storage.local.set({ [key]: _epa }).catch(() => {});
 }
-async function _loadEpa() {
-  try { const r = await browser.storage.local.get("epa"); if (r?.epa) _epa = r.epa; } catch(e) {}
+async function _loadEpaForChar(charId) {
+  try {
+    const key = `epa_${charId}`;
+    const r = await browser.storage.local.get(key);
+    _epa = r?.[key] ?? { lifetime: { actions: 0, echoes: 0 }, session: { actions: 0, echoes: 0, running: false } };
+  } catch(e) {}
 }
 
 // ── Bone Market skeleton state ────────────────────────────────────────────────
@@ -718,6 +725,11 @@ const _skeletonState = {
 
 function parseMyself(data) {
   if (!data || !Array.isArray(data.possessions)) return;
+  const charId = data.character?.id;
+  if (charId && charId !== _currentCharId) {
+    _currentCharId = charId;
+    _loadEpaForChar(charId).then(() => injectEpaPanel());
+  }
   const owned = new Map();
   const ccQtys = new Map();
   const factionStats = new Map();
@@ -1379,7 +1391,6 @@ window.addEventListener("message", (event) => {
 });
 
 startPossessionsObserver();
-_loadEpa();
 
 const _iconObserver = new MutationObserver((mutations) => {
   for (const m of mutations) {
