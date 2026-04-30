@@ -531,6 +531,7 @@ const PRICES = {
   355:   5856.40, // Overgoat
 
   // MISCELLANEOUS (sell prices from wiki, non-shop sources)
+  106688: 17.50,  // A Recipe for Zzoup
   146694: 0.50,   // Blood Oath (10 Stuivers)
   145002: 2.50,   // Ascended Ambergris (50 Stuivers)
   144982: 2.50,   // Roof-Chart (50 Stuivers)
