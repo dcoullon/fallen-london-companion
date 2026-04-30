@@ -1327,7 +1327,7 @@ function injectSkeletonTracker() {
       const divider = document.createElement("div");
       divider.className = "fl-skel-divider";
       panel.appendChild(divider);
-      for (const b of buyers.slice(0, 5)) {
+      for (const b of buyers.slice(0, 1)) {
         const row = document.createElement("div");
         row.className = "fl-skel-buyer";
         const nameEl = document.createElement("span");
@@ -1348,6 +1348,8 @@ function injectSkeletonTracker() {
     }
   }
 
+  const _navEl = document.querySelector('section.site-navigation');
+  panel.style.bottom = ((_navEl && _navEl.offsetHeight > 0) ? _navEl.offsetHeight + 8 : 16) + 'px';
   document.body.appendChild(panel);
 }
 
