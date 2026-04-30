@@ -135,7 +135,9 @@ const PRICES = {
   141161: 0.50,  // Final Breath
   122490: 0.50,  // Moves in the Great Game
   122489: 12.50, // Vital Intelligence
+  140970: 25.00, // Queen Mate (50 Hinterland Scrip)
   140971: 25.00, // Epaulette Mate (50 Hinterland Scrip)
+  140978: 2.50,  // Vienna Opening (5 Hinterland Scrip)
   758:   37.50,  // Copper Cipher Ring
   140980: 62.50, // Stalemate (125 Hinterland Scrip)
   142855: 62.50,  // Much-Needed Gap
@@ -527,6 +529,12 @@ const PRICES = {
   21898:  200.00, // Midnight Matriarch
   728:    312.50, // Bengal Tigress
   355:   5856.40, // Overgoat
+
+  // MISCELLANEOUS (sell prices from wiki, non-shop sources)
+  146694: 0.50,   // Blood Oath (10 Stuivers)
+  145002: 2.50,   // Ascended Ambergris (50 Stuivers)
+  144982: 2.50,   // Roof-Chart (50 Stuivers)
+  144983: 12.50,  // Memory of a Much Stranger Self (250 Stuivers)
 
   // FAVOURS (Progress qualities; value = Jericho Locks option / 5: 4 favours + 1 action)
   // All options below yield 30 echoes → 6.00 per favour
