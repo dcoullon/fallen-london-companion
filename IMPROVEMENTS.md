@@ -100,5 +100,11 @@ same plot without having to navigate back manually.
   ready for AMO submission.
 - **EPA counter** — two persistent counters (lifetime + session) injected into the Myself tab
   below the player name/reputation. Session counter reset by Start/Stop link; lifetime never
-  cleared. Both persist across page reloads via `browser.storage.local`. Action cost read from
-  `response.elapsed`; echo value summed from priced item changes per action.
+  cleared. Both persist across page reloads via `browser.storage.local`, keyed per character ID
+  (`epa_{charId}`) so multiple accounts on the same browser are tracked independently. Action
+  cost read from `response.elapsed`; echo value summed from priced item changes per action.
+- **Price list expansion** — added Queen Mate (25ε), Vienna Opening (2.5ε), Blood Oath (0.5ε),
+  Ascended Ambergris (2.5ε), Roof-Chart (2.5ε), Memory of a Much Stranger Self (12.5ε),
+  A Recipe for Zzoup (17.5ε). Added price audit tooling: `check-prices.js`,
+  `match-shop-prices.js`, `fetch-missing-prices.py`. 432 remaining unpriced inventory items
+  catalogued in `example-data/unpriced-items.txt`.
