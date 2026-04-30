@@ -1351,6 +1351,29 @@ function injectSkeletonTracker() {
   document.body.appendChild(panel);
 }
 
+
+function _updateFavoursFromChoosebranch(data) {
+  if (!data?.messages || !_cachedFactionStats) return;
+  let changed = false;
+  for (const msg of data.messages) {
+    const name = msg.possession?.name;
+    if (!name) continue;
+    const m = name.match(/^Favours: (.+)$/);
+    if (!m) continue;
+    const fid = FACTION_API_NAME_TO_ID.get(m[1]);
+    if (fid == null) continue;
+    const newLevel = msg.possession.level ?? 0;
+    const e = _cachedFactionStats.get(fid) ?? { favours: 0, renown: 0 };
+    e.favours = newLevel;
+    _cachedFactionStats.set(fid, e);
+    if (_cachedFavoursQtys) {
+      if (newLevel > 0) _cachedFavoursQtys.set(msg.possession.id, newLevel);
+      else _cachedFavoursQtys.delete(msg.possession.id);
+    }
+    changed = true;
+  }
+  if (changed) document.getElementById("fl-renown-bar")?.remove();
+}
 // ── Wire up ───────────────────────────────────────────────────────────────────
 
 window.addEventListener("message", (event) => {
@@ -1361,6 +1384,7 @@ window.addEventListener("message", (event) => {
     const data = event.data.data;
     const changes = parseChanges(data);
     annotateResults(changes, parseCPChanges(data));
+    _updateFavoursFromChoosebranch(data);
     const satLevel = parseSaturation(data);
     if (satLevel !== null) annotateSaturation(satLevel);
     const elapsed = data.elapsed ?? 0;

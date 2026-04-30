@@ -6,7 +6,7 @@
 /* ── Bone Market skeleton tracker ── */
 #fl-skeleton-tracker {
   position: fixed;
-  bottom: 16px;
+  top: 16px;
   left: 16px;
   background: rgba(18, 14, 9, 0.95);
   border: 1px solid #6b5a3e;
