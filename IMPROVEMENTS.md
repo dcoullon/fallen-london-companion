@@ -81,7 +81,7 @@ same plot without having to navigate back manually.
   a choice. Reads branch requirement data and looks up item prices inline.
 - **Possessions tab — faction renown bar** — faction item icons injected at the top of the
   Possessions tab with quantity badges, hover glow, click-to-scroll, and favours/7 · renown/55
-  stats under each icon. Favours text bolds at 7/7 to signal they should be spent.
+  stats under each icon. Favours text shown as [7/7] in teal at max to signal they should be spent.
   Also a "↓ Jump to items" link below the heading.
 - **Possessions tab — cross-conversion bar** — ordered T3 cross-conversion carousel below the
   renown bar, showing current quantities; Making Waves items marked with a dashed glow.
