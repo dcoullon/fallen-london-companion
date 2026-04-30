@@ -1078,7 +1078,15 @@ function injectEpaPanel() {
 }
 
 function startPossessionsObserver() {
-  setInterval(() => { injectPossessionsStyles(); injectEpaPanel(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); injectSkeletonTracker(); }, 1000);
+  setInterval(() => {
+    injectPossessionsStyles(); injectEpaPanel(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); injectSkeletonTracker();
+    const _sp = document.getElementById('fl-skeleton-tracker');
+    const _sn = document.querySelector('section.site-navigation');
+    if (_sp && _sn) {
+      const _h = Math.max(0, window.innerHeight - _sn.getBoundingClientRect().top);
+      if (_h > 0) _sp.style.bottom = (_h + 32) + 'px';
+    }
+  }, 1000);
 }
 
 // ── Bone Market — skeleton tracker + buyer suggestion ─────────────────────────
@@ -1349,7 +1357,8 @@ function injectSkeletonTracker() {
   }
 
   const _navEl = document.querySelector('section.site-navigation');
-  panel.style.bottom = ((_navEl && _navEl.offsetHeight > 0) ? _navEl.offsetHeight + 8 : 16) + 'px';
+  const _navFromBottom = _navEl ? Math.max(0, window.innerHeight - _navEl.getBoundingClientRect().top) : 0;
+  panel.style.bottom = (_navFromBottom > 0 ? _navFromBottom + 32 : 48) + 'px';
   document.body.appendChild(panel);
 }
 
