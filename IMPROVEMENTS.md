@@ -2,6 +2,28 @@
 
 ## Pending (highest ROI first)
 
+### Bone Market — buyer payout labels on Seeking Buyers page (BLOCKED)
+Each buyer card on the "Seeking Buyers" page should show `~26.0ε: 52 Scrip` inline after the branch title.
+The feature is partially built (`_tryAnnotateBuyersFromDOM` in `content.js`) but labels are not appearing.
+
+**What we know (from DevTools debug session):**
+- `AV=250, SIP=62, 22 [data-branch-id] containers` on the page — state IS populated, DOM IS loaded
+- Game branch names are `"Sell to a Naive Collector"`, `"Sell to a Pedagogically Inclined Grandmother"`, `"Sell to an Enthusiast of the Ancient World"`, etc. (confirmed from API log)
+- These exact strings were added as `branchName` to each `BONE_MARKET_BUYERS` entry
+- `_tryAnnotateBuyersFromDOM` does a full `document.body` TreeWalker scanning for those strings
+- Still not matching — suspected cause: the branch title may NOT be a single bare text node; likely split across child elements (e.g. `<h3>Sell to a <em>Naive Collector</em></h3>`) or padded with whitespace/non-breaking spaces
+
+**Next debugging step:**
+1. Open DevTools > Elements tab while on "Seeking Buyers"
+2. Inspect the `<h3>` (or equivalent heading) inside one `[data-branch-id]` container
+3. Run in console: `document.querySelector('[data-branch-id]').querySelector('h3,h4,h5')?.innerHTML`
+4. If text is split across child elements, TreeWalker won't find it as a single node — need to match on `element.textContent` instead of text-node content
+
+**Other notes:**
+- `parseBuyerBranches` (event-driven path) also updated to use `branchName` — both paths are consistent
+- 16 known buyer branch names mapped; "Dumbwaiter" (bird-only buyer) has `branchName: null` — name TBD when a bird skeleton is tested
+- "Sell to an Enterprising Boot Salesman" appears in the game but is NOT in `BONE_MARKET_BUYERS` — payout formula unknown
+
 ### setInterval — performance / battery guard
 Currently the 1 s polling interval runs all injection functions on every tick regardless of which
 tab the player is on. Add a page-context check at the top of each injector so work is skipped
