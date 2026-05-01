@@ -499,6 +499,9 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
   const newExh    = _exhaustionFromSale(simState);
   const increased = newExh > baseExh;
   const wouldCap  = _skeletonState.exhaustion + newExh >= 4;
+  const effectiveTypeKey = _skeletonState.skeletonInProgress >= 100
+    ? Math.floor(_skeletonState.skeletonInProgress / 10) * 10
+    : (_skeletonState.zoologicalManiaType || 0);
   let maniaConflict = false;
   if (_skeletonState.skeletonInProgress > 0) {
     const t = BONE_TYPE_BY_ID[boneId];
@@ -508,8 +511,7 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
       } else if (t.slot === "head") {
         maniaConflict = (_skeletonState.skullsNeeded || 0) > 0;
       } else {
-        const typeKey = Math.floor(_skeletonState.skeletonInProgress / 10) * 10;
-        const limits = SKEL_SLOT_LIMITS[typeKey];
+        const limits = SKEL_SLOT_LIMITS[effectiveTypeKey];
         const sk = t.slot + "s";
         if (limits) {
           const max = limits[sk];
@@ -518,10 +520,10 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
           } else if (max !== undefined) {
             maniaConflict = (_skeletonState[sk] || 0) >= max;
           } else {
-            maniaConflict = (_skeletonState.limbsNeeded || 0) === 0;
+            if (effectiveTypeKey) maniaConflict = (_skeletonState.limbsNeeded || 0) === 0;
           }
         } else {
-          maniaConflict = (_skeletonState.limbsNeeded || 0) === 0;
+          if (effectiveTypeKey) maniaConflict = (_skeletonState.limbsNeeded || 0) === 0;
         }
       }
     }
@@ -551,8 +553,7 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
   }
   if (maniaConflict) {
     const s = document.createElement("span");
-    const typeKey = Math.floor(_skeletonState.skeletonInProgress / 10) * 10;
-    const skelTypePlural = SKEL_TYPE_PLURAL[typeKey] || "skeleton";
+    const skelTypePlural = SKEL_TYPE_PLURAL[effectiveTypeKey] || "skeleton";
     s.textContent = " [✗ " + skelTypePlural + "]";
     s.style.color = "#c9592c";
     wrap.appendChild(s);
@@ -568,12 +569,14 @@ const _BONE_NAME_TO_ID = new Map([
   ["Bright Brass Skull", 749], ["Skull in Coral", 141774],
   ["A List of Aliases, Writ in Gant", 105464],
   ["Human Arm", 140813], ["Ivory Humerus", 140849],
+  ["Knotted Humerus", 140772], ["Crustacean Pincer", 140880],
   ["Femur of a Surface Deer", 140771], ["Unidentified Thigh Bone", 140756],
   ["Ivory Femur", 142351], ["Femur of a Jurassic Beast", 140773],
+  ["Holy Relic of the Thigh of Saint Fiacre", 140774], ["Helical Thighbone", 141480],
   ["Bat Wing", 140879], ["Wing of a Young Terror Bird", 141372],
   ["Albatross Wing", 140850], ["Fin Bones, Collected", 140852],
   ["Amber-Crusted Fin", 141380], ["Tomb-Lion's Tail", 140881],
-  ["Plaster Tail Bones", 140851], ["Obsidian Chitin Tail", 142727],
+  ["Plaster Tail Bones", 140851], ["Obsidian Chitin Tail", 142727], ["Jet Black Stinger", 140883],
   ["Withered Tentacle", 140853],
 ]);
 
@@ -616,6 +619,7 @@ function parseBranchBones(data) {
 
   const results = [];
   for (const node of nodes) for (const branch of node.childBranches) {
+    if (/^(supply a skeleton|declare your)/i.test(branch.name)) continue;
     if (!Array.isArray(branch.qualityRequirements)) continue;
     let nameMatch = null;
     for (const req of branch.qualityRequirements) {
@@ -981,6 +985,7 @@ const _skeletonState = {
   approximateValue: 0, amalgamy: 0, antiquity: 0, menace: 0,
   exhaustion: 0,
   zoologicalMania: 0,          // auto-captured from choosebranch when type is declared
+  zoologicalManiaType: 0,      // typeKey of the skeleton type with weekly penny bonus (e.g. 140=Amphibian)
   boneMarketFluctuations: 0,   // 1=Antiquity, 2=Amalgamy, 3=Menace; 0=unknown
   skeletonInProgress: 0,
   skullsNeeded: 0, limbsNeeded: 0,
@@ -1000,10 +1005,14 @@ const BONE_TYPE_BY_ID = {
   105464: { slot: "skull",    count: 1 }, // A List of Aliases, Writ in Gant (Victim's Skull branch)
   140813: { slot: "arm",      count: 1 }, // Human Arm
   140849: { slot: "arm",      count: 1 }, // Ivory Humerus
+  140772: { slot: "arm",      count: 1 }, // Knotted Humerus
+  140880: { slot: "arm",      count: 1 }, // Crustacean Pincer
   140771: { slot: "leg",      count: 1 }, // Femur of a Surface Deer
   140756: { slot: "leg",      count: 1 }, // Unidentified Thigh Bone
   142351: { slot: "leg",      count: 1 }, // Ivory Femur
   140773: { slot: "leg",      count: 1 }, // Femur of a Jurassic Beast
+  140774: { slot: "leg",      count: 1 }, // Holy Relic of the Thigh of Saint Fiacre
+  141480: { slot: "leg",      count: 1 }, // Helical Thighbone
   140879: { slot: "wing",     count: 1 }, // Bat Wing
   141372: { slot: "wing",     count: 1 }, // Wing of a Young Terror Bird
   140850: { slot: "wing",     count: 1 }, // Albatross Wing
@@ -1012,6 +1021,7 @@ const BONE_TYPE_BY_ID = {
   140881: { slot: "tail",     count: 1 }, // Tomb-Lion's Tail
   140851: { slot: "tail",     count: 1 }, // Plaster Tail Bones
   142727: { slot: "tail",     count: 1 }, // Obsidian Chitin Tail
+  140883: { slot: "tail",     count: 1 }, // Jet Black Stinger
   140853: { slot: "tentacle", count: 1 }, // Withered Tentacle
 };
 
@@ -1027,10 +1037,14 @@ const BONE_EFFECTS_BY_ID = {
   105464: { av:  250, antiquity: 0, amalgamy: 0, menace:  0 }, // A List of Aliases, Writ in Gant (Victim's Skull branch)
   140813: { av:  250, antiquity: 0, amalgamy: 0, menace: -1 }, // Human Arm
   140849: { av: 1500, antiquity: 0, amalgamy: 0, menace:  0 }, // Ivory Humerus
+  140772: { av:  300, antiquity: 0, amalgamy: 1, menace:  0 }, // Knotted Humerus
+  140880: { av:    0, antiquity: 0, amalgamy: 0, menace:  1 }, // Crustacean Pincer
   140771: { av:   10, antiquity: 0, amalgamy: 0, menace: -1 }, // Femur of a Surface Deer
   140756: { av:  100, antiquity: 0, amalgamy: 0, menace:  0 }, // Unidentified Thigh Bone
   142351: { av: 6500, antiquity: 1, amalgamy: 0, menace:  0 }, // Ivory Femur
   140773: { av:  300, antiquity: 1, amalgamy: 0, menace:  0 }, // Femur of a Jurassic Beast
+  140774: { av: 1250, antiquity: 0, amalgamy: 0, menace:  0 }, // Holy Relic of the Thigh of Saint Fiacre
+  141480: { av:  300, antiquity: 0, amalgamy: 1, menace:  0 }, // Helical Thighbone
   140879: { av:    1, antiquity: 0, amalgamy: 0, menace: -1 }, // Bat Wing
   141372: { av:  250, antiquity: 1, amalgamy: 0, menace:  1 }, // Wing of a Young Terror Bird
   140850: { av: 1250, antiquity: 0, amalgamy: 1, menace:  0 }, // Albatross Wing
@@ -1039,6 +1053,7 @@ const BONE_EFFECTS_BY_ID = {
   140881: { av:  250, antiquity: 1, amalgamy: 0, menace:  0 }, // Tomb-Lion's Tail
   140851: { av:  250, antiquity: 0, amalgamy: 0, menace:  0 }, // Plaster Tail Bones
   142727: { av:  500, antiquity: 0, amalgamy: 1, menace:  0 }, // Obsidian Chitin Tail
+  140883: { av:   50, antiquity: 0, amalgamy: 0, menace:  1 }, // Jet Black Stinger
   140853: { av:  250, antiquity:-1, amalgamy: 0, menace:  0 }, // Withered Tentacle
 };
 
@@ -1584,21 +1599,36 @@ const BONE_MARKET_BUYERS = [
     note: "Bird" },
 ];
 
+const _ZOOLOGICAL_TYPE_MAP = {
+  amphibians:140, humanoids:110, insects:200, reptiles:150,
+  birds:180, fish:190, spiders:210, apes:120, monkeys:130, chimeras:100,
+};
+
 function _detectManiaFromStorylets(storylets) {
   if (!Array.isArray(storylets)) return;
   for (const s of storylets) {
     const text = [s.name, s.teaser, s.description].filter(Boolean).join(" ");
     const m = text.match(/predilection for (antique|amalgam|menac)/i);
-    if (!m) continue;
-    const t = m[1].toLowerCase();
-    const val = t === "antique" ? 1 : t.startsWith("amalgam") ? 2 : 3;
-    if (_skeletonState.boneMarketFluctuations !== val) {
-      _skeletonState.boneMarketFluctuations = val;
-      document.getElementById("fl-skeleton-tracker")?.remove();
-      _lastSkeletonRenderHash = "";
-      for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
+    if (m) {
+      const t = m[1].toLowerCase();
+      const val = t === "antique" ? 1 : t.startsWith("amalgam") ? 2 : 3;
+      if (_skeletonState.boneMarketFluctuations !== val) {
+        _skeletonState.boneMarketFluctuations = val;
+        document.getElementById("fl-skeleton-tracker")?.remove();
+        _lastSkeletonRenderHash = "";
+        for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
+      }
     }
-    return;
+    const z = text.match(/most interested in (\w+)/i);
+    if (z) {
+      const val = _ZOOLOGICAL_TYPE_MAP[z[1].toLowerCase()] || 0;
+      if (val && _skeletonState.zoologicalManiaType !== val) {
+        _skeletonState.zoologicalManiaType = val;
+        document.getElementById("fl-skeleton-tracker")?.remove();
+        _lastSkeletonRenderHash = "";
+        for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
+      }
+    }
   }
 }
 
@@ -1617,6 +1647,7 @@ function _boneTypeLabel(boneId, boneName) {
     return `[${t.slot}]`;
   }
   const n = (boneName || "").toLowerCase();
+  if (n.startsWith("skeleton:")) return null;
   if (n.includes("skull")) return "[skull]";
   if (n.includes("femur") || n.includes("thigh")) return "[leg]";
   if (n.includes("humerus") || n.includes(" arm")) return "[arm]";
