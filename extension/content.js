@@ -485,6 +485,131 @@ function annotateBranchCosts(branchCosts) {
   setTimeout(() => { if (_branchCostObserver) { _branchCostObserver.disconnect(); _branchCostObserver = null; } }, 300000);
 }
 
+function parseBranchBones(data) {
+  let nodes = [];
+  if (data && Array.isArray(data.childBranches)) {
+    nodes = [data];
+  } else if (data && data.storylet && Array.isArray(data.storylet.childBranches)) {
+    nodes = [data.storylet];
+  } else if (data && data.event && Array.isArray(data.event.childBranches)) {
+    nodes = [data.event];
+  } else if (data && Array.isArray(data.displayCards)) {
+    const withBranches = data.displayCards.filter(c => Array.isArray(c.childBranches));
+    nodes = withBranches.length > 0 ? withBranches
+          : data.displayCards.filter(c => Array.isArray(c.qualityRequirements) && c.qualityRequirements.length > 0)
+                             .map(c => ({ name: c.name, childBranches: [c] }));
+  }
+  if (nodes.length === 0) return [];
+
+  const results = [];
+  for (const node of nodes) for (const branch of node.childBranches) {
+    if (!Array.isArray(branch.qualityRequirements)) continue;
+    for (const req of branch.qualityRequirements) {
+      const id = req.qualityId;
+      const name = req.qualityName || "";
+      if (BONE_TYPE_BY_ID[id] || _boneTypeLabel(0, name)) {
+        results.push({ branchId: branch.id, branchName: branch.name, boneId: id, boneName: name });
+        break;
+      }
+    }
+  }
+  return results;
+}
+
+let _boneLabelObserver = null;
+
+function annotateBranchBones(boneBranches) {
+  if (_boneLabelObserver) { _boneLabelObserver.disconnect(); _boneLabelObserver = null; }
+  if (boneBranches.length === 0) return;
+
+  function tryInject() {
+    for (const { branchId, branchName, boneId, boneName } of boneBranches) {
+      const typeLabel = _boneTypeLabel(boneId, boneName);
+      if (!typeLabel) continue;
+
+      // Find branch container by data-branch-id, fall back to text search
+      let headerEl = null;
+      if (branchId) {
+        const container = document.querySelector(`[data-branch-id="${branchId}"]`);
+        if (container) {
+          headerEl = container.querySelector("h2,h3,h4,h5,[class*='heading'],[class*='title']") || container;
+        }
+      }
+      if (!headerEl) {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+          if (node.textContent.trim() === branchName) { headerEl = node.parentElement; break; }
+        }
+      }
+      if (!headerEl) continue;
+      if (headerEl.dataset.flBoneLabeled) continue;
+      headerEl.dataset.flBoneLabeled = "1";
+
+      // Compute exhaustion and mania labels
+      const eff = BONE_EFFECTS_BY_ID[boneId] ?? { av: (PRICES[boneId] ?? 0) * 100, antiquity: 0, amalgamy: 0, menace: 0 };
+      const baseExh = _exhaustionFromSale(_skeletonState);
+      const simState = {
+        ..._skeletonState,
+        approximateValue: _skeletonState.approximateValue + eff.av,
+        antiquity: _skeletonState.antiquity + eff.antiquity,
+        amalgamy:  _skeletonState.amalgamy  + eff.amalgamy,
+        menace:    _skeletonState.menace    + eff.menace,
+      };
+      const newExh   = _exhaustionFromSale(simState);
+      const increased = newExh > baseExh;
+      const wouldCap  = _skeletonState.exhaustion + newExh >= 4;
+
+      const bmf = _skeletonState.boneMarketFluctuations;
+      let maniaConflict = false;
+      if (bmf === 1) maniaConflict = eff.amalgamy > 0 || eff.menace > 0;
+      else if (bmf === 2) maniaConflict = eff.antiquity > 0 || eff.menace > 0;
+      else if (bmf === 3) maniaConflict = eff.antiquity > 0 || eff.amalgamy > 0;
+
+      // Build label span
+      const wrap = document.createElement("span");
+      wrap.style.cssText = "font-size:0.85em;opacity:0.85;margin-left:4px;";
+
+      const typeSp = document.createElement("span");
+      typeSp.textContent = typeLabel;
+      typeSp.style.color = "inherit";
+      wrap.appendChild(typeSp);
+
+      if (increased && wouldCap) {
+        const exhSp = document.createElement("span");
+        exhSp.textContent = " ⚠⚠ +exh→cap";
+        exhSp.style.cssText = "color:#c9592c;font-weight:bold;";
+        wrap.appendChild(exhSp);
+      } else if (increased) {
+        const exhSp = document.createElement("span");
+        exhSp.textContent = " ⚠ +exh";
+        exhSp.style.color = "#c9a84c";
+        wrap.appendChild(exhSp);
+      } else if (wouldCap) {
+        const exhSp = document.createElement("span");
+        exhSp.textContent = " ⚠ at cap";
+        exhSp.style.color = "#c9592c";
+        wrap.appendChild(exhSp);
+      }
+
+      if (maniaConflict) {
+        const maniaSp = document.createElement("span");
+        maniaSp.textContent = " [~mania]";
+        maniaSp.style.color = "#c9a84c";
+        wrap.appendChild(maniaSp);
+      }
+
+      headerEl.appendChild(wrap);
+    }
+  }
+
+  _boneLabelObserver = new MutationObserver(tryInject);
+  _boneLabelObserver.observe(document.body, { childList: true, subtree: true });
+  tryInject();
+  setTimeout(tryInject, 300);
+  setTimeout(() => { if (_boneLabelObserver) { _boneLabelObserver.disconnect(); _boneLabelObserver = null; } }, 300000);
+}
+
 // ── General icon aria-label annotation ───────────────────────────────────────
 
 function annotateIconAriaLabels(root) {
@@ -721,6 +846,54 @@ const _skeletonState = {
   skullsNeeded: 0, limbsNeeded: 0,
   skulls: 0, arms: 0, legs: 0, wings: 0, fins: 0, tails: 0, tentacles: 0,
   implausibility: 0, torsoStyle: 0,
+};
+
+const BONE_TYPE_BY_ID = {
+  122483: { slot: "head",     count: 0 }, // Carved Ball of Stygian Ivory
+  141479: { slot: "skull",    count: 2 }, // Doubled Skull
+  140847: { slot: "skull",    count: 1 }, // Sabre-toothed Skull
+  141371: { slot: "skull",    count: 1 }, // Horned Skull
+  140882: { slot: "skull",    count: 1 }, // Plated Skull
+  811:    { slot: "skull",    count: 1 }, // Rubbery Skull
+  140813: { slot: "arm",      count: 1 }, // Human Arm
+  140849: { slot: "arm",      count: 1 }, // Ivory Humerus
+  140771: { slot: "leg",      count: 1 }, // Femur of a Surface Deer
+  140756: { slot: "leg",      count: 1 }, // Unidentified Thigh Bone
+  142351: { slot: "leg",      count: 1 }, // Ivory Femur
+  140773: { slot: "leg",      count: 1 }, // Femur of a Jurassic Beast
+  140879: { slot: "wing",     count: 1 }, // Bat Wing
+  141372: { slot: "wing",     count: 1 }, // Wing of a Young Terror Bird
+  140850: { slot: "wing",     count: 1 }, // Albatross Wing
+  140852: { slot: "fin",      count: 1 }, // Fin Bones, Collected
+  141380: { slot: "fin",      count: 1 }, // Amber-Crusted Fin
+  140881: { slot: "tail",     count: 1 }, // Tomb-Lion's Tail
+  140851: { slot: "tail",     count: 1 }, // Plaster Tail Bones
+  142727: { slot: "tail",     count: 1 }, // Obsidian Chitin Tail
+  140853: { slot: "tentacle", count: 1 }, // Withered Tentacle
+};
+
+const BONE_EFFECTS_BY_ID = {
+  122483: { av:  250, antiquity: 0, amalgamy: 0, menace:  0 }, // Carved Ball of Stygian Ivory
+  141479: { av: 6250, antiquity: 1, amalgamy: 1, menace:  0 }, // Doubled Skull
+  140847: { av: 6250, antiquity: 1, amalgamy: 0, menace:  1 }, // Sabre-toothed Skull
+  141371: { av: 1250, antiquity: 1, amalgamy: 0, menace:  1 }, // Horned Skull
+  140882: { av: 2500, antiquity: 0, amalgamy: 0, menace:  1 }, // Plated Skull
+  811:    { av: 6000, antiquity: 0, amalgamy: 1, menace:  0 }, // Rubbery Skull
+  140813: { av:  250, antiquity: 0, amalgamy: 0, menace: -1 }, // Human Arm
+  140849: { av: 1500, antiquity: 0, amalgamy: 0, menace:  0 }, // Ivory Humerus
+  140771: { av:   10, antiquity: 0, amalgamy: 0, menace: -1 }, // Femur of a Surface Deer
+  140756: { av:  100, antiquity: 0, amalgamy: 0, menace:  0 }, // Unidentified Thigh Bone
+  142351: { av: 6500, antiquity: 1, amalgamy: 0, menace:  0 }, // Ivory Femur
+  140773: { av:  300, antiquity: 1, amalgamy: 0, menace:  0 }, // Femur of a Jurassic Beast
+  140879: { av:    1, antiquity: 0, amalgamy: 0, menace: -1 }, // Bat Wing
+  141372: { av:  250, antiquity: 1, amalgamy: 0, menace:  1 }, // Wing of a Young Terror Bird
+  140850: { av: 1250, antiquity: 0, amalgamy: 1, menace:  0 }, // Albatross Wing
+  140852: { av:   50, antiquity: 0, amalgamy: 0, menace:  0 }, // Fin Bones, Collected
+  141380: { av: 1500, antiquity: 0, amalgamy: 1, menace:  0 }, // Amber-Crusted Fin
+  140881: { av:  250, antiquity: 1, amalgamy: 0, menace:  0 }, // Tomb-Lion's Tail
+  140851: { av:  250, antiquity: 0, amalgamy: 0, menace:  0 }, // Plaster Tail Bones
+  142727: { av:  500, antiquity: 0, amalgamy: 1, menace:  0 }, // Obsidian Chitin Tail
+  140853: { av:  250, antiquity:-1, amalgamy: 0, menace:  0 }, // Withered Tentacle
 };
 
 function parseMyself(data) {
@@ -1118,66 +1291,82 @@ if (_skeletonState[field] !== newLevel) { _skeletonState[field] = newLevel; chan
 const BONE_MARKET_BUYERS = [
   { name: "Naive Collector", check: () => true,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 250) * 2.50,
+    secondaryEchoesFn: () => 0,
     note: null },
   { name: "Bohemian Sculptress", check: (s) => s.antiquity === 0,
     payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
+    secondaryEchoesFn: () => 0,
     note: null },
   { name: "Grandmother", check: (s) => s.menace === 0,
     payout: (s) => (20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50,
+    secondaryEchoesFn: () => 0,
     note: null },
   { name: "Theologian", check: (s) => s.amalgamy === 0,
     payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
+    secondaryEchoesFn: () => 0,
     note: null },
   { name: "Palaeontologist", check: () => true,
     payout: (s) => (s.approximateValue + s.zoologicalMania + 5) * 0.01 + 5.00,
+    secondaryEchoesFn: () => 5,
     note: "Bone Fragments" },
   { name: "Ancient Enthusiast", check: (s) => s.antiquity >= 1,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50
                + (s.antiquity + (s.boneMarketFluctuations === 1 ? 1 : 0)) * 2.50,
+    secondaryEchoesFn: (s) => (s.antiquity + (s.boneMarketFluctuations === 1 ? 1 : 0)) * 2.5,
     note: "Antiquity" },
   { name: "Mrs Plenty", check: (s) => s.menace >= 1,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50
                + (s.menace + (s.boneMarketFluctuations === 3 ? 1 : 0)) * 2.50,
+    secondaryEchoesFn: (s) => (s.menace + (s.boneMarketFluctuations === 3 ? 1 : 0)) * 2.5,
     note: "Menace" },
   { name: "Tentacled Servant", check: (s) => s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
                + (s.amalgamy + (s.boneMarketFluctuations === 2 ? 1 : 0)) * 2.50,
+    secondaryEchoesFn: (s) => (s.amalgamy + (s.boneMarketFluctuations === 2 ? 1 : 0)) * 2.5,
     note: "Amalgamy" },
   { name: "Ambassador", check: (s) => s.exhaustion < 4 && s.antiquity >= 1,
     payout: (s) => Math.ceil(5 + (s.approximateValue + s.zoologicalMania) / 50) * 0.50
                + Math.round(0.8 * Math.pow(s.antiquity, s.boneMarketFluctuations === 1 ? 2.1 : 2)) * 2.50,
+    secondaryEchoesFn: (s) => Math.round(0.8 * Math.pow(s.antiquity, s.boneMarketFluctuations === 1 ? 2.1 : 2)) * 2.5,
     note: "Antiquity²" },
   { name: "Teller of Terrors", check: (s) => s.exhaustion < 4 && s.menace >= 1,
     payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 0.10
                + Math.round(4 * Math.pow(s.menace, s.boneMarketFluctuations === 3 ? 2.1 : 2)) * 0.50,
+    secondaryEchoesFn: (s) => Math.round(4 * Math.pow(s.menace, s.boneMarketFluctuations === 3 ? 2.1 : 2)) * 0.5,
     note: "Menace²" },
   { name: "Tentacled Entrepreneur", check: (s) => s.exhaustion < 4 && s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
                + Math.round(4 * Math.pow(s.amalgamy, s.boneMarketFluctuations === 2 ? 2.1 : 2)) * 0.50,
+    secondaryEchoesFn: (s) => Math.round(4 * Math.pow(s.amalgamy, s.boneMarketFluctuations === 2 ? 2.1 : 2)) * 0.5,
     note: "Amalgamy²" },
   { name: "Gothic Author", check: (s) => s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
                + (s.boneMarketFluctuations === 1 ? Math.floor(s.antiquity * (s.menace + 0.5))
                 : s.boneMarketFluctuations === 3 ? Math.floor((s.antiquity + 0.5) * s.menace)
                 : s.antiquity * s.menace) * 2.50,
+    secondaryEchoesFn: (s) => (s.boneMarketFluctuations === 1 ? Math.floor(s.antiquity * (s.menace + 0.5)) : s.boneMarketFluctuations === 3 ? Math.floor((s.antiquity + 0.5) * s.menace) : s.antiquity * s.menace) * 2.5,
     note: "Antiquity×Menace" },
   { name: "Zailor", check: (s) => s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
     payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 2.50 + (
       s.boneMarketFluctuations === 1 ? Math.floor((s.amalgamy + 0.5) * s.antiquity)
       : s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.antiquity + 0.5))
       : s.antiquity * s.amalgamy) * 2.50,
+    secondaryEchoesFn: (s) => (s.boneMarketFluctuations === 1 ? Math.floor((s.amalgamy + 0.5) * s.antiquity) : s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.antiquity + 0.5)) : s.antiquity * s.amalgamy) * 2.5,
     note: "Antiquity×Amalgamy" },
   { name: "Rubbery Collector", check: (s) => s.exhaustion < 4 && s.menace >= 1 && s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + (
       s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.menace + 0.5))
       : s.boneMarketFluctuations === 3 ? Math.floor((s.amalgamy + 0.5) * s.menace)
       : s.menace * s.amalgamy) * 2.50,
+    secondaryEchoesFn: (s) => (s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.menace + 0.5)) : s.boneMarketFluctuations === 3 ? Math.floor((s.amalgamy + 0.5) * s.menace) : s.menace * s.amalgamy) * 2.5,
     note: "Menace×Amalgamy" },
   { name: "Constable", check: (s) => s.skeletonInProgress >= 110 && s.skeletonInProgress <= 119,
     payout: (s) => (20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50,
+    secondaryEchoesFn: () => 0,
     note: "Humanoid" },
   { name: "Dumbwaiter", check: (s) => s.skeletonInProgress >= 180 && s.skeletonInProgress <= 189,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 250) * 2.50,
+    secondaryEchoesFn: () => 0,
     note: "Bird" },
 ];
 
@@ -1203,6 +1392,32 @@ function evaluateBuyers(state) {
     .filter(b => b.check(state))
     .map(b => ({ name: b.name, echoes: b.payout(state), note: b.note }))
     .sort((a, b) => b.echoes - a.echoes);
+}
+
+function _boneTypeLabel(boneId, boneName) {
+  const t = BONE_TYPE_BY_ID[boneId];
+  if (t) {
+    if (t.count === 0) return "[head]";
+    if (t.count === 2) return "[skull×2]";
+    return `[${t.slot}]`;
+  }
+  const n = (boneName || "").toLowerCase();
+  if (n.includes("skull")) return "[skull]";
+  if (n.includes("femur") || n.includes("thigh")) return "[leg]";
+  if (n.includes("humerus") || n.includes(" arm")) return "[arm]";
+  if (n.includes("wing")) return "[wing]";
+  if (n.includes("tail")) return "[tail]";
+  if (n.includes("fin ") || n.includes(" fin")) return "[fin]";
+  if (n.includes("tentacle")) return "[tentacle]";
+  return null;
+}
+
+function _exhaustionFromSale(state) {
+  const top = evaluateBuyers(state)[0];
+  if (!top) return 0;
+  const buyer = BONE_MARKET_BUYERS.find(b => b.name === top.name);
+  if (!buyer?.secondaryEchoesFn) return 0;
+  return Math.floor(buyer.secondaryEchoesFn(state) / 50);
 }
 
 const SKEL_TYPE_LABELS = {
@@ -1410,6 +1625,7 @@ window.addEventListener("message", (event) => {
     }
   } else if (event.data.type === "storylet-begin") {
     annotateBranchCosts(parseBranchCosts(event.data.data));
+    annotateBranchBones(parseBranchBones(event.data.data));
   } else if (event.data.type === "storylet-list") {
     _detectManiaFromStorylets(event.data.data.storylets);
   } else if (event.data.type === "myself") {

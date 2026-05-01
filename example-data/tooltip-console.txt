@@ -1,0 +1,122 @@
+[FL] annotateTooltip: no tooltipBox found in 
+<head>
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media storylet" data-branch-id="222864">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media storylet" data-branch-id="10375">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media storylet" data-branch-id="10569">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media storylet" data-branch-id="279187">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media storylet" data-branch-id="23988">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media storylet" data-branch-id="23983">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="ReactModalPortal">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="ReactModalPortal">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="ReactModalPortal">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<span>
+content.js:509:30
+[FL] storylet-begin: parseBranchCosts returned 0 branches; first reqs= [] content.js:962:13
+[FL] annotateTooltip: qualityName= Shadowy costByQuality keys= 
+Array []
+content.js:518:11
+[FL] annotateTooltip fallback: rootId= tippy-63 source= null content.js:526:13
+[FL] annotateTooltip: echoValue= null tooltipBox innerHTML= <div class="tippy-content" data-state="hidden" style="transition-duration: 0ms;"><div><div class="tooltip"><div class="icon tooltip__icon"><img src="//images.fallenlondon.com/icons/catsmall.png" alt=" content.js:541:11
+[FL] annotateTooltip: qualityName= Shadowy costByQuality keys= 
+Array []
+content.js:518:11
+[FL] annotateTooltip fallback: rootId= tippy-63 source= You unlocked this with Shadowy 205 (you needed 70) content.js:526:13
+[FL] annotateTooltip fallback: no [data-quality-id] ancestor of source; source outerHTML= <img alt="You unlocked this with Shadowy 205 (you needed 70)" aria-label="You unlocked this with Shadowy 205 (you needed 70)" class="cursor-default" src="//images.fallenlondon.com/icons/catsmall.png" aria-describedby="tippy-63"> content.js:536:21
+[FL] annotateTooltip: echoValue= null tooltipBox innerHTML= <div class="tippy-content" data-state="visible" style="transition-duration: 0ms;"><div><div class="tooltip"><div class="icon tooltip__icon"><img src="//images.fallenlondon.com/icons/catsmall.png" alt= content.js:541:11
+[FL] annotateTooltip: qualityName= Shadowy costByQuality keys= 
+Array []
+content.js:518:11
+[FL] annotateTooltip fallback: rootId= tippy-63 source= You unlocked this with Shadowy 205 (you needed 70) content.js:526:13
+[FL] annotateTooltip fallback: no [data-quality-id] ancestor of source; source outerHTML= <img alt="You unlocked this with Shadowy 205 (you needed 70)" aria-label="You unlocked this with Shadowy 205 (you needed 70)" class="cursor-default" src="//images.fallenlondon.com/icons/catsmall.png" aria-describedby="tippy-63"> content.js:536:21
+[FL] annotateTooltip: echoValue= null tooltipBox innerHTML= <div class="tippy-content" data-state="visible" style="transition-duration: 0ms;"><div><div class="tooltip"><div class="icon tooltip__icon"><img src="//images.fallenlondon.com/icons/catsmall.png" alt= content.js:541:11
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="loading-image">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media media--root" style="margin-bottom: 18px;">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media branch media--branch" data-branch-id="8311">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media branch media--branch" data-branch-id="8312">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media branch media--branch" data-branch-id="8314">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media branch media--branch" data-branch-id="8315">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media branch media--branch" data-branch-id="8316">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media branch media--branch" data-branch-id="9426">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="media branch media--branch media--locked" data-branch-id="8313">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="buttons buttons--left bu…--storylet-exit-options">
+content.js:509:30
+[FL] annotateTooltip: no tooltipBox found in 
+<div class="ReactModalPortal">
+content.js:509:30
+[FL] storylet-begin: parseBranchCosts returned 1 branches; first reqs= [{"branchName":"The fellow in the corner","costs":[{"name":"Piece of Rostygold","qty":10,"echoValue":0.1}],"total":0.1}] content.js:962:13
+[FL] annotateTooltip: qualityName= Pieces of Rostygold costByQuality keys= 
+Array [ "Piece of Rostygold" ]
+content.js:518:11
+[FL] annotateTooltip fallback: rootId= tippy-82 source= null content.js:526:13
+[FL] annotateTooltip: echoValue= null tooltipBox innerHTML= <div class="tippy-content" data-state="hidden" style="transition-duration: 0ms;"><div><div class="tooltip"><div class="icon tooltip__icon"><img src="//images.fallenlondon.com/icons/red_goldsmall.png" content.js:541:11
+[FL] annotateTooltip: qualityName= Pieces of Rostygold costByQuality keys= 
+Array [ "Piece of Rostygold" ]
+content.js:518:11
+[FL] annotateTooltip fallback: rootId= tippy-82 source= You unlocked this with 23,724 Pieces of Rostygold (you needed 10) content.js:526:13
+[FL] annotateTooltip fallback: no [data-quality-id] ancestor of source; source outerHTML= <img alt="You unlocked this with 23,724 Pieces of Rostygold (you needed 10)" aria-label="You unlocked this with 23,724 Pieces of Rostygold (you needed 10)" class="cursor-default" src="//images.fallenlondon.com/icons/red_goldsmall.png" aria-describedby="tippy-82"> content.js:536:21
+[FL] annotateTooltip: echoValue= null tooltipBox innerHTML= <div class="tippy-content" data-state="visible" style="transition-duration: 0ms;"><div><div class="tooltip"><div class="icon tooltip__icon"><img src="//images.fallenlondon.com/icons/red_goldsmall.png" content.js:541:11
+[FL] annotateTooltip: qualityName= Pieces of Rostygold costByQuality keys= 
+Array [ "Piece of Rostygold" ]
+content.js:518:11
+[FL] annotateTooltip fallback: rootId= tippy-82 source= You unlocked this with 23,724 Pieces of Rostygold (you needed 10) content.js:526:13
+[FL] annotateTooltip fallback: no [data-quality-id] ancestor of source; source outerHTML= <img alt="You unlocked this with 23,724 Pieces of Rostygold (you needed 10)" aria-label="You unlocked this with 23,724 Pieces of Rostygold (you needed 10)" class="cursor-default" src="//images.fallenlondon.com/icons/red_goldsmall.png" aria-describedby="tippy-82"> content.js:536:21
+[FL] annotateTooltip: echoValue= null tooltipBox innerHTML= <div class="tippy-content" data-state="visible" style="transition-duration: 0ms;"><div><div class="tooltip"><div class="icon tooltip__icon"><img src="//images.fallenlondon.com/icons/red_goldsmall.png" content.js:541:11
+[FL] annotateTooltip: qualityName= Pieces of Rostygold costByQuality keys= 
+Array [ "Piece of Rostygold" ]
+content.js:518:11
+[FL] annotateTooltip fallback: rootId= tippy-82 source= null content.js:526:13
+[FL] annotateTooltip: echoValue= null tooltipBox innerHTML= <div class="tippy-content" data-state="hidden" style="transition-duration: 0ms;"><div><div class="tooltip"><div class="icon tooltip__icon"><img src="//images.fallenlondon.com/icons/red_goldsmall.png" content.js:541:11
+[FL] annotateTooltip: qualityName= Pieces of Rostygold costByQuality keys= 
+Array [ "Piece of Rostygold" ]
+content.js:518:11
+[FL] annotateTooltip fallback: rootId= tippy-82 source= You unlocked this with 23,724 Pieces of Rostygold (you needed 10) content.js:526:13
+[FL] annotateTooltip fallback: no [data-quality-id] ancestor of source; source outerHTML= <img alt="You unlocked this with 23,724 Pieces of Rostygold (you needed 10)" aria-label="You unlocked this with 23,724 Pieces of Rostygold (you needed 10)" class="cursor-default" src="//images.fallenlondon.com/icons/red_goldsmall.png" aria-describedby="tippy-82"> content.js:536:21
+[FL] annotateTooltip: echoValue= null tooltipBox innerHTML= <div class="tippy-content" data-state="visible" style="transition-duration: 0ms;"><div><div class="tooltip"><div class="icon tooltip__icon"><img src="//images.fallenlondon.com/icons/red_goldsmall.png" content.js:541:11
+[FL] annotateTooltip: qualityName= Pieces of Rostygold costByQuality keys= 
+Array [ "Piece of Rostygold" ]
+content.js:518:11
+[FL] annotateTooltip fallback: rootId= tippy-82 source= You unlocked this with 23,724 Pieces of Rostygold (you needed 10) content.js:526:13
+[FL] annotateTooltip fallback: no [data-quality-id] ancestor of source; source outerHTML= <img alt="You unlocked this with 23,724 Pieces of Rostygold (you needed 10)" aria-label="You unlocked this with 23,724 Pieces of Rostygold (you needed 10)" class="cursor-default" src="//images.fallenlondon.com/icons/red_goldsmall.png" aria-describedby="tippy-82"> content.js:536:21
+[FL] annotateTooltip: echoValue= null tooltipBox innerHTML= <div class="tippy-content" data-state="visible" style="transition-duration: 0ms;"><div><div class="tooltip"><div class="icon tooltip__icon"><img src="//images.fallenlondon.com/icons/red_goldsmall.png" content.js:541:11
+
+​
+

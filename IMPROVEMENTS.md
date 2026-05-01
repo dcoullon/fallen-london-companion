@@ -13,7 +13,7 @@ React timing) was reached during a period of extension-loading issues and may no
 
 ### Destructive action warnings
 For known costly or irreversible actions, show a warning icon before the player clicks and ideally a confirmation dialog when they do.
-- Examples: selling the boat, the action that converts many Cellars of Wine (losing ~120 echoes), actions that consume Favours for poor reward when the relevant companion item is absent (e.g. using Favours: Criminals without a Lucky Weasel)
+- Examples: selling the boat, the action that converts many Cellars of Wine (losing ~120 echoes), actions that consume Favours for poor reward when the relevant companion item is absent (e.g. using Favours: Urchins without a Lucky Weasel)
 - Phase 1 (low complexity): static "danger" icon injected next to the branch name, driven by a hard-coded list of branch/storylet IDs
 - Phase 2: intercept the click and show a modal "Are you sure?" before letting the request through
 - Needs: a curated list of destructive branch IDs and the condition under which each is dangerous

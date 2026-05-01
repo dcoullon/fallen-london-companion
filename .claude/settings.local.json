@@ -15,7 +15,26 @@
       "Bash(grep -o 'role=\"main\".\\\\{0,300\\\\}' \"C:/Users/dcoullon/claude-projects/fallen-london/fallen-london-html-example.html\")",
       "Bash(awk '{print $2}')",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(grep -o '.\\\\{0,200\\\\}My Possessions.\\\\{0,200\\\\}' \"C:/Users/dcoullon/claude-projects/fallen-london/example-data/fallen-london-html-example.html\")",
+      "Bash(grep -o '.\\\\{0,100\\\\}input.\\\\{0,100\\\\}search.\\\\{0,100\\\\}' \"C:/Users/dcoullon/claude-projects/fallen-london/example-data/fallen-london-html-example.html\")",
+      "Bash(grep -o '.\\\\{0,300\\\\}[Oo]steology.\\\\{0,300\\\\}' \"C:/Users/dcoullon/claude-projects/fallen-london/example-data/fallen-london-html-example.html\")",
+      "Bash(grep -o '.\\\\{0,200\\\\}sidebar.\\\\{0,200\\\\}' \"C:/Users/dcoullon/claude-projects/fallen-london/example-data/fallen-london-html-example.html\")",
+      "Bash(grep -o '.\\\\{0,150\\\\}<a [^>]*nav[^>]*>.\\\\{0,100\\\\}' \"C:/Users/dcoullon/claude-projects/fallen-london/example-data/fallen-london-html-example.html\")",
+      "Bash(curl -s \"https://www.fallenlondon.com/static/css/main.e55ce34e.chunk.css\")",
+      "Bash(grep -o '.\\\\{0,300\\\\}data-quality-id.\\\\{0,300\\\\}' \"C:/Users/dcoullon/claude-projects/fallen-london/example-data/fallen-london-html-example.html\")",
+      "Bash(grep -o '.\\\\{0,300\\\\}inventory-group.\\\\{0,300\\\\}' \"C:/Users/dcoullon/claude-projects/fallen-london/example-data/fallen-london-html-example.html\")",
+      "Bash(grep -o 'inventory-group.\\\\{0,500\\\\}' \"C:/Users/dcoullon/claude-projects/fallen-london/example-data/fallen-london-html-example.html\")",
+      "Bash(awk '{print $2}' wc -l /tmp/recent_jsonl.txt)",
+      "Read(//c/Users/dcoullon//**)",
+      "Read(//c/Users/dcoullon/**)",
+      "Bash(git checkout *)",
+      "Bash(npm --version)",
+      "Bash(npx playwright *)",
+      "Bash(web-ext run *)",
+      "Bash(xargs ls *)",
+      "Bash(npm run *)"
     ]
   }
 }
