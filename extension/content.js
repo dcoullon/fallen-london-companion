@@ -504,7 +504,14 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
     : (_skeletonState.zoologicalManiaType || 0);
   let maniaConflict = false;
   if (_skeletonState.skeletonInProgress > 0) {
-    const t = BONE_TYPE_BY_ID[boneId];
+    let t = BONE_TYPE_BY_ID[boneId];
+    if (!t && typeLabel) {
+      // Bone not in table but slot is known from typeLabel — synthesise for conflict check
+      const raw = typeLabel.slice(1, -1); // "[tail]" → "tail"
+      if (raw === 'skull×2') t = { slot: 'skull', count: 2 };
+      else if (raw === '0 skull') t = { slot: 'head', count: 0 };
+      else if (['skull','arm','leg','wing','fin','tail','tentacle'].includes(raw)) t = { slot: raw, count: 1 };
+    }
     if (t) {
       if (t.slot === "skull") {
         maniaConflict = t.count > (_skeletonState.skullsNeeded || 0);
@@ -1066,9 +1073,9 @@ const BONE_EFFECTS_BY_ID = {
   140850: { av: 1250, antiquity: 0, amalgamy: 1, menace:  0 }, // Albatross Wing
   140852: { av:   50, antiquity: 0, amalgamy: 0, menace:  0 }, // Fin Bones, Collected
   141380: { av: 1500, antiquity: 0, amalgamy: 1, menace:  0, menaceMax: 1 }, // Amber-Crusted Fin (Menace 0–1 based on challenge)
-  140881: { av:  250, antiquity: 1, amalgamy: 0, menace:  0 }, // Tomb-Lion's Tail
+  140881: { av:  250, antiquity: 0, antiquityMax: 1, amalgamy: 0, menace:  0 }, // Tomb-Lion's Tail (Antiquity 0–1)
   140851: { av:  250, antiquity: 0, amalgamy: 0, menace:  0 }, // Plaster Tail Bones
-  142727: { av:  500, antiquity: 0, amalgamy: 1, menace:  0 }, // Obsidian Chitin Tail
+  142727: { av:  500, antiquity: 0, amalgamy: 0, amalgamyMax: 1, menace:  0 }, // Obsidian Chitin Tail (Amalgamy 0–1)
   140883: { av:   50, antiquity: 0, amalgamy: 0, menace:  1, menaceMax: 2 }, // Jet Black Stinger (Menace 1–2, MA4 challenge)
   140853: { av:  250, antiquity:-1, amalgamy: 0, menace:  0 }, // Withered Tentacle
   142298: { av: 1250, antiquity: 0, amalgamy: 1, amalgamyMax: 2, menace:  1 }, // Pentagrammic Skull (FATE; Amalgamy 1–2)
