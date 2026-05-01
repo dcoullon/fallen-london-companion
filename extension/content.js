@@ -529,25 +529,32 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
     }
   }
 
+  const _ap = [];
+  for (const [a, abbr] of [['antiquity','Ant'],['amalgamy','Ama'],['menace','Men']]) {
+    const v = eff[a] || 0, mx = eff[a + 'Max'];
+    if (mx !== undefined) _ap.push(`+${v}-${mx} ${abbr}`);
+    else if (v !== 0) _ap.push(`${v > 0 ? '+' : ''}${v} ${abbr}`);
+  }
+  const _attrSuffix = _ap.length ? ', ' + _ap.join(', ') : '';
   const wrap = document.createElement("span");
   wrap.style.cssText = "font-size:0.85em;opacity:0.85;margin-left:4px;";
   const typeSp = document.createElement("span");
-  typeSp.textContent = typeLabel;
+  typeSp.textContent = typeLabel.replace(/\]$/, _attrSuffix + ']');
   typeSp.style.color = "inherit";
   wrap.appendChild(typeSp);
   if (increased && wouldCap) {
     const s = document.createElement("span");
-    s.textContent = " ⚠⚠ +exh→cap";
+    s.textContent = " [⚠⚠ +exh→cap]";
     s.style.cssText = "color:#c9592c;font-weight:bold;";
     wrap.appendChild(s);
   } else if (increased) {
     const s = document.createElement("span");
-    s.textContent = " ⚠ +exh";
+    s.textContent = " [⚠ +exh]";
     s.style.color = "#c9a84c";
     wrap.appendChild(s);
   } else if (wouldCap) {
     const s = document.createElement("span");
-    s.textContent = " ⚠ at cap";
+    s.textContent = " [⚠ at cap]";
     s.style.color = "#c9592c";
     wrap.appendChild(s);
   }
@@ -567,9 +574,10 @@ const _BONE_NAME_TO_ID = new Map([
   ["Sabre-toothed Skull", 140847], ["Horned Skull", 141371],
   ["Plated Skull", 140882], ["Rubbery Skull", 811],
   ["Bright Brass Skull", 749], ["Skull in Coral", 141774],
+  ["Pentagrammic Skull", 142298], ["Panoptical Skull", 145642],
   ["A List of Aliases, Writ in Gant", 105464],
   ["Human Arm", 140813], ["Ivory Humerus", 140849],
-  ["Knotted Humerus", 140772], ["Crustacean Pincer", 140880],
+  ["Knotted Humerus", 140772], ["Crustacean Pincer", 140880], ["Fossilised Forelimb", 141540],
   ["Femur of a Surface Deer", 140771], ["Unidentified Thigh Bone", 140756],
   ["Ivory Femur", 142351], ["Femur of a Jurassic Beast", 140773],
   ["Holy Relic of the Thigh of Saint Fiacre", 140774], ["Helical Thighbone", 141480],
@@ -1023,6 +1031,9 @@ const BONE_TYPE_BY_ID = {
   142727: { slot: "tail",     count: 1 }, // Obsidian Chitin Tail
   140883: { slot: "tail",     count: 1 }, // Jet Black Stinger
   140853: { slot: "tentacle", count: 1 }, // Withered Tentacle
+  142298: { slot: "skull",    count: 1 }, // Pentagrammic Skull (FATE)
+  145642: { slot: "skull",    count: 1 }, // Panoptical Skull (Upper River)
+  141540: { slot: "arm",      count: 1 }, // Fossilised Forelimb (Upper River)
 };
 
 const BONE_EFFECTS_BY_ID = {
@@ -1049,12 +1060,15 @@ const BONE_EFFECTS_BY_ID = {
   141372: { av:  250, antiquity: 1, amalgamy: 0, menace:  1 }, // Wing of a Young Terror Bird
   140850: { av: 1250, antiquity: 0, amalgamy: 1, menace:  0 }, // Albatross Wing
   140852: { av:   50, antiquity: 0, amalgamy: 0, menace:  0 }, // Fin Bones, Collected
-  141380: { av: 1500, antiquity: 0, amalgamy: 1, menace:  0 }, // Amber-Crusted Fin
+  141380: { av: 1500, antiquity: 0, amalgamy: 1, menace:  0, menaceMax: 1 }, // Amber-Crusted Fin (Menace 0–1 based on challenge)
   140881: { av:  250, antiquity: 1, amalgamy: 0, menace:  0 }, // Tomb-Lion's Tail
   140851: { av:  250, antiquity: 0, amalgamy: 0, menace:  0 }, // Plaster Tail Bones
   142727: { av:  500, antiquity: 0, amalgamy: 1, menace:  0 }, // Obsidian Chitin Tail
   140883: { av:   50, antiquity: 0, amalgamy: 0, menace:  1 }, // Jet Black Stinger
   140853: { av:  250, antiquity:-1, amalgamy: 0, menace:  0 }, // Withered Tentacle
+  142298: { av: 1250, antiquity: 0, amalgamy: 1, amalgamyMax: 2, menace:  1 }, // Pentagrammic Skull (FATE; Amalgamy 1–2)
+  145642: { av: 3500, antiquity: 1, antiquityMax: 2, amalgamy: 0, menace:  0 }, // Panoptical Skull (Upper River; Antiquity 1–2)
+  141540: { av: 2750, antiquity: 1, antiquityMax: 2, amalgamy: 0, menace:  0 }, // Fossilised Forelimb (Upper River; Antiquity 1–2)
 };
 
 function parseMyself(data) {
