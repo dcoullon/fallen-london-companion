@@ -487,6 +487,13 @@ function annotateBranchCosts(branchCosts) {
 
 // Shared helper: compute & inject bone-type + exhaustion + mania label onto targetEl
 function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
+  const _dbg_t = BONE_TYPE_BY_ID[boneId];
+  if (_dbg_t && ['tail','fin','wing','arm'].includes(_dbg_t.slot)) {
+    console.log('[FL] bone label debug:', { boneId, slot: _dbg_t.slot,
+      skeletonInProgress: _skeletonState.skeletonInProgress,
+      zoologicalManiaType: _skeletonState.zoologicalManiaType,
+      zoologicalMania: _skeletonState.zoologicalMania });
+  }
   const eff = BONE_EFFECTS_BY_ID[boneId] ?? { av: (PRICES[boneId] ?? 0) * 100, antiquity: 0, amalgamy: 0, menace: 0 };
   const baseExh = _exhaustionFromSale(_skeletonState);
   const simState = {
@@ -503,7 +510,7 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
     ? Math.floor(_skeletonState.skeletonInProgress / 10) * 10
     : (_skeletonState.zoologicalManiaType || 0);
   let maniaConflict = false;
-  if (_skeletonState.skeletonInProgress > 0) {
+  if (_skeletonState.skeletonInProgress > 0 || effectiveTypeKey > 0) {
     let t = BONE_TYPE_BY_ID[boneId];
     if (!t && typeLabel) {
       // Bone not in table but slot is known from typeLabel — synthesise for conflict check
@@ -572,7 +579,9 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
   }
   if (maniaConflict) {
     const s = document.createElement("span");
-    const skelTypePlural = SKEL_TYPE_PLURAL[effectiveTypeKey] || "skeleton";
+    const skelTypePlural = (effectiveTypeKey === _skeletonState.zoologicalManiaType && _skeletonState.zoologicalManiaLabel)
+      ? _skeletonState.zoologicalManiaLabel
+      : (SKEL_TYPE_PLURAL[effectiveTypeKey] || "skeleton");
     s.textContent = " [✗ " + skelTypePlural + "]";
     s.style.color = "#c9592c";
     wrap.appendChild(s);
@@ -980,7 +989,7 @@ async function _loadEpaForChar(charId) {
 
 // ── Bone Market skeleton state ────────────────────────────────────────────────
 const SKEL_QUALITY_IDS = {
-  140811: "skeletonInProgress",
+  140813: "skeletonInProgress",
   140812: "approximateValue",
   140815: "skullsNeeded",
   140816: "limbsNeeded",
@@ -1005,7 +1014,8 @@ const _skeletonState = {
   approximateValue: 0, amalgamy: 0, antiquity: 0, menace: 0,
   exhaustion: 0,
   zoologicalMania: 0,          // auto-captured from choosebranch when type is declared
-  zoologicalManiaType: 0,      // typeKey of the skeleton type with weekly penny bonus (e.g. 140=Amphibian)
+  zoologicalManiaType: 0,      // typeKey for the weekly mania animal type (e.g. 140=Amphibian); from quality 142799
+  zoologicalManiaLabel: "",    // display label for the mania type (e.g. "amphibians")
   boneMarketFluctuations: 0,   // 1=Antiquity, 2=Amalgamy, 3=Menace; 0=unknown
   skeletonInProgress: 0,
   skullsNeeded: 0, limbsNeeded: 0,
@@ -1471,6 +1481,16 @@ function _updateSkeletonFromChoosebranch(data) {
 if (_skeletonState[field] !== newLevel) { _skeletonState[field] = newLevel; changed = true; }
     }
   }
+  // Infer zoologicalManiaType from API: if this skeleton earns mania bonus, its type IS the mania type.
+  if (_skeletonState.zoologicalMania > 0 && _skeletonState.skeletonInProgress >= 100) {
+    const inferred = Math.floor(_skeletonState.skeletonInProgress / 10) * 10;
+    if (_skeletonState.zoologicalManiaType !== inferred) {
+      _skeletonState.zoologicalManiaType = inferred;
+      _lastSkeletonRenderHash = "";
+      for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
+      changed = true;
+    }
+  }
   return changed;
 }
 
@@ -1626,15 +1646,63 @@ const BONE_MARKET_BUYERS = [
     note: "Bird" },
 ];
 
+// Quality 142799 = Zoological Mania (world quality): levels 1-7 encode which animal type is in demand.
+const _MANIA_LEVEL_TO_TYPE  = {1:150, 2:140, 3:180, 4:190, 5:210, 6:200, 7:110};
+const _MANIA_LEVEL_TO_LABEL = {1:"reptiles",2:"amphibians",3:"birds",4:"fish",5:"spiders",6:"insects",7:"primates"};
+
 const _ZOOLOGICAL_TYPE_MAP = {
   amphibians:140, humanoids:110, insects:200, reptiles:150,
   birds:180, fish:190, spiders:210, apes:120, monkeys:130, chimeras:100,
 };
 
-function _detectManiaFromStorylets(storylets) {
-  if (!Array.isArray(storylets)) return;
+function _applyZoologicalManiaLevel(level) {
+  const typeKey = _MANIA_LEVEL_TO_TYPE[level] || 0;
+  const label = _MANIA_LEVEL_TO_LABEL[level] || "";
+  if (typeKey && (_skeletonState.zoologicalManiaType !== typeKey || _skeletonState.zoologicalManiaLabel !== label)) {
+    _skeletonState.zoologicalManiaType = typeKey;
+    _skeletonState.zoologicalManiaLabel = label;
+    document.getElementById("fl-skeleton-tracker")?.remove();
+    _lastSkeletonRenderHash = "";
+    for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
+    console.log('[FL] Zoological Mania set:', label, '(typeKey', typeKey, ')');
+  }
+}
+
+function _detectManiaFromStorylets(data) {
+  const storylets = Array.isArray(data) ? data : [...(data.storylets || []), ...(data.displayCards || [])];
+  console.log('[FL] _detectManiaFromStorylets: received', storylets.length, 'items, top-level keys:', Array.isArray(data) ? '(array)' : Object.keys(data).join(','));
+
+  // Scan top-level quality arrays on the response object (e.g. worldQualities)
+  if (!Array.isArray(data)) {
+    for (const key of Object.keys(data)) {
+      const arr = data[key];
+      if (Array.isArray(arr)) {
+        for (const q of arr) {
+          if (q && q.id === 142799) {
+            console.log('[FL] Found quality 142799 at data.' + key + ', level:', q.level);
+            _applyZoologicalManiaLevel(q.level);
+          }
+        }
+      }
+    }
+  }
+
   for (const s of storylets) {
     const text = [s.name, s.teaser, s.description].filter(Boolean).join(" ");
+    if (text) console.log('[FL] storylet text:', text.slice(0, 150));
+
+    // Scan quality arrays inside each storylet/card for quality 142799
+    const allQuals = [...(s.qualitiesRequired||[]), ...(s.qualitiesAffected||[]), ...(s.qualities||[])];
+    if (allQuals.length > 0) {
+      console.log('[FL] quality IDs in', (s.name||'').slice(0,40)||'(unnamed)', ':', allQuals.map(q=>q.id).join(','));
+      for (const q of allQuals) {
+        if (q.id === 142799) {
+          console.log('[FL] Found quality 142799 in storylet/card qualities, level:', q.level);
+          _applyZoologicalManiaLevel(q.level);
+        }
+      }
+    }
+
     const m = text.match(/predilection for (antique|amalgam|menac)/i);
     if (m) {
       const t = m[1].toLowerCase();
@@ -1646,16 +1714,38 @@ function _detectManiaFromStorylets(storylets) {
         for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
       }
     }
+    // Text fallback: keep old regex as backup detection
     const z = text.match(/most interested in (\w+)/i);
     if (z) {
       const val = _ZOOLOGICAL_TYPE_MAP[z[1].toLowerCase()] || 0;
       if (val && _skeletonState.zoologicalManiaType !== val) {
         _skeletonState.zoologicalManiaType = val;
+        _skeletonState.zoologicalManiaLabel = z[1].toLowerCase();
         document.getElementById("fl-skeleton-tracker")?.remove();
         _lastSkeletonRenderHash = "";
         for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
       }
     }
+  }
+}
+
+// Scan a storylet-begin response for mania info.
+// Covers: main storylet/event/card description, branch descriptions, displayCards.
+function _detectManiaFromBeginData(data) {
+  const items = [];
+  const node = data.storylet || data.event || (data.childBranches ? data : null);
+  if (node) {
+    items.push(node);
+    for (const b of (node.childBranches || [])) items.push(b);
+  }
+  for (const card of (data.displayCards || [])) {
+    items.push(card);
+    for (const b of (card.childBranches || [])) items.push(b);
+  }
+  if (items.length === 0 && data.name) items.push(data);
+  if (items.length > 0) {
+    console.log('[FL] storylet-begin mania scan:', items.length, 'items, first node keys:', Object.keys(node || data).join(','));
+    _detectManiaFromStorylets({ storylets: items });
   }
 }
 
@@ -1920,12 +2010,13 @@ window.addEventListener("message", (event) => {
       injectSkeletonTracker();
     }
   } else if (event.data.type === "storylet-begin") {
-    annotateBranchCosts(parseBranchCosts(event.data.data));
-    annotateBranchBones(parseBranchBones(event.data.data));
-    annotateBuyerBranches(parseBuyerBranches(event.data.data));
+    const _bd = event.data.data;
+    annotateBranchCosts(parseBranchCosts(_bd));
+    annotateBranchBones(parseBranchBones(_bd));
+    annotateBuyerBranches(parseBuyerBranches(_bd));
+    _detectManiaFromBeginData(_bd);
   } else if (event.data.type === "storylet-list") {
-    const _d = event.data.data;
-    _detectManiaFromStorylets([...(_d.storylets || []), ...(_d.displayCards || [])]);
+    _detectManiaFromStorylets(event.data.data);
   } else if (event.data.type === "myself") {
     parseMyself(event.data.data);
   }
