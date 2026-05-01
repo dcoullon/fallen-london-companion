@@ -71,6 +71,13 @@ same plot without having to navigate back manually.
 
 ## Done
 
+- **Landing page** — production-grade static landing page at `docs/index.html` deployed via GitHub Pages
+  (`https://dcoullon.github.io/fallen-london-companion/`). Fifth City Gothic design (EB Garamond, brass/ink-blue/parchment).
+  Sections: hero with CTAs, "What's included" feature grid, Bone Market featured section, bento feature cards,
+  3-step install guide, FAQ, zero-botting pledge, GitHub CTA, footer. All assets self-contained in `docs/` so
+  GitHub Pages from `/docs` folder works without `../` path issues. OG/Twitter meta tags with absolute URLs.
+  Pending: user to enable GitHub Pages in repo settings; demo GIF to be recorded and wired into hero.
+
 - **Echo value overlay** — after taking a storylet action, show the echo value of each item
   gained or lost inline next to the result text, with a net total line after the last item.
 - **First-gain annotation** — when a player gains an item for the first time (API sends
