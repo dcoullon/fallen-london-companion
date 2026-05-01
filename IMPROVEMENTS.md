@@ -25,10 +25,6 @@ Push a browser notification when the action candle (action count) reaches its ca
 - Fire once per fill; suppress until at least one action is spent after the cap is hit
 - On Firefox for Android, browser notifications surface as system notifications — verify behaviour
 
-### Bone Market — incompatibility warnings
-Show a "don't do that" icon next to bones that would be incompatible with the current week's mania (wrong qualities) or would push the skeleton into Chimera territory.
-- Skeleton state is already tracked in the quality tracker — this can leverage existing state
-- Requires knowing which bones break each constraint
 
 ### Weekly opportunities dashboard
 Surface high-value periodic activities that the player hasn't done yet this week (or cycle), as a reminder panel.
@@ -58,10 +54,6 @@ Suggest skeletons that are efficient to build in the current week, factoring in:
 - Show expected profit and key qualities for each suggestion
 - Requires a skeleton recipe database and weekly buyer schedule (or detection of the current week's buff)
 
-### Bone Market — Exhaustion threshold warning per bone
-Show a warning "adding Exhaustion" on any bone that would push the skeleton past an Exhaustion threshold with the likely target buyer.
-- Exhaustion level is already tracked and displayed in the skeleton panel — needs per-bone injection
-- Threshold logic: each buyer has specific Exhaustion breakpoints that reduce payout
 
 ### Optimal loadout button
 When a branch shows less than 100% success rate, add a button "Move to optimal loadout" that automatically selects the equipment combination that reaches the maximum achievable success rate for the relevant quality.
@@ -107,6 +99,15 @@ same plot without having to navigate back manually.
   Mania week captured from `/api/storylet` storylets via "predilection for" text regex.
 - **Firefox extension** — MV3 Firefox-first extension with gecko_android support; packaged and
   ready for AMO submission.
+- **Bone Market — Assemble a Skeleton annotations** — three inline labels on each bone-adding branch:
+  (1) bone type label (`[skull]`, `[leg]`, `[skull×2]`, `[0 skull]` for Stygian Ivory, etc.);
+  (2) exhaustion warning (`⚠ +exh` amber / `⚠⚠ +exh→cap` red) when adding this bone would increase
+  the exhaustion generated on sale with the best buyer;
+  (3) skeleton-type conflict warning (`✗ Amphibian` in red) when the bone violates the current
+  skeleton's slot requirements — skull overflow, limb overflow, forbidden slot type (e.g. arms on
+  Amphibian), or Stygian Ivory when skulls are still needed. Per-slot limits from wiki in
+  `SKEL_SLOT_LIMITS`. Labels injected both from `storylet-begin` event and from 1 s setInterval DOM
+  scan so they survive page reloads.
 - **EPA counter** — two persistent counters (lifetime + session) injected into the Myself tab
   below the player name/reputation. Session counter reset by Start/Stop link; lifetime never
   cleared. Both persist across page reloads via `browser.storage.local`, keyed per character ID

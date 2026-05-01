@@ -499,11 +499,33 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
   const newExh    = _exhaustionFromSale(simState);
   const increased = newExh > baseExh;
   const wouldCap  = _skeletonState.exhaustion + newExh >= 4;
-  const bmf = _skeletonState.boneMarketFluctuations;
   let maniaConflict = false;
-  if (bmf === 1) maniaConflict = eff.amalgamy > 0 || eff.menace > 0;
-  else if (bmf === 2) maniaConflict = eff.antiquity > 0 || eff.menace > 0;
-  else if (bmf === 3) maniaConflict = eff.antiquity > 0 || eff.amalgamy > 0;
+  if (_skeletonState.skeletonInProgress > 0) {
+    const t = BONE_TYPE_BY_ID[boneId];
+    if (t) {
+      if (t.slot === "skull") {
+        maniaConflict = t.count > (_skeletonState.skullsNeeded || 0);
+      } else if (t.slot === "head") {
+        maniaConflict = (_skeletonState.skullsNeeded || 0) > 0;
+      } else {
+        const typeKey = Math.floor(_skeletonState.skeletonInProgress / 10) * 10;
+        const limits = SKEL_SLOT_LIMITS[typeKey];
+        const sk = t.slot + "s";
+        if (limits) {
+          const max = limits[sk];
+          if (max === 0) {
+            maniaConflict = true;
+          } else if (max !== undefined) {
+            maniaConflict = (_skeletonState[sk] || 0) >= max;
+          } else {
+            maniaConflict = (_skeletonState.limbsNeeded || 0) === 0;
+          }
+        } else {
+          maniaConflict = (_skeletonState.limbsNeeded || 0) === 0;
+        }
+      }
+    }
+  }
 
   const wrap = document.createElement("span");
   wrap.style.cssText = "font-size:0.85em;opacity:0.85;margin-left:4px;";
@@ -529,8 +551,9 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
   }
   if (maniaConflict) {
     const s = document.createElement("span");
-    s.textContent = " [~mania]";
-    s.style.color = "#c9a84c";
+    const skelType = SKEL_TYPE_LABELS[Math.floor(_skeletonState.skeletonInProgress / 10) * 10] || "skeleton";
+    s.textContent = " ✗ " + skelType;
+    s.style.color = "#c9592c";
     wrap.appendChild(s);
   }
   targetEl.appendChild(wrap);
@@ -1418,6 +1441,7 @@ function _detectManiaFromStorylets(storylets) {
       _skeletonState.boneMarketFluctuations = val;
       document.getElementById("fl-skeleton-tracker")?.remove();
       _lastSkeletonRenderHash = "";
+      for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
     }
     return;
   }
@@ -1433,7 +1457,7 @@ function evaluateBuyers(state) {
 function _boneTypeLabel(boneId, boneName) {
   const t = BONE_TYPE_BY_ID[boneId];
   if (t) {
-    if (t.count === 0) return "[head]";
+    if (t.count === 0) return "[0 skull]";
     if (t.count === 2) return "[skull×2]";
     return `[${t.slot}]`;
   }
@@ -1460,6 +1484,22 @@ const SKEL_TYPE_LABELS = {
   100: "Chimera", 110: "Humanoid", 120: "Ape", 130: "Monkey",
   140: "Amphibian", 150: "Reptile", 160: "Amphibian", 170: "Reptile",
   180: "Bird", 190: "Fish", 200: "Insect", 210: "Spider",
+};
+// Per-slot maximums per skeleton type; 0=forbidden, positive=cap, absent=unlimited.
+// Tentacles are always unlimited (not listed). Source: fallenlondon.wiki Assembling_a_Skeleton Guide.
+const SKEL_SLOT_LIMITS = {
+  100: {},                                                          // Chimera: all unlimited
+  110: { arms: 2, legs: 2, wings: 0, fins: 0, tails: 0 },         // Humanoid
+  120: { arms: 4, legs: 0, wings: 0, fins: 0, tails: 0 },         // Ape
+  130: { arms: 4, legs: 0, wings: 0, fins: 0, tails: 1 },         // Monkey
+  140: { arms: 0, legs: 4, wings: 0, fins: 0, tails: 0 },         // Amphibian
+  150: { arms: 0, legs: 4, wings: 0, fins: 0, tails: 1 },         // Reptile
+  160: { arms: 0, legs: 4, wings: 0, fins: 0, tails: 0 },         // Amphibian (tier 2)
+  170: { arms: 0, legs: 4, wings: 0, fins: 0, tails: 1 },         // Reptile (tier 2)
+  180: { arms: 0, legs: 2, wings: 2, fins: 0, tails: 1 },         // Bird
+  190: { arms: 0, legs: 0, wings: 0, fins: 4, tails: 1 },         // Fish
+  200: { arms: 0, legs: 6, wings: 4, fins: 0, tails: 0 },         // Insect
+  210: { arms: 0, legs: 8, wings: 0, fins: 0, tails: 1 },         // Spider
 };
 
 let _lastSkeletonRenderHash = "";
