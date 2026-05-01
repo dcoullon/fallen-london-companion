@@ -535,6 +535,11 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
     if (mx !== undefined) _ap.push(`+${v}-${mx} ${abbr}`);
     else if (v !== 0) _ap.push(`${v > 0 ? '+' : ''}${v} ${abbr}`);
   }
+  if (eff.av > 0) {
+    const e = eff.av / 100;
+    const s = Number.isInteger(e) ? e.toFixed(1) : parseFloat(e.toFixed(2)).toString();
+    _ap.push(`+${s}ε`);
+  }
   const _attrSuffix = _ap.length ? ', ' + _ap.join(', ') : '';
   const wrap = document.createElement("span");
   wrap.style.cssText = "font-size:0.85em;opacity:0.85;margin-left:4px;";
@@ -1064,7 +1069,7 @@ const BONE_EFFECTS_BY_ID = {
   140881: { av:  250, antiquity: 1, amalgamy: 0, menace:  0 }, // Tomb-Lion's Tail
   140851: { av:  250, antiquity: 0, amalgamy: 0, menace:  0 }, // Plaster Tail Bones
   142727: { av:  500, antiquity: 0, amalgamy: 1, menace:  0 }, // Obsidian Chitin Tail
-  140883: { av:   50, antiquity: 0, amalgamy: 0, menace:  1 }, // Jet Black Stinger
+  140883: { av:   50, antiquity: 0, amalgamy: 0, menace:  1, menaceMax: 2 }, // Jet Black Stinger (Menace 1–2, MA4 challenge)
   140853: { av:  250, antiquity:-1, amalgamy: 0, menace:  0 }, // Withered Tentacle
   142298: { av: 1250, antiquity: 0, amalgamy: 1, amalgamyMax: 2, menace:  1 }, // Pentagrammic Skull (FATE; Amalgamy 1–2)
   145642: { av: 3500, antiquity: 1, antiquityMax: 2, amalgamy: 0, menace:  0 }, // Panoptical Skull (Upper River; Antiquity 1–2)
