@@ -313,6 +313,7 @@ const PRICES = {
   141543: 6.00,  // Patent Osteological Sand and Wax (12 Hinterland Scrip)
   141546: 31.00, // Annings' Complete and Reliable Kit for the Preservation and Display of Skeletons (62 Hinterland Scrip)
   140879: 0.01,  // Bat Wing
+  140880: 0,     // Crustacean Pincer (no Bazaar price)
   140771: 0.10,  // Femur of a Surface Deer
   140852: 0.50,  // Fin Bones, Collected
   140756: 1.00,  // Unidentified Thigh Bone

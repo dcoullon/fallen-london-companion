@@ -1813,10 +1813,12 @@ function injectSkeletonTracker() {
     }
 
     // Exhaustion
-    if (s.exhaustion > 0) {
+    const wipExh = _exhaustionFromSale(s);
+    if (s.exhaustion > 0 || wipExh > 0) {
+      const totalExh = s.exhaustion + wipExh;
       const exh = document.createElement("div");
-      exh.className = "fl-skel-exh" + (s.exhaustion >= 3 ? " fl-skel-exh--warn" : "");
-      exh.textContent = `Exhaustion: ${s.exhaustion}`;
+      exh.className = "fl-skel-exh" + (totalExh >= 3 ? " fl-skel-exh--warn" : "");
+      exh.textContent = `Exhaustion: ${s.exhaustion}` + (wipExh > 0 ? ` [+${wipExh} WIP]` : "");
       panel.appendChild(exh);
     }
 
