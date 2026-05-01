@@ -551,8 +551,9 @@ function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
   }
   if (maniaConflict) {
     const s = document.createElement("span");
-    const skelType = SKEL_TYPE_LABELS[Math.floor(_skeletonState.skeletonInProgress / 10) * 10] || "skeleton";
-    s.textContent = " ✗ " + skelType;
+    const typeKey = Math.floor(_skeletonState.skeletonInProgress / 10) * 10;
+    const skelTypePlural = SKEL_TYPE_PLURAL[typeKey] || "skeleton";
+    s.textContent = " [✗ " + skelTypePlural + "]";
     s.style.color = "#c9592c";
     wrap.appendChild(s);
   }
@@ -564,6 +565,8 @@ const _BONE_NAME_TO_ID = new Map([
   ["Carved Ball of Stygian Ivory", 122483], ["Doubled Skull", 141479],
   ["Sabre-toothed Skull", 140847], ["Horned Skull", 141371],
   ["Plated Skull", 140882], ["Rubbery Skull", 811],
+  ["Bright Brass Skull", 749], ["Skull in Coral", 141774],
+  ["A List of Aliases, Writ in Gant", 105464],
   ["Human Arm", 140813], ["Ivory Humerus", 140849],
   ["Femur of a Surface Deer", 140771], ["Unidentified Thigh Bone", 140756],
   ["Ivory Femur", 142351], ["Femur of a Jurassic Beast", 140773],
@@ -667,6 +670,84 @@ function annotateBranchBones(boneBranches) {
   tryInject();
   setTimeout(tryInject, 300);
   setTimeout(() => { if (_boneLabelObserver) { _boneLabelObserver.disconnect(); _boneLabelObserver = null; } }, 300000);
+}
+
+// ── Buyer payout annotations on Seeking Buyers card ──────────────────────────
+
+function parseBuyerBranches(data) {
+  if (_skeletonState.approximateValue <= 0) return [];
+  let nodes = [];
+  if (data && Array.isArray(data.childBranches)) {
+    nodes = [data];
+  } else if (data && data.storylet && Array.isArray(data.storylet.childBranches)) {
+    nodes = [data.storylet];
+  } else if (data && data.event && Array.isArray(data.event.childBranches)) {
+    nodes = [data.event];
+  } else if (data && Array.isArray(data.displayCards)) {
+    const withBranches = data.displayCards.filter(c => Array.isArray(c.childBranches));
+    nodes = withBranches.length > 0 ? withBranches
+          : data.displayCards.filter(c => Array.isArray(c.qualityRequirements) && c.qualityRequirements.length > 0)
+                             .map(c => ({ name: c.name, childBranches: [c] }));
+  }
+  if (nodes.length === 0) return [];
+
+  const buyerNames = new Set(BONE_MARKET_BUYERS.map(b => b.name));
+  const results = [];
+  const s = _skeletonState;
+  for (const node of nodes) for (const branch of node.childBranches) {
+    if (!buyerNames.has(branch.name)) continue;
+    const buyer = BONE_MARKET_BUYERS.find(b => b.name === branch.name);
+    if (!buyer || !buyer.check(s)) continue;
+    results.push({
+      branchId: branch.id,
+      branchName: branch.name,
+      echoes: buyer.payout(s),
+      items: buyer.items(s),
+    });
+  }
+  return results;
+}
+
+let _buyerLabelObserver = null;
+
+function annotateBuyerBranches(buyerBranches) {
+  if (_buyerLabelObserver) { _buyerLabelObserver.disconnect(); _buyerLabelObserver = null; }
+  if (buyerBranches.length === 0) return;
+
+  function tryInject() {
+    for (const { branchId, branchName, echoes, items } of buyerBranches) {
+      let headerEl = null;
+      if (branchId) {
+        const container = document.querySelector(`[data-branch-id="${branchId}"]`);
+        if (container) {
+          headerEl = container.querySelector("h2,h3,h4,h5,[class*='heading'],[class*='title']") || container;
+        }
+      }
+      if (!headerEl) {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+          if (node.textContent.trim() === branchName) { headerEl = node.parentElement; break; }
+        }
+      }
+      if (!headerEl) continue;
+      if (headerEl.dataset.flBuyerLabeled) continue;
+      headerEl.dataset.flBuyerLabeled = "1";
+
+      const wrap = document.createElement("span");
+      wrap.style.cssText = "font-size:0.85em;opacity:0.85;margin-left:4px;";
+      const itemStr = items.filter(i => i.qty > 0).map(i => `${i.qty} ${i.name}`).join(", ");
+      wrap.textContent = `~${echoes.toFixed(1)}ε` + (itemStr ? `: ${itemStr}` : "");
+      wrap.style.color = "inherit";
+      headerEl.appendChild(wrap);
+    }
+  }
+
+  _buyerLabelObserver = new MutationObserver(tryInject);
+  _buyerLabelObserver.observe(document.body, { childList: true, subtree: true });
+  tryInject();
+  setTimeout(tryInject, 300);
+  setTimeout(() => { if (_buyerLabelObserver) { _buyerLabelObserver.disconnect(); _buyerLabelObserver = null; } }, 300000);
 }
 
 // ── General icon aria-label annotation ───────────────────────────────────────
@@ -914,6 +995,9 @@ const BONE_TYPE_BY_ID = {
   141371: { slot: "skull",    count: 1 }, // Horned Skull
   140882: { slot: "skull",    count: 1 }, // Plated Skull
   811:    { slot: "skull",    count: 1 }, // Rubbery Skull
+  749:    { slot: "skull",    count: 1 }, // Bright Brass Skull
+  141774: { slot: "skull",    count: 1 }, // Skull in Coral
+  105464: { slot: "skull",    count: 1 }, // A List of Aliases, Writ in Gant (Victim's Skull branch)
   140813: { slot: "arm",      count: 1 }, // Human Arm
   140849: { slot: "arm",      count: 1 }, // Ivory Humerus
   140771: { slot: "leg",      count: 1 }, // Femur of a Surface Deer
@@ -938,6 +1022,9 @@ const BONE_EFFECTS_BY_ID = {
   141371: { av: 1250, antiquity: 1, amalgamy: 0, menace:  1 }, // Horned Skull
   140882: { av: 2500, antiquity: 0, amalgamy: 0, menace:  1 }, // Plated Skull
   811:    { av: 6000, antiquity: 0, amalgamy: 1, menace:  0 }, // Rubbery Skull
+  749:    { av: 6000, antiquity: 0, amalgamy: 0, menace:  0 }, // Bright Brass Skull (adds implausibility, no A/An/M)
+  141774: { av: 1750, antiquity: 0, amalgamy: 1, menace:  0 }, // Skull in Coral
+  105464: { av:  250, antiquity: 0, amalgamy: 0, menace:  0 }, // A List of Aliases, Writ in Gant (Victim's Skull branch)
   140813: { av:  250, antiquity: 0, amalgamy: 0, menace: -1 }, // Human Arm
   140849: { av: 1500, antiquity: 0, amalgamy: 0, menace:  0 }, // Ivory Humerus
   140771: { av:   10, antiquity: 0, amalgamy: 0, menace: -1 }, // Femur of a Surface Deer
@@ -1347,56 +1434,98 @@ if (_skeletonState[field] !== newLevel) { _skeletonState[field] = newLevel; chan
 
 // Payout formulas verified from wiki buyer pages.
 // (AV + zoologicalMania) in pennies; boneMarketFluctuations: 1=Antiquity, 2=Amalgamy, 3=Menace.
+// items(state) returns [{qty, name}] for display on Seeking Buyers card.
 const BONE_MARKET_BUYERS = [
   { name: "Naive Collector", check: () => true,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 250) * 2.50,
     secondaryEchoesFn: () => 0,
+    items: (s) => [{qty: Math.floor((s.approximateValue + s.zoologicalMania) / 250), name: "Bombazine"}],
     note: null },
   { name: "Bohemian Sculptress", check: (s) => s.antiquity === 0,
     payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
     secondaryEchoesFn: () => 0,
+    items: (s) => [{qty: 4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250), name: "Blooms"}],
     note: null },
   { name: "Grandmother", check: (s) => s.menace === 0,
     payout: (s) => (20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50,
     secondaryEchoesFn: () => 0,
+    items: (s) => [{qty: 20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50), name: "Obs."}],
     note: null },
   { name: "Theologian", check: (s) => s.amalgamy === 0,
     payout: (s) => (4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250)) * 2.50,
     secondaryEchoesFn: () => 0,
+    items: (s) => [{qty: 4 + Math.floor((s.approximateValue + s.zoologicalMania) / 250), name: "Biscuits"}],
     note: null },
   { name: "Palaeontologist", check: () => true,
     payout: (s) => (s.approximateValue + s.zoologicalMania + 5) * 0.01 + 5.00,
     secondaryEchoesFn: () => 5,
+    items: (s) => [{qty: s.approximateValue + s.zoologicalMania + 5, name: "Frags"}, {qty: 2, name: "Fossils"}],
     note: "Bone Fragments" },
   { name: "Ancient Enthusiast", check: (s) => s.antiquity >= 1,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50
                + (s.antiquity + (s.boneMarketFluctuations === 1 ? 1 : 0)) * 2.50,
     secondaryEchoesFn: (s) => (s.antiquity + (s.boneMarketFluctuations === 1 ? 1 : 0)) * 2.5,
+    items: (s) => {
+      const r = [{qty: Math.floor((s.approximateValue + s.zoologicalMania) / 50), name: "Ingots"}];
+      const n = s.antiquity + (s.boneMarketFluctuations === 1 ? 1 : 0);
+      if (n > 0) r.push({qty: n, name: "Artefacts"});
+      return r;
+    },
     note: "Antiquity" },
   { name: "Mrs Plenty", check: (s) => s.menace >= 1,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 50) * 0.50
                + (s.menace + (s.boneMarketFluctuations === 3 ? 1 : 0)) * 2.50,
     secondaryEchoesFn: (s) => (s.menace + (s.boneMarketFluctuations === 3 ? 1 : 0)) * 2.5,
+    items: (s) => {
+      const r = [{qty: Math.floor((s.approximateValue + s.zoologicalMania) / 50), name: "Scrip"}];
+      const n = s.menace + (s.boneMarketFluctuations === 3 ? 1 : 0);
+      if (n > 0) r.push({qty: n, name: "Pies"});
+      return r;
+    },
     note: "Menace" },
   { name: "Tentacled Servant", check: (s) => s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
                + (s.amalgamy + (s.boneMarketFluctuations === 2 ? 1 : 0)) * 2.50,
     secondaryEchoesFn: (s) => (s.amalgamy + (s.boneMarketFluctuations === 2 ? 1 : 0)) * 2.5,
+    items: (s) => {
+      const r = [{qty: 5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50), name: "Nightsoil"}];
+      const n = (s.amalgamy + (s.boneMarketFluctuations === 2 ? 1 : 0)) * 5;
+      if (n > 0) r.push({qty: n, name: "Eoliths"});
+      return r;
+    },
     note: "Amalgamy" },
   { name: "Ambassador", check: (s) => s.exhaustion < 4 && s.antiquity >= 1,
     payout: (s) => Math.ceil(5 + (s.approximateValue + s.zoologicalMania) / 50) * 0.50
                + Math.round(0.8 * Math.pow(s.antiquity, s.boneMarketFluctuations === 1 ? 2.1 : 2)) * 2.50,
     secondaryEchoesFn: (s) => Math.round(0.8 * Math.pow(s.antiquity, s.boneMarketFluctuations === 1 ? 2.1 : 2)) * 2.5,
+    items: (s) => {
+      const r = [{qty: Math.ceil(5 + (s.approximateValue + s.zoologicalMania) / 50), name: "Mem. Light"}];
+      const n = Math.round(0.8 * Math.pow(s.antiquity, s.boneMarketFluctuations === 1 ? 2.1 : 2));
+      if (n > 0) r.push({qty: n, name: "Tailfeathers"});
+      return r;
+    },
     note: "Antiquity²" },
   { name: "Teller of Terrors", check: (s) => s.exhaustion < 4 && s.menace >= 1,
     payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 0.10
                + Math.round(4 * Math.pow(s.menace, s.boneMarketFluctuations === 3 ? 2.1 : 2)) * 0.50,
     secondaryEchoesFn: (s) => Math.round(4 * Math.pow(s.menace, s.boneMarketFluctuations === 3 ? 2.1 : 2)) * 0.5,
+    items: (s) => {
+      const r = [{qty: 25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10), name: "Morelways"}];
+      const n = Math.round(4 * Math.pow(s.menace, s.boneMarketFluctuations === 3 ? 2.1 : 2));
+      if (n > 0) r.push({qty: n, name: "R-B Feathers"});
+      return r;
+    },
     note: "Menace²" },
   { name: "Tentacled Entrepreneur", check: (s) => s.exhaustion < 4 && s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
                + Math.round(4 * Math.pow(s.amalgamy, s.boneMarketFluctuations === 2 ? 2.1 : 2)) * 0.50,
     secondaryEchoesFn: (s) => Math.round(4 * Math.pow(s.amalgamy, s.boneMarketFluctuations === 2 ? 2.1 : 2)) * 0.5,
+    items: (s) => {
+      const r = [{qty: 5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50), name: "Shores"}];
+      const n = Math.round(4 * Math.pow(s.amalgamy, s.boneMarketFluctuations === 2 ? 2.1 : 2));
+      if (n > 0) r.push({qty: n, name: "Breaths"});
+      return r;
+    },
     note: "Amalgamy²" },
   { name: "Gothic Author", check: (s) => s.exhaustion < 4 && s.antiquity >= 1 && s.menace >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50
@@ -1404,6 +1533,14 @@ const BONE_MARKET_BUYERS = [
                 : s.boneMarketFluctuations === 3 ? Math.floor((s.antiquity + 0.5) * s.menace)
                 : s.antiquity * s.menace) * 2.50,
     secondaryEchoesFn: (s) => (s.boneMarketFluctuations === 1 ? Math.floor(s.antiquity * (s.menace + 0.5)) : s.boneMarketFluctuations === 3 ? Math.floor((s.antiquity + 0.5) * s.menace) : s.antiquity * s.menace) * 2.5,
+    items: (s) => {
+      const r = [{qty: 5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50), name: "Scrip"}];
+      const n = s.boneMarketFluctuations === 1 ? Math.floor(s.antiquity * (s.menace + 0.5))
+              : s.boneMarketFluctuations === 3 ? Math.floor((s.antiquity + 0.5) * s.menace)
+              : s.antiquity * s.menace;
+      if (n > 0) r.push({qty: n, name: "Ivory"});
+      return r;
+    },
     note: "Antiquity×Menace" },
   { name: "Zailor", check: (s) => s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
     payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 2.50 + (
@@ -1411,6 +1548,14 @@ const BONE_MARKET_BUYERS = [
       : s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.antiquity + 0.5))
       : s.antiquity * s.amalgamy) * 2.50,
     secondaryEchoesFn: (s) => (s.boneMarketFluctuations === 1 ? Math.floor((s.amalgamy + 0.5) * s.antiquity) : s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.antiquity + 0.5)) : s.antiquity * s.amalgamy) * 2.5,
+    items: (s) => {
+      const r = [{qty: 25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10), name: "Amber"}];
+      const n = s.boneMarketFluctuations === 1 ? Math.floor((s.amalgamy + 0.5) * s.antiquity)
+              : s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.antiquity + 0.5))
+              : s.antiquity * s.amalgamy;
+      if (n > 0) r.push({qty: n, name: "Scintillack"});
+      return r;
+    },
     note: "Antiquity×Amalgamy" },
   { name: "Rubbery Collector", check: (s) => s.exhaustion < 4 && s.menace >= 1 && s.amalgamy >= 1,
     payout: (s) => (5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50 + (
@@ -1418,14 +1563,24 @@ const BONE_MARKET_BUYERS = [
       : s.boneMarketFluctuations === 3 ? Math.floor((s.amalgamy + 0.5) * s.menace)
       : s.menace * s.amalgamy) * 2.50,
     secondaryEchoesFn: (s) => (s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.menace + 0.5)) : s.boneMarketFluctuations === 3 ? Math.floor((s.amalgamy + 0.5) * s.menace) : s.menace * s.amalgamy) * 2.5,
+    items: (s) => {
+      const r = [{qty: 5 + Math.floor((s.approximateValue + s.zoologicalMania) / 50), name: "Nightsoil"}];
+      const n = s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.menace + 0.5))
+              : s.boneMarketFluctuations === 3 ? Math.floor((s.amalgamy + 0.5) * s.menace)
+              : s.menace * s.amalgamy;
+      if (n > 0) r.push({qty: n, name: "Pies"});
+      return r;
+    },
     note: "Menace×Amalgamy" },
   { name: "Constable", check: (s) => s.skeletonInProgress >= 110 && s.skeletonInProgress <= 119,
     payout: (s) => (20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50)) * 0.50,
     secondaryEchoesFn: () => 0,
+    items: (s) => [{qty: 20 + Math.floor((s.approximateValue + s.zoologicalMania) / 50), name: "Scrip"}],
     note: "Humanoid" },
   { name: "Dumbwaiter", check: (s) => s.skeletonInProgress >= 180 && s.skeletonInProgress <= 189,
     payout: (s) => Math.floor((s.approximateValue + s.zoologicalMania) / 250) * 2.50,
     secondaryEchoesFn: () => 0,
+    items: (s) => [{qty: Math.floor((s.approximateValue + s.zoologicalMania) / 250), name: "Identities"}],
     note: "Bird" },
 ];
 
@@ -1484,6 +1639,11 @@ const SKEL_TYPE_LABELS = {
   100: "Chimera", 110: "Humanoid", 120: "Ape", 130: "Monkey",
   140: "Amphibian", 150: "Reptile", 160: "Amphibian", 170: "Reptile",
   180: "Bird", 190: "Fish", 200: "Insect", 210: "Spider",
+};
+const SKEL_TYPE_PLURAL = {
+  100: "chimeras", 110: "humanoids", 120: "apes", 130: "monkeys",
+  140: "amphibians", 150: "reptiles", 160: "amphibians", 170: "reptiles",
+  180: "birds", 190: "fish", 200: "insects", 210: "spiders",
 };
 // Per-slot maximums per skeleton type; 0=forbidden, positive=cap, absent=unlimited.
 // Tentacles are always unlimited (not listed). Source: fallenlondon.wiki Assembling_a_Skeleton Guide.
@@ -1702,6 +1862,7 @@ window.addEventListener("message", (event) => {
   } else if (event.data.type === "storylet-begin") {
     annotateBranchCosts(parseBranchCosts(event.data.data));
     annotateBranchBones(parseBranchBones(event.data.data));
+    annotateBuyerBranches(parseBuyerBranches(event.data.data));
   } else if (event.data.type === "storylet-list") {
     _detectManiaFromStorylets(event.data.data.storylets);
   } else if (event.data.type === "myself") {
