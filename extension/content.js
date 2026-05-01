@@ -1,5 +1,6 @@
 // Runs in the isolated content script world.
 // PRICES is defined in prices.js, loaded before this file via manifest.json.
+const _b = typeof browser !== 'undefined' ? browser : chrome;
 
 // ── Inject fetch/XHR interceptor into the page's main world ─────────────────
 // Use textContent (not script.src) so the code executes synchronously before
@@ -977,12 +978,12 @@ let _currentCharId = null;
 function _epaKey() { return _currentCharId ? `epa_${_currentCharId}` : null; }
 function _saveEpa() {
   const key = _epaKey(); if (!key) return;
-  browser.storage.local.set({ [key]: _epa }).catch(() => {});
+  _b.storage.local.set({ [key]: _epa }).catch(() => {});
 }
 async function _loadEpaForChar(charId) {
   try {
     const key = `epa_${charId}`;
-    const r = await browser.storage.local.get(key);
+    const r = await _b.storage.local.get(key);
     _epa = r?.[key] ?? { lifetime: { actions: 0, echoes: 0 }, session: { actions: 0, echoes: 0, running: false } };
   } catch(e) {}
 }
