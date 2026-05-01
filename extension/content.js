@@ -485,6 +485,93 @@ function annotateBranchCosts(branchCosts) {
   setTimeout(() => { if (_branchCostObserver) { _branchCostObserver.disconnect(); _branchCostObserver = null; } }, 300000);
 }
 
+// Shared helper: compute & inject bone-type + exhaustion + mania label onto targetEl
+function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
+  const eff = BONE_EFFECTS_BY_ID[boneId] ?? { av: (PRICES[boneId] ?? 0) * 100, antiquity: 0, amalgamy: 0, menace: 0 };
+  const baseExh = _exhaustionFromSale(_skeletonState);
+  const simState = {
+    ..._skeletonState,
+    approximateValue: _skeletonState.approximateValue + eff.av,
+    antiquity: _skeletonState.antiquity + eff.antiquity,
+    amalgamy:  _skeletonState.amalgamy  + eff.amalgamy,
+    menace:    _skeletonState.menace    + eff.menace,
+  };
+  const newExh    = _exhaustionFromSale(simState);
+  const increased = newExh > baseExh;
+  const wouldCap  = _skeletonState.exhaustion + newExh >= 4;
+  const bmf = _skeletonState.boneMarketFluctuations;
+  let maniaConflict = false;
+  if (bmf === 1) maniaConflict = eff.amalgamy > 0 || eff.menace > 0;
+  else if (bmf === 2) maniaConflict = eff.antiquity > 0 || eff.menace > 0;
+  else if (bmf === 3) maniaConflict = eff.antiquity > 0 || eff.amalgamy > 0;
+
+  const wrap = document.createElement("span");
+  wrap.style.cssText = "font-size:0.85em;opacity:0.85;margin-left:4px;";
+  const typeSp = document.createElement("span");
+  typeSp.textContent = typeLabel;
+  typeSp.style.color = "inherit";
+  wrap.appendChild(typeSp);
+  if (increased && wouldCap) {
+    const s = document.createElement("span");
+    s.textContent = " ⚠⚠ +exh→cap";
+    s.style.cssText = "color:#c9592c;font-weight:bold;";
+    wrap.appendChild(s);
+  } else if (increased) {
+    const s = document.createElement("span");
+    s.textContent = " ⚠ +exh";
+    s.style.color = "#c9a84c";
+    wrap.appendChild(s);
+  } else if (wouldCap) {
+    const s = document.createElement("span");
+    s.textContent = " ⚠ at cap";
+    s.style.color = "#c9592c";
+    wrap.appendChild(s);
+  }
+  if (maniaConflict) {
+    const s = document.createElement("span");
+    s.textContent = " [~mania]";
+    s.style.color = "#c9a84c";
+    wrap.appendChild(s);
+  }
+  targetEl.appendChild(wrap);
+}
+
+// Bone name → ID map for DOM-based scanning (handles reload without storylet-begin event)
+const _BONE_NAME_TO_ID = new Map([
+  ["Carved Ball of Stygian Ivory", 122483], ["Doubled Skull", 141479],
+  ["Sabre-toothed Skull", 140847], ["Horned Skull", 141371],
+  ["Plated Skull", 140882], ["Rubbery Skull", 811],
+  ["Human Arm", 140813], ["Ivory Humerus", 140849],
+  ["Femur of a Surface Deer", 140771], ["Unidentified Thigh Bone", 140756],
+  ["Ivory Femur", 142351], ["Femur of a Jurassic Beast", 140773],
+  ["Bat Wing", 140879], ["Wing of a Young Terror Bird", 141372],
+  ["Albatross Wing", 140850], ["Fin Bones, Collected", 140852],
+  ["Amber-Crusted Fin", 141380], ["Tomb-Lion's Tail", 140881],
+  ["Plaster Tail Bones", 140851], ["Obsidian Chitin Tail", 142727],
+  ["Withered Tentacle", 140853],
+]);
+
+// Scan DOM branch containers for bone quality requirements (handles page reload)
+function _tryAnnotateBonesFromDOM() {
+  for (const container of document.querySelectorAll('[data-branch-id]')) {
+    if (container.dataset.flBoneLabeled) continue;
+    for (const btn of container.querySelectorAll('[role="button"][aria-label], img[aria-label]')) {
+      const label = btn.getAttribute('aria-label') || '';
+      for (const [name, id] of _BONE_NAME_TO_ID) {
+        if (!label.includes(name)) continue;
+        const headerEl = container.querySelector("h2,h3,h4,h5,[class*='heading'],[class*='title']") || container;
+        if (headerEl.dataset.flBoneLabeled) break;
+        headerEl.dataset.flBoneLabeled = "1";
+        container.dataset.flBoneLabeled = "1";
+        const typeLabel = _boneTypeLabel(id, name);
+        if (typeLabel) _buildBoneLabelSpan(headerEl, id, typeLabel);
+        break;
+      }
+      if (container.dataset.flBoneLabeled) break;
+    }
+  }
+}
+
 function parseBranchBones(data) {
   let nodes = [];
   if (data && Array.isArray(data.childBranches)) {
@@ -504,14 +591,16 @@ function parseBranchBones(data) {
   const results = [];
   for (const node of nodes) for (const branch of node.childBranches) {
     if (!Array.isArray(branch.qualityRequirements)) continue;
+    let nameMatch = null;
     for (const req of branch.qualityRequirements) {
-      const id = req.qualityId;
-      const name = req.qualityName || "";
-      if (BONE_TYPE_BY_ID[id] || _boneTypeLabel(0, name)) {
-        results.push({ branchId: branch.id, branchName: branch.name, boneId: id, boneName: name });
+      if (BONE_TYPE_BY_ID[req.qualityId]) {
+        nameMatch = null;
+        results.push({ branchId: branch.id, branchName: branch.name, boneId: req.qualityId, boneName: req.qualityName || "" });
         break;
       }
+      if (!nameMatch && _boneTypeLabel(0, req.qualityName || "")) nameMatch = req;
     }
+    if (nameMatch) results.push({ branchId: branch.id, branchName: branch.name, boneId: nameMatch.qualityId, boneName: nameMatch.qualityName || "" });
   }
   return results;
 }
@@ -546,60 +635,7 @@ function annotateBranchBones(boneBranches) {
       if (headerEl.dataset.flBoneLabeled) continue;
       headerEl.dataset.flBoneLabeled = "1";
 
-      // Compute exhaustion and mania labels
-      const eff = BONE_EFFECTS_BY_ID[boneId] ?? { av: (PRICES[boneId] ?? 0) * 100, antiquity: 0, amalgamy: 0, menace: 0 };
-      const baseExh = _exhaustionFromSale(_skeletonState);
-      const simState = {
-        ..._skeletonState,
-        approximateValue: _skeletonState.approximateValue + eff.av,
-        antiquity: _skeletonState.antiquity + eff.antiquity,
-        amalgamy:  _skeletonState.amalgamy  + eff.amalgamy,
-        menace:    _skeletonState.menace    + eff.menace,
-      };
-      const newExh   = _exhaustionFromSale(simState);
-      const increased = newExh > baseExh;
-      const wouldCap  = _skeletonState.exhaustion + newExh >= 4;
-
-      const bmf = _skeletonState.boneMarketFluctuations;
-      let maniaConflict = false;
-      if (bmf === 1) maniaConflict = eff.amalgamy > 0 || eff.menace > 0;
-      else if (bmf === 2) maniaConflict = eff.antiquity > 0 || eff.menace > 0;
-      else if (bmf === 3) maniaConflict = eff.antiquity > 0 || eff.amalgamy > 0;
-
-      // Build label span
-      const wrap = document.createElement("span");
-      wrap.style.cssText = "font-size:0.85em;opacity:0.85;margin-left:4px;";
-
-      const typeSp = document.createElement("span");
-      typeSp.textContent = typeLabel;
-      typeSp.style.color = "inherit";
-      wrap.appendChild(typeSp);
-
-      if (increased && wouldCap) {
-        const exhSp = document.createElement("span");
-        exhSp.textContent = " ⚠⚠ +exh→cap";
-        exhSp.style.cssText = "color:#c9592c;font-weight:bold;";
-        wrap.appendChild(exhSp);
-      } else if (increased) {
-        const exhSp = document.createElement("span");
-        exhSp.textContent = " ⚠ +exh";
-        exhSp.style.color = "#c9a84c";
-        wrap.appendChild(exhSp);
-      } else if (wouldCap) {
-        const exhSp = document.createElement("span");
-        exhSp.textContent = " ⚠ at cap";
-        exhSp.style.color = "#c9592c";
-        wrap.appendChild(exhSp);
-      }
-
-      if (maniaConflict) {
-        const maniaSp = document.createElement("span");
-        maniaSp.textContent = " [~mania]";
-        maniaSp.style.color = "#c9a84c";
-        wrap.appendChild(maniaSp);
-      }
-
-      headerEl.appendChild(wrap);
+      _buildBoneLabelSpan(headerEl, boneId, typeLabel);
     }
   }
 
@@ -1252,7 +1288,7 @@ function injectEpaPanel() {
 
 function startPossessionsObserver() {
   setInterval(() => {
-    injectPossessionsStyles(); injectEpaPanel(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); injectSkeletonTracker();
+    injectPossessionsStyles(); injectEpaPanel(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); injectSkeletonTracker(); _tryAnnotateBonesFromDOM();
   }, 1000);
 }
 
