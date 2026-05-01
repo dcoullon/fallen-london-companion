@@ -36,11 +36,13 @@ Success: lose Egg, gain 50 Nodule of Warm Amber
 
 ## Formula (implemented)
 
-AV-based: (25 + floor((AV+M)/10)) × Nodule of Warm Amber (2.50ε)
+AV-based: (25 + floor((AV+M)/10)) × Nodule of Warm Amber (0.05ε — 1 stuiver)
 Secondary: Amalgamy × Antiquity × Knob of Scintillack (2.50ε)
 Fluctuation effects:
   - Antiquity week (1): floor((Amalgamy + 0.5) × Antiquity) scintillack
   - Amalgamy week (2): floor(Amalgamy × (Antiquity + 0.5)) scintillack
   - Otherwise: Amalgamy × Antiquity scintillack
-Total echo: (25+floor((AV+M)/10))×2.50 + floor(Amalgamy×Antiquity [±0.5])×2.50
-Verification: wiki ✓
+Total echo: (25+floor((AV+M)/10))×0.05 + floor(Amalgamy×Antiquity [±0.5])×2.50
+Note: Warm Amber is bought at 1 stuiver (0.05ε) in the Bone Market stuiver shop.
+The Scintillack secondary dominates payout for high Antiquity×Amalgamy skeletons.
+Verification: wiki formula ✓; Warm Amber price confirmed by user 2026-05-01

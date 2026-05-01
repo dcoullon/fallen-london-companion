@@ -49,7 +49,7 @@ const PRICES = {
 
   // RUBBERY
   385:    0.01,  // Nodule of Deep Amber
-  328:    2.50,  // Nodule of Warm Amber
+  328:    0.05,  // Nodule of Warm Amber (1 stuiver)
   810:    2.50,  // Unearthly Fossil
   949:   12.50,  // Nodule of Trembling Amber
   754:   62.50,  // Nodule of Pulsating Amber
@@ -324,10 +324,12 @@ const PRICES = {
   140881: 2.50,  // Tomb-Lion's Tail
   140853: 2.50,  // Withered Tentacle
   141372: 2.50,  // Wing of a Young Terror Bird
+  105464: 2.50,  // A List of Aliases, Writ in Gant
   140773: 3.00,  // Femur of a Jurassic Beast
   141480: 3.00,  // Helical Thighbone
   140772: 3.00,  // Knotted Humerus
   142727: 5.00,  // Obsidian Chitin Tail
+  140883: 0.50,  // Jet Black Stinger
   140839: 12.50, // Human Ribcage
   140840: 12.50, // Flourishing Ribcage
   140833: 12.50, // Thorned Ribcage

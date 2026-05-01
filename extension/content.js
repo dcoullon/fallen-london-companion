@@ -1144,6 +1144,7 @@ function parseMyself(data) {
   _cachedFactionStats = factionStats;
   _cachedFavoursQtys = favoursQtys;
   _updateSkeletonFromPossessions(data.possessions);
+  for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
   // Remove stale bars so they re-inject with fresh data (qty and faction stats now known)
   document.getElementById("fl-renown-bar")?.remove();
   document.getElementById("fl-cc-bar")?.remove();
@@ -1584,7 +1585,7 @@ const BONE_MARKET_BUYERS = [
     },
     note: "Antiquity×Menace" },
   { name: "Zailor", check: (s) => s.exhaustion < 4 && s.antiquity >= 1 && s.amalgamy >= 1,
-    payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 2.50 + (
+    payout: (s) => (25 + Math.floor((s.approximateValue + s.zoologicalMania) / 10)) * 0.05 + (
       s.boneMarketFluctuations === 1 ? Math.floor((s.amalgamy + 0.5) * s.antiquity)
       : s.boneMarketFluctuations === 2 ? Math.floor(s.amalgamy * (s.antiquity + 0.5))
       : s.antiquity * s.amalgamy) * 2.50,
@@ -1913,7 +1914,7 @@ window.addEventListener("message", (event) => {
       _saveEpa();
     }
     if (_updateSkeletonFromChoosebranch(data)) {
-      // Re-render tracker immediately on state change rather than waiting for next interval tick
+      for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
       document.getElementById("fl-skeleton-tracker")?.remove();
       _lastSkeletonRenderHash = "";
       injectSkeletonTracker();
@@ -1923,7 +1924,8 @@ window.addEventListener("message", (event) => {
     annotateBranchBones(parseBranchBones(event.data.data));
     annotateBuyerBranches(parseBuyerBranches(event.data.data));
   } else if (event.data.type === "storylet-list") {
-    _detectManiaFromStorylets(event.data.data.storylets);
+    const _d = event.data.data;
+    _detectManiaFromStorylets([...(_d.storylets || []), ...(_d.displayCards || [])]);
   } else if (event.data.type === "myself") {
     parseMyself(event.data.data);
   }

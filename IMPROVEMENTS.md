@@ -2,6 +2,16 @@
 
 ## Pending (highest ROI first)
 
+### Bone Market — tail/fin/wing conflict warning not showing (mania week)
+During mania weeks (e.g. amphibian week requiring no tail), the `[✗ amphibians]` conflict label
+does not appear on tail bones (Tomb-Lion's Tail, Jet Black Stinger, Plaster Tail Bones, etc.).
+- Root cause not yet confirmed: mania detection via `displayCards` was added but may still not fire
+  in the Bone Market context; `zoologicalManiaType` may remain 0 when building an undeclared skeleton
+- For declared skeletons of the conflicting type (skeletonInProgress = 140–149), the warning SHOULD
+  already show (effectiveTypeKey derived directly from skeletonInProgress) — needs verification
+- Likely next step: add a console.log in `_buildBoneLabelSpan` to log `effectiveTypeKey`,
+  `skeletonInProgress`, and `zoologicalManiaType` at label time; check which is 0
+
 ### setInterval — performance / battery guard
 Currently the 1 s polling interval runs all injection functions on every tick regardless of which
 tab the player is on. Add a page-context check at the top of each injector so work is skipped
