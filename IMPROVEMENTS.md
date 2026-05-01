@@ -2,16 +2,6 @@
 
 ## Pending (highest ROI first)
 
-### Bone Market — tail/fin/wing conflict warning not showing (mania week)
-During mania weeks (e.g. amphibian week requiring no tail), the `[✗ amphibians]` conflict label
-does not appear on tail bones (Tomb-Lion's Tail, Jet Black Stinger, Plaster Tail Bones, etc.).
-- Root cause not yet confirmed: mania detection via `displayCards` was added but may still not fire
-  in the Bone Market context; `zoologicalManiaType` may remain 0 when building an undeclared skeleton
-- For declared skeletons of the conflicting type (skeletonInProgress = 140–149), the warning SHOULD
-  already show (effectiveTypeKey derived directly from skeletonInProgress) — needs verification
-- Likely next step: add a console.log in `_buildBoneLabelSpan` to log `effectiveTypeKey`,
-  `skeletonInProgress`, and `zoologicalManiaType` at label time; check which is 0
-
 ### setInterval — performance / battery guard
 Currently the 1 s polling interval runs all injection functions on every tick regardless of which
 tab the player is on. Add a page-context check at the top of each injector so work is skipped
@@ -107,8 +97,15 @@ same plot without having to navigate back manually.
   based on skeleton attributes only (Respectable/Dreaded/Bizarre removed — player can swap gear).
   Quadratic secondary formulas use `Math.round` (not floor), confirmed against real sales.
   Mania week captured from `/api/storylet` storylets via "predilection for" text regex.
-- **Firefox extension** — MV3 Firefox-first extension with gecko_android support; packaged and
-  ready for AMO submission.
+- **Firefox + Chrome extension** — MV3 extension with two manifests: `manifest.json` (Firefox,
+  gecko_android) and `manifest.chrome.json` (Chrome). `npm run build` → Firefox zip for AMO;
+  `npm run build:chrome` → Chrome zip for Web Store. `HOWTO.html` documents the full build,
+  test and publish workflow for both browsers.
+- **Bone Market — zoological mania conflict warning** — `[✗ amphibians]` (and equivalent for
+  other mania types) now correctly appears on incompatible bone slots during mania weeks.
+  Zoological Mania detected from quality 142799 (world quality, levels 1–7) found in the
+  `storylet-begin` response when entering any Bone Market sub-storylet. Conflict gate relaxed
+  to fire even without an active skeleton when mania type is known.
 - **Bone Market — Assemble a Skeleton annotations** — three inline labels on each bone-adding branch:
   (1) bone type label (`[skull]`, `[leg]`, `[skull×2]`, `[0 skull]` for Stygian Ivory, etc.);
   (2) exhaustion warning (`⚠ +exh` amber / `⚠⚠ +exh→cap` red) when adding this bone would increase
