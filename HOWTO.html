@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fallen London Companion — Build, Test &amp; Publish Guide</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; font-size: 15px; line-height: 1.6; color: #1a1a1a; background: #f7f7f5; }
+  .page { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { color: #666; margin-bottom: 40px; }
+  h2 { font-size: 1.25rem; font-weight: 700; margin: 40px 0 16px; padding-bottom: 6px; border-bottom: 2px solid #e0e0dc; }
+  h3 { font-size: 1rem; font-weight: 700; margin: 24px 0 10px; color: #333; }
+  p { margin-bottom: 10px; }
+  ol, ul { padding-left: 22px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+  code { font-family: "SF Mono", Consolas, monospace; font-size: 0.875em; background: #eeeee9; padding: 2px 5px; border-radius: 3px; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 14px 18px; border-radius: 6px; overflow-x: auto; margin: 10px 0 14px; font-family: "SF Mono", Consolas, monospace; font-size: 0.875em; line-height: 1.5; }
+  .callout { border-radius: 6px; padding: 12px 16px; margin: 14px 0; }
+  .callout.info  { background: #e8f0fe; border-left: 4px solid #4285f4; }
+  .callout.warn  { background: #fef7e0; border-left: 4px solid #f9ab00; }
+  .callout.good  { background: #e6f4ea; border-left: 4px solid #34a853; }
+  .callout strong { display: block; margin-bottom: 4px; }
+  .files { background: #fff; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin: 14px 0; }
+  .files table { width: 100%; border-collapse: collapse; }
+  .files td, .files th { padding: 10px 14px; border-bottom: 1px solid #eee; font-size: 0.9em; }
+  .files th { background: #f2f2ef; font-weight: 600; text-align: left; }
+  .files tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; font-size: 0.75em; font-weight: 600; padding: 2px 7px; border-radius: 10px; vertical-align: middle; margin-left: 4px; }
+  .badge.ff  { background: #ff6611; color: #fff; }
+  .badge.cr  { background: #4285f4; color: #fff; }
+  .badge.both { background: #555; color: #fff; }
+  .step-num { display: inline-block; width: 22px; height: 22px; border-radius: 50%; background: #333; color: #fff; font-size: 0.75em; font-weight: 700; text-align: center; line-height: 22px; margin-right: 8px; flex-shrink: 0; }
+  .toc { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 16px 20px; margin-bottom: 36px; }
+  .toc ul { margin: 0; }
+  .toc a { color: #4285f4; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  hr.section { border: none; border-top: 1px solid #e0e0dc; margin: 40px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Fallen London Companion</h1>
+<p class="subtitle">Build, Test &amp; Publish Guide — Firefox · Firefox Android · Chrome</p>
+
+<div class="toc">
+  <strong style="display:block;margin-bottom:8px;">Contents</strong>
+  <ul>
+    <li><a href="#manifests">1 — Which manifest is which</a></li>
+    <li><a href="#build">2 — Building</a></li>
+    <li><a href="#test-ff">3 — Testing on Firefox desktop</a></li>
+    <li><a href="#test-android">4 — Testing on Firefox Android</a></li>
+    <li><a href="#test-chrome">5 — Testing on Chrome</a></li>
+    <li><a href="#publish-ff">6 — Publishing to Firefox Add-ons (AMO)</a></li>
+    <li><a href="#publish-chrome">7 — Publishing to Chrome Web Store</a></li>
+    <li><a href="#checklist">8 — Release checklist</a></li>
+  </ul>
+</div>
+
+<!-- ─── 1. MANIFESTS ──────────────────────────────────────────────── -->
+<h2 id="manifests">1 — Which manifest is which</h2>
+
+<p>There are two manifest files in <code>extension/</code>. <strong>Never edit or swap them manually</strong> — the build scripts handle everything.</p>
+
+<div class="files">
+  <table>
+    <thead><tr><th>File</th><th>Target</th><th>Used by</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>extension/manifest.json</code></td>
+        <td><span class="badge ff">Firefox</span> desktop &amp; Android</td>
+        <td><code>npm run dev</code>, <code>npm run build</code>, <code>npm run lint</code></td>
+      </tr>
+      <tr>
+        <td><code>extension/manifest.chrome.json</code></td>
+        <td><span class="badge cr">Chrome</span> desktop</td>
+        <td><code>npm run build:chrome</code> only — never touched by any other command</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout info">
+  <strong>How the Chrome build works</strong>
+  <code>npm run build:chrome</code> temporarily copies <code>manifest.chrome.json</code> over <code>manifest.json</code>, runs the build, then <strong>immediately restores</strong> the Firefox manifest — even if the build fails. After the command returns, <code>manifest.json</code> is always the Firefox version.
+</div>
+
+<p>The only code difference between the two manifests is:</p>
+<ul>
+  <li>Firefox manifest has <code>browser_specific_settings</code> (gecko ID + min version for Android)</li>
+  <li>Chrome manifest has <code>minimum_chrome_version</code> instead, no gecko settings</li>
+</ul>
+<p>All logic lives in <code>content.js</code> and is shared between both browsers via a one-line shim at the top of the file (<code>const _b = typeof browser !== 'undefined' ? browser : chrome</code>).</p>
+
+<!-- ─── 2. BUILDING ───────────────────────────────────────────────── -->
+<h2 id="build">2 — Building</h2>
+
+<div class="files">
+  <table>
+    <thead><tr><th>Command</th><th>Output file</th><th>Upload this to</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>npm run build</code></td>
+        <td><code>dist/fallen_london_companion-0.3.zip</code></td>
+        <td>Firefox Add-ons (AMO) <span class="badge ff">FF only</span></td>
+      </tr>
+      <tr>
+        <td><code>npm run build:chrome</code></td>
+        <td><code>dist/fallen_london_companion-chrome.zip</code></td>
+        <td>Chrome Web Store <span class="badge cr">Chrome only</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout warn">
+  <strong>Before any release build: bump the version</strong>
+  Update <code>"version"</code> in <strong>both</strong> <code>extension/manifest.json</code> and <code>extension/manifest.chrome.json</code> to the same string (e.g. <code>"0.4"</code>), then run both build commands.
+</div>
+
+<!-- ─── 3. FIREFOX DESKTOP ───────────────────────────────────────── -->
+<h2 id="test-ff">3 — Testing on Firefox desktop</h2>
+
+<h3>Option A — Dev mode (recommended for active development)</h3>
+<pre>cmd /c "npm run dev"</pre>
+<p>Opens a dedicated Firefox window on <code>fallenlondon.com</code> with the extension loaded. Any file save in <code>extension/</code> auto-reloads the extension. No reinstall needed.</p>
+
+<h3>Option B — Temporary install from folder</h3>
+<ol>
+  <li>Open <code>about:debugging#/runtime/this-firefox</code></li>
+  <li>Click <strong>Load Temporary Add-on…</strong></li>
+  <li>Navigate to <code>extension/</code> and select <code>manifest.json</code></li>
+  <li>Visit <code>https://www.fallenlondon.com</code></li>
+</ol>
+<div class="callout warn">
+  <strong>Updating after a code change</strong>
+  Do not use the Reload button — it doesn't pick up all changes. Always <strong>Remove</strong> the extension, then <strong>Load Temporary Add-on…</strong> again. Temporary installs are cleared when Firefox closes.
+</div>
+
+<h3>Option C — Test the actual release zip</h3>
+<ol>
+  <li>Run <code>npm run build</code> → produces <code>dist/fallen_london_companion-0.3.zip</code></li>
+  <li>In Firefox: <strong>Add-ons and themes</strong> → gear icon → <strong>Install Add-on From File…</strong></li>
+  <li>Select the zip from <code>dist/</code></li>
+</ol>
+<p>This installs as a permanent (unsigned) add-on. Unsigned add-ons only work in Firefox Developer Edition or Nightly, or if <code>xpinstall.signatures.required</code> is set to <code>false</code> in <code>about:config</code>.</p>
+
+<!-- ─── 4. FIREFOX ANDROID ──────────────────────────────────────── -->
+<h2 id="test-android">4 — Testing on Firefox Android</h2>
+
+<h3>One-time phone setup</h3>
+<ol>
+  <li>Install <strong>Firefox Nightly</strong> on your Android device (required for unsigned extension installs)</li>
+  <li>Open Firefox Nightly → tap the menu (⋮) → <strong>Settings</strong> → <strong>About Firefox Nightly</strong></li>
+  <li>Tap the Firefox logo <strong>5 times rapidly</strong> — you'll see "Debug menu enabled"</li>
+  <li>Go back to Settings — a new <strong>"Install extension from file"</strong> option now appears</li>
+</ol>
+
+<h3>Installing / updating the extension</h3>
+<ol>
+  <li>Run <code>npm run build</code> on your PC → produces <code>dist/fallen_london_companion-0.3.zip</code></li>
+  <li>Transfer the zip to your phone (email, Google Drive, USB — anything works)</li>
+  <li>On the phone: Settings → <strong>Install extension from file</strong> → select the zip</li>
+  <li>Tap <strong>Add</strong> on the install prompt</li>
+  <li>Open <code>https://www.fallenlondon.com</code> in Firefox Nightly and log in</li>
+</ol>
+
+<div class="callout info">
+  <strong>Re-installing after an update</strong>
+  Firefox Android does not auto-update sideloaded extensions. To update: go to Add-ons (Settings → Add-ons), remove the old version, then install the new zip via the same flow above.
+</div>
+
+<!-- ─── 5. CHROME ────────────────────────────────────────────────── -->
+<h2 id="test-chrome">5 — Testing on Chrome desktop</h2>
+
+<h3>Option A — Load unpacked (recommended for development)</h3>
+<ol>
+  <li>Open <code>chrome://extensions</code></li>
+  <li>Enable <strong>Developer mode</strong> (toggle in the top-right corner)</li>
+  <li>Click <strong>Load unpacked</strong></li>
+  <li>Select the <code>extension/</code> folder (not a zip — the folder itself)</li>
+  <li>Visit <code>https://www.fallenlondon.com</code></li>
+</ol>
+<p>To reload after a code change: click the refresh icon on the extension card in <code>chrome://extensions</code>, then hard-reload the game tab.</p>
+
+<h3>Option B — Test the actual release zip</h3>
+<ol>
+  <li>Run <code>npm run build:chrome</code> → produces <code>dist/fallen_london_companion-chrome.zip</code></li>
+  <li>In <code>chrome://extensions</code> (Developer mode on): drag the zip onto the page, or use <strong>Pack extension</strong> if you want a <code>.crx</code></li>
+</ol>
+
+<div class="callout warn">
+  <strong>Do not load the Chrome zip in Firefox, or the Firefox zip in Chrome</strong>
+  They will install but behave incorrectly (wrong gecko/chrome API assumptions in the manifest).
+</div>
+
+<!-- ─── 6. PUBLISH FIREFOX ───────────────────────────────────────── -->
+<h2 id="publish-ff">6 — Publishing to Firefox Add-ons (AMO)</h2>
+
+<div class="callout good">
+  <strong>File to upload: <code>dist/fallen_london_companion-0.3.zip</code></strong>
+  Built by <code>npm run build</code>. This is the Firefox zip — it contains <code>manifest.json</code> with gecko settings.
+</div>
+
+<ol>
+  <li>Bump the version in <code>extension/manifest.json</code> and run <code>npm run build</code></li>
+  <li>Go to <a href="https://addons.mozilla.org/en-US/developers/addons" target="_blank">addons.mozilla.org/en-US/developers/addons</a></li>
+  <li>Click your extension → <strong>Upload New Version</strong></li>
+  <li>Upload <code>dist/fallen_london_companion-0.3.zip</code></li>
+  <li>When asked "Is this add-on listed on AMO?":
+    <ul>
+      <li>Choose <strong>"On your own"</strong> to get a signed <code>.xpi</code> for self-distribution (no review, instant)</li>
+      <li>Choose <strong>"On AMO"</strong> for public listing (requires review, takes days)</li>
+    </ul>
+  </li>
+  <li>If self-distributing: download the signed <code>.xpi</code> — this is what installs cleanly on Android without needing the debug menu</li>
+</ol>
+
+<div class="callout info">
+  <strong>Source code submission</strong>
+  AMO may ask for source code if the extension is minified or obfuscated. This extension is plain unminified JS — you can submit the same zip.
+</div>
+
+<!-- ─── 7. PUBLISH CHROME ─────────────────────────────────────────── -->
+<h2 id="publish-chrome">7 — Publishing to Chrome Web Store</h2>
+
+<div class="callout good">
+  <strong>File to upload: <code>dist/fallen_london_companion-chrome.zip</code></strong>
+  Built by <code>npm run build:chrome</code>. This is the Chrome zip — it contains the chrome manifest (no gecko settings).
+</div>
+
+<ol>
+  <li>Bump the version in <code>extension/manifest.chrome.json</code> (<strong>and</strong> <code>manifest.json</code> to keep them in sync) and run <code>npm run build:chrome</code></li>
+  <li>Go to <a href="https://chrome.google.com/webstore/devconsole" target="_blank">chrome.google.com/webstore/devconsole</a></li>
+  <li>Click <strong>New Item</strong> (first time) or select your existing item → <strong>Package</strong> → <strong>Upload new package</strong></li>
+  <li>Upload <code>dist/fallen_london_companion-chrome.zip</code></li>
+  <li>Fill in the Store Listing (description, screenshots, category)</li>
+  <li>Submit for review — Chrome review typically takes 1–3 days for updates</li>
+</ol>
+
+<div class="callout warn">
+  <strong>One-time developer account fee</strong>
+  Chrome Web Store requires a $5 one-time developer registration fee if you haven't paid it already.
+</div>
+
+<!-- ─── 8. CHECKLIST ──────────────────────────────────────────────── -->
+<h2 id="checklist">8 — Release checklist</h2>
+
+<ol>
+  <li>Run <code>node run-tests.js</code> — all tests pass</li>
+  <li>Run <code>cmd /c "npm run test:all"</code> — unit + Playwright tests pass</li>
+  <li>Bump version in <strong>both</strong> <code>extension/manifest.json</code> and <code>extension/manifest.chrome.json</code></li>
+  <li>Run <code>npm run build</code> → verify <code>dist/fallen_london_companion-0.3.zip</code> exists</li>
+  <li>Run <code>npm run build:chrome</code> → verify <code>dist/fallen_london_companion-chrome.zip</code> exists</li>
+  <li>Test Firefox zip via temporary install (Option B in §3) — check core features on desktop</li>
+  <li>Test on Firefox Android (§4) — primary target, test all features</li>
+  <li>Test Chrome zip via Load unpacked or zip drag-in (§5) — check core features</li>
+  <li>Commit and push: <code>git add -A &amp;&amp; git commit -m "vX.Y" &amp;&amp; git push</code></li>
+  <li>Upload <code>fallen_london_companion-0.3.zip</code> <span class="badge ff">FF only</span> → AMO (§6)</li>
+  <li>Upload <code>fallen_london_companion-chrome.zip</code> <span class="badge cr">Chrome only</span> → Chrome Web Store (§7)</li>
+</ol>
+
+<div class="callout warn">
+  <strong>Never cross-upload</strong>
+  The Firefox zip has gecko-specific settings that will cause a Chrome submission error (and vice versa). The filenames make it unambiguous: <code>-chrome.zip</code> goes to Chrome, the other goes to AMO.
+</div>
+
+</div><!-- .page -->
+</body>
+</html>
