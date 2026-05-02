@@ -120,6 +120,13 @@ same plot without having to navigate back manually.
   Zoological Mania detected from quality 142799 (world quality, levels 1–7) found in the
   `storylet-begin` response when entering any Bone Market sub-storylet. Conflict gate relaxed
   to fire even without an active skeleton when mania type is known.
+- **Bone Market — skeleton frame mania warnings** — on the frame-selection screen (before any
+  skeleton is started), frames incompatible with the current zoological mania show `[✗ amphibians]`
+  (or equivalent). Fixed three root causes: (1) "Supply a Skeleton of Your Own" added to
+  `FRAME_COMPATIBLE_TYPES` (human-only); (2) `_detectManiaFromBeginData` moved before annotation
+  calls in the `storylet-begin` handler so mania is available immediately; (3)
+  `_tryAnnotateFramesFromDOM` switched from text-node walk to `img[alt]` primary matching (same
+  pattern as buyer annotation — the game renders branch titles as images, not heading text nodes).
 - **Bone Market — Assemble a Skeleton annotations** — three inline labels on each bone-adding branch:
   (1) bone type label (`[skull]`, `[leg]`, `[skull×2]`, `[0 skull]` for Stygian Ivory, etc.);
   (2) exhaustion warning (`⚠ +exh` amber / `⚠⚠ +exh→cap` red) when adding this bone would increase

@@ -631,21 +631,28 @@ function _tryAnnotateFramesFromDOM() {
   const maniaType = _skeletonState.zoologicalManiaType;
   const maniaLabel = _skeletonState.zoologicalManiaLabel;
   for (const container of document.querySelectorAll('[data-branch-id]')) {
-    let headerEl = null, matchedName = null;
-    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-    let node;
-    while ((node = walker.nextNode())) {
-      const t = node.textContent.trim();
-      if (FRAME_COMPATIBLE_TYPES[t]) { headerEl = node.parentElement; matchedName = t; break; }
+    if (container.dataset.flFrameLabeled) continue;
+    let matchedName = null;
+    const img = container.querySelector('img[alt]');
+    if (img && FRAME_COMPATIBLE_TYPES[img.getAttribute('alt')] !== undefined)
+      matchedName = img.getAttribute('alt');
+    if (!matchedName) {
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        const t = node.textContent.trim();
+        if (FRAME_COMPATIBLE_TYPES[t] !== undefined) { matchedName = t; break; }
+      }
     }
-    if (!headerEl || headerEl.dataset.flFrameLabeled) continue;
-    headerEl.dataset.flFrameLabeled = "1";
+    if (!matchedName) continue;
+    container.dataset.flFrameLabeled = "1";
     if (!FRAME_COMPATIBLE_TYPES[matchedName].includes(maniaType)) {
+      const body = container.querySelector('.media__body, .branch__body') || container;
       const s = document.createElement("span");
       s.className = "fl-frame-label";
       s.textContent = " [✗ " + maniaLabel + "]";
       s.style.cssText = "font-size:0.85em;color:#c9592c;margin-left:4px;";
-      headerEl.appendChild(s);
+      body.appendChild(s);
     }
   }
 }
@@ -1076,6 +1083,7 @@ async function _loadEpaForChar(charId) {
 const FRAME_COMPATIBLE_TYPES = {
   "Build on the Human Ribcage":        [100, 110, 120], // chimera, humanoid, ape
   "Reassemble your Headless Humanoid": [100, 110],      // chimera, humanoid
+  "Supply a Skeleton of Your Own":     [110],           // human only
 };
 
 // ── Bone Market skeleton state ────────────────────────────────────────────────
@@ -1526,18 +1534,33 @@ function injectEpaPanel() {
   const s = _epa.session;
   const sEpa = s.actions > 0 ? (s.echoes / s.actions).toFixed(2) : "—";
 
-  let html = "";
+  const wrapper = document.createElement("div");
+  wrapper.className = "fl-epa-content";
+
+  const sessionRow = document.createElement("div");
+  const btn = document.createElement("a");
+  btn.className = "fl-epa-btn";
+  btn.href = "#";
   if (s.running) {
-    html += `<div>Session: ${s.actions.toLocaleString()} actions &middot; ${s.echoes.toFixed(2)}&#949; &middot; ${sEpa}&#949;/act &nbsp;<a class="fl-epa-btn" href="#">stop</a></div>`;
+    sessionRow.textContent = `Session: ${s.actions.toLocaleString()} actions · ${s.echoes.toFixed(2)}ε · ${sEpa}ε/act  `;
+    btn.textContent = "stop";
+    sessionRow.appendChild(btn);
   } else if (s.actions > 0) {
-    html += `<div>Session (stopped): ${s.actions.toLocaleString()} actions &middot; ${s.echoes.toFixed(2)}&#949; &middot; ${sEpa}&#949;/act &nbsp;<a class="fl-epa-btn" href="#">new session</a></div>`;
+    sessionRow.textContent = `Session (stopped): ${s.actions.toLocaleString()} actions · ${s.echoes.toFixed(2)}ε · ${sEpa}ε/act  `;
+    btn.textContent = "new session";
+    sessionRow.appendChild(btn);
   } else {
-    html += `<div><a class="fl-epa-btn" href="#">Start session</a></div>`;
+    btn.textContent = "Start session";
+    sessionRow.appendChild(btn);
   }
+  wrapper.appendChild(sessionRow);
+
   if (la > 0 || s.running || s.actions > 0) {
-    html += `<div>Lifetime: ${la.toLocaleString()} actions &middot; ${le.toFixed(2)}&#949; &middot; ${lifeEpa}&#949;/act</div>`;
+    const lifetimeRow = document.createElement("div");
+    lifetimeRow.textContent = `Lifetime: ${la.toLocaleString()} actions · ${le.toFixed(2)}ε · ${lifeEpa}ε/act`;
+    wrapper.appendChild(lifetimeRow);
   }
-  panel.innerHTML = `<div class="fl-epa-content">${html}</div>`;
+  panel.replaceChildren(wrapper);
 }
 
 function startPossessionsObserver() {
@@ -2126,11 +2149,11 @@ window.addEventListener("message", (event) => {
     }
   } else if (event.data.type === "storylet-begin") {
     const _bd = event.data.data;
+    _detectManiaFromBeginData(_bd);
     annotateBranchCosts(parseBranchCosts(_bd));
     annotateBranchBones(parseBranchBones(_bd));
     annotateFrameBranches(parseFrameBranches(_bd));
     annotateBuyerBranches(parseBuyerBranches(_bd));
-    _detectManiaFromBeginData(_bd);
   } else if (event.data.type === "storylet-list") {
     _detectManiaFromStorylets(event.data.data);
   } else if (event.data.type === "myself") {
