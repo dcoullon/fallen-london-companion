@@ -86,7 +86,9 @@ same plot without having to navigate back manually.
 - **Rat Market Saturation hint** — after any action that changes Rat Market Saturation, show
   the current boost tier and distance to the next threshold inline next to the saturation line.
 - **Storylet choice cost preview** — echo cost shown on quality requirement icons before clicking
-  a choice. Reads branch requirement data and looks up item prices inline.
+  a choice. Reads branch requirement data and looks up item prices inline. Fixed on Firefox Android:
+  game uses a ReactModal (`modal--tooltip-like__content`) instead of Tippy; annotateTooltip and
+  click fallback updated to target both structures.
 - **Possessions tab — faction renown bar** — faction item icons injected at the top of the
   Possessions tab with quantity badges, hover glow, click-to-scroll, and favours/7 · renown/55
   stats under each icon. Favours text shown as [7/7] in teal at max to signal they should be spent.
