@@ -896,7 +896,6 @@ function annotateIconAriaLabels(root) {
 }
 
 function annotateTooltip(root) {
-  _dbgAnnotateCount++;
   // If called on an inner element, walk up to the enclosing [data-tippy-root].
   if (root && root.closest && !root.hasAttribute("data-tippy-root")
       && root.getAttribute("role") !== "tooltip") {
@@ -906,7 +905,10 @@ function annotateTooltip(root) {
 
   const tooltipBox = (root.getAttribute && root.getAttribute("role") === "tooltip")
     ? root
-    : root.querySelector && root.querySelector('[role="tooltip"]');
+    : root.querySelector && (
+        root.querySelector('[role="tooltip"]') ||
+        root.querySelector('.modal--tooltip-like__content')
+      );
   if (!tooltipBox) return;
   // Tippy clears tooltip content on hide, so the div may be gone even if the flag is set.
   if (tooltipBox.dataset.flPriceAdded && tooltipBox.querySelector("[data-fl-worth]")) return;
@@ -2126,12 +2128,9 @@ function _updateFavoursFromChoosebranch(data) {
 }
 // ── Wire up ───────────────────────────────────────────────────────────────────
 
-let _dbgMsgCount = 0, _dbgAnnotateCount = 0, _dbgObserverCount = 0;
-
 window.addEventListener("message", (event) => {
   if (event.source !== window) return;
   if (!event.data || event.data.source !== "fl-helper") return;
-  _dbgMsgCount++;
 
   if (event.data.type === "choosebranch") {
     const data = event.data.data;
@@ -2180,7 +2179,6 @@ startPossessionsObserver();
 
 const _iconObserver = new MutationObserver((mutations) => {
   for (const m of mutations) {
-    _dbgObserverCount++;
     if (m.type === "attributes") {
       // Tippy showing a pre-existing tooltip via data-state change instead of DOM insertion
       if (m.target.getAttribute("data-state") === "visible") {
@@ -2203,22 +2201,17 @@ _iconObserver.observe(document.documentElement, {
   attributes: true, attributeFilter: ["data-state"],
 });
 
-// Fallback for Firefox Android: touch-triggered Tippy tooltips may not fire
-// data-state attribute mutations reliably. Re-scan tooltip roots 150ms after every tap.
+// Fallback for Firefox Android: re-scan for both Tippy tooltips and the mobile
+// React Modal variant (modal--tooltip-like__content) 150ms after every tap.
 document.addEventListener("click", () => {
   setTimeout(() => {
     for (const el of document.querySelectorAll("[data-tippy-root]")) {
+      annotateTooltip(el);
+    }
+    for (const el of document.querySelectorAll(".modal--tooltip-like__content")) {
       annotateTooltip(el);
     }
   }, 150);
 }, { passive: true, capture: true });
 
 window.FL_HELPER_LOADED = true;
-window.__flDiag = {
-  loaded: true,
-  get costByQualitySize() { return _costByQuality.size; },
-  get costByQuality()     { return Object.fromEntries(_costByQuality); },
-  get msgCount()          { return _dbgMsgCount; },
-  get annotateCount()     { return _dbgAnnotateCount; },
-  get observerCount()     { return _dbgObserverCount; },
-};
