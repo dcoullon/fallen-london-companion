@@ -488,13 +488,6 @@ function annotateBranchCosts(branchCosts) {
 
 // Shared helper: compute & inject bone-type + exhaustion + mania label onto targetEl
 function _buildBoneLabelSpan(targetEl, boneId, typeLabel) {
-  const _dbg_t = BONE_TYPE_BY_ID[boneId];
-  if (_dbg_t && ['tail','fin','wing','arm'].includes(_dbg_t.slot)) {
-    console.log('[FL] bone label debug:', { boneId, slot: _dbg_t.slot,
-      skeletonInProgress: _skeletonState.skeletonInProgress,
-      zoologicalManiaType: _skeletonState.zoologicalManiaType,
-      zoologicalMania: _skeletonState.zoologicalMania });
-  }
   const eff = BONE_EFFECTS_BY_ID[boneId] ?? { av: (PRICES[boneId] ?? 0) * 100, antiquity: 0, amalgamy: 0, menace: 0 };
   const baseExh = _exhaustionFromSale(_skeletonState);
   const simState = {
@@ -660,25 +653,22 @@ function _tryAnnotateFramesFromDOM() {
 function _tryAnnotateBuyersFromDOM() {
   if (_skeletonState.approximateValue <= 0) return;
   const s = _skeletonState;
-  const buyerBranchNames = new Set(BONE_MARKET_BUYERS.map(b => b.branchName).filter(Boolean));
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  let node;
-  while ((node = walker.nextNode())) {
-    const text = node.textContent.trim();
-    if (!buyerBranchNames.has(text)) continue;
-    const headerEl = node.parentElement;
-    if (!headerEl || headerEl.dataset.flBuyerLabeled) continue;
-    const buyer = BONE_MARKET_BUYERS.find(b => b.branchName === text && b.check(s));
+  for (const container of document.querySelectorAll('[data-branch-id]')) {
+    if (container.dataset.flBuyerLabeled) continue;
+    const img = container.querySelector('img[alt]');
+    if (!img) continue;
+    const buyer = BONE_MARKET_BUYERS.find(b => b.branchName === img.getAttribute('alt'));
     if (!buyer) continue;
-    headerEl.dataset.flBuyerLabeled = "1";
+    container.dataset.flBuyerLabeled = "1";
+    const body = container.querySelector('.media__body, .branch__body') || container;
     const wrap = document.createElement("span");
     wrap.className = "fl-buyer-label";
-    wrap.style.cssText = "font-size:0.85em;opacity:0.85;margin-left:4px;";
+    wrap.style.cssText = "font-size:0.85em;opacity:0.85;display:block;margin-top:2px;";
     const items = buyer.items(s);
     const itemStr = items.filter(i => i.qty > 0).map(i => `${i.qty} ${i.name}`).join(", ");
     wrap.textContent = `~${buyer.payout(s).toFixed(1)}ε` + (itemStr ? `: ${itemStr}` : "");
     wrap.style.color = "inherit";
-    headerEl.appendChild(wrap);
+    body.appendChild(wrap);
   }
 }
 
@@ -836,7 +826,7 @@ function parseBuyerBranches(data) {
   const s = _skeletonState;
   for (const node of nodes) for (const branch of node.childBranches) {
     const buyer = BONE_MARKET_BUYERS.find(b => b.branchName === branch.name);
-    if (!buyer || !buyer.check(s)) continue;
+    if (!buyer) continue;
     results.push({
       branchId: branch.id,
       branchName: branch.name,
@@ -854,32 +844,19 @@ function annotateBuyerBranches(buyerBranches) {
   if (buyerBranches.length === 0) return;
 
   function tryInject() {
-    for (const { branchId, branchName, echoes, items } of buyerBranches) {
-      let headerEl = null;
-      if (branchId) {
-        const container = document.querySelector(`[data-branch-id="${branchId}"]`);
-        if (container) {
-          headerEl = container.querySelector("h2,h3,h4,h5,[class*='heading'],[class*='title']") || container;
-        }
-      }
-      if (!headerEl) {
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        let node;
-        while ((node = walker.nextNode())) {
-          if (node.textContent.trim() === branchName) { headerEl = node.parentElement; break; }
-        }
-      }
-      if (!headerEl) continue;
-      if (headerEl.dataset.flBuyerLabeled) continue;
-      headerEl.dataset.flBuyerLabeled = "1";
-
+    for (const { branchId, echoes, items } of buyerBranches) {
+      if (!branchId) continue;
+      const container = document.querySelector(`[data-branch-id="${branchId}"]`);
+      if (!container || container.dataset.flBuyerLabeled) continue;
+      container.dataset.flBuyerLabeled = "1";
+      const body = container.querySelector('.media__body, .branch__body') || container;
       const wrap = document.createElement("span");
       wrap.className = "fl-buyer-label";
-      wrap.style.cssText = "font-size:0.85em;opacity:0.85;margin-left:4px;";
+      wrap.style.cssText = "font-size:0.85em;opacity:0.85;display:block;margin-top:2px;";
       const itemStr = items.filter(i => i.qty > 0).map(i => `${i.qty} ${i.name}`).join(", ");
       wrap.textContent = `~${echoes.toFixed(1)}ε` + (itemStr ? `: ${itemStr}` : "");
       wrap.style.color = "inherit";
-      headerEl.appendChild(wrap);
+      body.appendChild(wrap);
     }
   }
 
@@ -1802,13 +1779,11 @@ function _applyZoologicalManiaLevel(level) {
     for (const el of document.querySelectorAll(".fl-frame-label")) el.remove();
     for (const el of document.querySelectorAll("[data-fl-bone-labeled]")) delete el.dataset.flBoneLabeled;
     for (const el of document.querySelectorAll("[data-fl-frame-labeled]")) delete el.dataset.flFrameLabeled;
-    console.log('[FL] Zoological Mania set:', label, '(typeKey', typeKey, ')');
   }
 }
 
 function _detectManiaFromStorylets(data) {
   const storylets = Array.isArray(data) ? data : [...(data.storylets || []), ...(data.displayCards || [])];
-  console.log('[FL] _detectManiaFromStorylets: received', storylets.length, 'items, top-level keys:', Array.isArray(data) ? '(array)' : Object.keys(data).join(','));
 
   // Scan top-level quality arrays on the response object (e.g. worldQualities)
   if (!Array.isArray(data)) {
@@ -1816,10 +1791,7 @@ function _detectManiaFromStorylets(data) {
       const arr = data[key];
       if (Array.isArray(arr)) {
         for (const q of arr) {
-          if (q && q.id === 142799) {
-            console.log('[FL] Found quality 142799 at data.' + key + ', level:', q.level);
-            _applyZoologicalManiaLevel(q.level);
-          }
+          if (q && q.id === 142799) _applyZoologicalManiaLevel(q.level);
         }
       }
     }
@@ -1827,18 +1799,11 @@ function _detectManiaFromStorylets(data) {
 
   for (const s of storylets) {
     const text = [s.name, s.teaser, s.description].filter(Boolean).join(" ");
-    if (text) console.log('[FL] storylet text:', text.slice(0, 150));
 
     // Scan quality arrays inside each storylet/card for quality 142799
     const allQuals = [...(s.qualitiesRequired||[]), ...(s.qualitiesAffected||[]), ...(s.qualities||[])];
-    if (allQuals.length > 0) {
-      console.log('[FL] quality IDs in', (s.name||'').slice(0,40)||'(unnamed)', ':', allQuals.map(q=>q.id).join(','));
-      for (const q of allQuals) {
-        if (q.id === 142799) {
-          console.log('[FL] Found quality 142799 in storylet/card qualities, level:', q.level);
-          _applyZoologicalManiaLevel(q.level);
-        }
-      }
+    for (const q of allQuals) {
+      if (q.id === 142799) _applyZoologicalManiaLevel(q.level);
     }
 
     const m = text.match(/predilection for (antique|amalgam|menac)/i);
@@ -1885,10 +1850,7 @@ function _detectManiaFromBeginData(data) {
     for (const b of (card.childBranches || [])) items.push(b);
   }
   if (items.length === 0 && data.name) items.push(data);
-  if (items.length > 0) {
-    console.log('[FL] storylet-begin mania scan:', items.length, 'items, first node keys:', Object.keys(node || data).join(','));
-    _detectManiaFromStorylets({ storylets: items });
-  }
+  if (items.length > 0) _detectManiaFromStorylets({ storylets: items });
 }
 
 function evaluateBuyers(state) {
