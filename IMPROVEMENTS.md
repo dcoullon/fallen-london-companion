@@ -58,6 +58,15 @@ Suggest skeletons that are efficient to build in the current week, factoring in:
 ### Optimal loadout button — post-equip page refresh
 After clicking "+" and equipping the optimal loadout, the page currently does a full `location.reload()` which triggers the Fallen London logo loading animation. Replace with a softer SPA-style navigation so the storylet view re-renders without re-initialising the whole app.
 
+**Approaches ruled out:**
+- `popstate` dispatch, `window.next?.router` — FL is not Next.js, these no-op
+- `pushState('/possessions')` from a storylet page → game router guard fires synchronously, pushes back to `/` immediately with no XHR in between; no re-render results
+
+**Current approach (partially working):**
+After equip, fetch `/character/myself` ourselves using `_gameHeaders`, compute new success % from `challenge.targetNumber` and `possession.effectiveLevel`, patch `.challenge__description` DOM text directly. Falls back to `location.reload()` if `targetNumber` is 0 (field missing). Currently always falls back — `ch.targetNumber` appears to not be the correct field name.
+
+**Next step:** check the browser console for `[FL] challenge targetNumber= ... name= ...` log after loading a storylet with a broad challenge, to see what the actual field value/name is. If it logs `undefined`, inspect `branch.challenges[0]` directly to find the correct field (may be `targetDifficulty`, `difficulty`, `chancePercentage`, etc.).
+
 ### Agent "redo" tickbox
 When an agent finishes an assignment and the result screen appears, show a tickbox
 "Send again" (or similar) that lets the player immediately re-assign the agent to the

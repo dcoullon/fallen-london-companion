@@ -16,7 +16,6 @@ if (typeof FL_TEST_MODE === "undefined") {
     return headers[name] || headers[name.toLowerCase()] || null;
   }
 
-  console.log("[FL-PW] injected script loaded");
   const originalFetch = window.fetch;
   window.fetch = async function (...args) {
     const url = typeof args[0] === "string" ? args[0] : (args[0] && args[0].url) || "";
@@ -88,9 +87,24 @@ if (typeof FL_TEST_MODE === "undefined") {
             },
             body: JSON.stringify({ qualityId: e.data.qualityId })
           });
-          window.postMessage({ source: "fl-helper", type: "equip-done", qualityId: e.data.qualityId, ok: resp.ok }, "*");
+          if (resp.ok) {
+            try {
+              const myselfResp = await originalFetch("https://api.fallenlondon.com/api/character/myself", {
+                method: "GET",
+                credentials: "include",
+                headers: { "X-Requested-With": "XMLHttpRequest", ..._gameHeaders }
+              });
+              const myselfData = myselfResp.ok ? await myselfResp.json() : null;
+              window.postMessage({ source: "fl-helper", type: "equip-done", ok: true, myselfData }, "*");
+            } catch (err) {
+              window.postMessage({ source: "fl-helper", type: "equip-done", ok: true, myselfData: null }, "*");
+            }
+          } else {
+            window.postMessage({ source: "fl-helper", type: "equip-done", qualityId: e.data.qualityId, ok: false }, "*");
+          }
         } catch (err) {
           console.warn("[FL] equipHighest failed", err);
+          window.postMessage({ source: "fl-helper", type: "equip-done", qualityId: e.data.qualityId, ok: false }, "*");
         }
       })();
     }
@@ -475,7 +489,13 @@ function parseBranchCosts(data) {
       const arr = [];
       for (const ch of branch.challenges) {
         const qid = EQUIP_HIGHEST_BY_NAME.get((ch.name || '').toLowerCase());
-        if (qid) arr.push({ qualityId: qid, qualityName: ch.name, image: ch.image || "" });
+        if (qid) {
+          arr.push({ qualityId: qid, qualityName: ch.name, image: ch.image || "", targetNumber: ch.targetNumber || 0 });
+          if (!_challengeFieldsLogged) {
+            console.log("[FL] challenge targetNumber=", ch.targetNumber, "name=", ch.name);
+            _challengeFieldsLogged = true;
+          }
+        }
       }
       if (arr.length) _challengeByBranch.set(branch.id, arr);
     }
@@ -1134,7 +1154,8 @@ let _cachedFactionStats = null;    // null = not yet received; Map<id,{favours,r
 let _cachedFavoursQtys = null;     // Map<favoursQualityId, qty> — used to recover qty when quality goes to 0
 const _cpState = new Map();        // Map<qualityId, {level, cp, totalCP}> — pre-action CP state for delta calculation
 let _canChangeOutfit = true;          // cached from /myself and choosebranch responses
-let _challengeByBranch = new Map();   // branchId → [{qualityId, qualityName, image}, ...]
+let _challengeByBranch = new Map();   // branchId → [{qualityId, qualityName, image, targetNumber}, ...]
+let _challengeFieldsLogged = false;   // one-time diagnostic log for challenge.targetNumber presence
 
 const EQUIP_HIGHEST_BY_NAME = new Map([
   ["watchful", 209], ["shadowy", 210], ["dangerous", 211], ["persuasive", 212],
@@ -1664,6 +1685,29 @@ function _makeLoadoutBtn(qualityId, qualityName) {
     window.postMessage({ source: "fl-helper-cmd", type: "equip-highest", qualityId }, "*");
   });
   return btn;
+}
+
+function _updateChallengePercentages(myselfData) {
+  if (!myselfData || !Array.isArray(myselfData.possessions)) return false;
+  const effectiveLevels = new Map();
+  for (const p of myselfData.possessions) effectiveLevels.set(p.id, p.effectiveLevel);
+  let updated = 0;
+  for (const [branchId, challenges] of _challengeByBranch) {
+    const branchEl = document.querySelector(`[data-branch-id="${branchId}"]`);
+    if (!branchEl) continue;
+    for (const ch of challenges) {
+      if (!ch.targetNumber) continue;
+      const newLevel = effectiveLevels.get(ch.qualityId);
+      if (newLevel == null) continue;
+      const newPct = Math.min(100, Math.floor(newLevel / ch.targetNumber * 100));
+      const desc = branchEl.querySelector('.challenge__description');
+      if (desc) {
+        desc.textContent = desc.textContent.replace(/\d+%/, `${newPct}%`);
+        updated++;
+      }
+    }
+  }
+  return updated > 0;
 }
 
 function injectLoadoutButtons() {
@@ -2308,14 +2352,12 @@ window.addEventListener("message", (event) => {
   } else if (event.data.type === "myself") {
     parseMyself(event.data.data);
   } else if (event.data.type === "equip-done") {
-    if (event.data.ok) {
-      window.location.reload();
-    } else {
-      for (const btn of document.querySelectorAll(".fl-loadout-btn:disabled")) {
-        btn.disabled = false;
-      }
-      console.warn("[FL] equipHighest returned non-OK status");
+    for (const btn of document.querySelectorAll(".fl-loadout-btn:disabled")) {
+      btn.disabled = false;
     }
+    if (!event.data.ok) { console.warn("[FL] equipHighest returned non-OK status"); return; }
+    const updated = event.data.myselfData && _updateChallengePercentages(event.data.myselfData);
+    if (!updated) window.location.reload();
   }
 });
 
