@@ -1,6 +1,6 @@
 {
   "name": "fallen-london-companion",
-  "version": "0.3.0",
+  "version": "0.31.0",
   "private": true,
   "scripts": {
     "dev": "node -e \"require('fs').mkdirSync('profiles/fl-dev',{recursive:true})\" && web-ext run --source-dir extension/ --firefox=\"C:/Program Files/Mozilla Firefox/firefox.exe\" --firefox-profile profiles/fl-dev --keep-profile-changes --start-url https://www.fallenlondon.com/",
