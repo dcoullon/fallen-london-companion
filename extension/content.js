@@ -8,10 +8,26 @@ const _b = typeof browser !== 'undefined' ? browser : chrome;
 if (typeof FL_TEST_MODE === "undefined") {
   const s = document.createElement("script");
   s.textContent = `(function () {
+  // Auth headers captured from the game's own outgoing requests, reused for our API calls.
+  let _gameHeaders = {};
+  function _getHeader(headers, name) {
+    if (!headers) return null;
+    if (typeof headers.get === "function") return headers.get(name) || headers.get(name.toLowerCase()) || null;
+    return headers[name] || headers[name.toLowerCase()] || null;
+  }
+
+  console.log("[FL-PW] injected script loaded");
   const originalFetch = window.fetch;
   window.fetch = async function (...args) {
-    const response = await originalFetch.apply(this, args);
     const url = typeof args[0] === "string" ? args[0] : (args[0] && args[0].url) || "";
+    if (url.includes("api.fallenlondon.com")) {
+      const h = args[1]?.headers ?? (args[0] instanceof Request ? args[0].headers : null);
+      const auth = _getHeader(h, "Authorization");
+      const ver  = _getHeader(h, "X-Current-Version");
+      if (auth) _gameHeaders["Authorization"] = auth;
+      if (ver)  _gameHeaders["X-Current-Version"] = ver;
+    }
+    const response = await originalFetch.apply(this, args);
     const isChooseBranch = url.includes("choosebranch");
     const isBegin = url.includes("storylet/begin") || url.includes("/opportunity");
     const isMyself = url.includes("character/myself");
@@ -26,9 +42,18 @@ if (typeof FL_TEST_MODE === "undefined") {
   };
   const originalOpen = XMLHttpRequest.prototype.open;
   const originalSend = XMLHttpRequest.prototype.send;
+  const originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {
     this._flUrl = url;
     return originalOpen.call(this, method, url, ...rest);
+  };
+  XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+    if (this._flUrl && this._flUrl.includes("api.fallenlondon.com")) {
+      const lower = name.toLowerCase();
+      if (lower === "authorization") _gameHeaders["Authorization"] = value;
+      if (lower === "x-current-version") _gameHeaders["X-Current-Version"] = value;
+    }
+    return originalSetRequestHeader.call(this, name, value);
   };
   XMLHttpRequest.prototype.send = function (...args) {
     const _xhrIsChooseBranch = this._flUrl && this._flUrl.includes("choosebranch");
@@ -46,6 +71,30 @@ if (typeof FL_TEST_MODE === "undefined") {
     }
     return originalSend.apply(this, args);
   };
+
+  // Handle equip-highest commands dispatched from the content script.
+  window.addEventListener("message", (e) => {
+    if (!e.data || e.data.source !== "fl-helper-cmd") return;
+    if (e.data.type === "equip-highest") {
+      (async () => {
+        try {
+          const resp = await originalFetch("https://api.fallenlondon.com/api/outfit/equipHighest", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+              ..._gameHeaders
+            },
+            body: JSON.stringify({ qualityId: e.data.qualityId })
+          });
+          window.postMessage({ source: "fl-helper", type: "equip-done", qualityId: e.data.qualityId, ok: resp.ok }, "*");
+        } catch (err) {
+          console.warn("[FL] equipHighest failed", err);
+        }
+      })();
+    }
+  });
 })();`;
   document.documentElement.appendChild(s);
   s.remove();
@@ -397,6 +446,7 @@ function parseRequiredQty(tooltip) {
 }
 
 function parseBranchCosts(data) {
+  _challengeByBranch.clear();
   // Collect all storylet nodes that have childBranches from various response structures
   let nodes = [];
   if (data && Array.isArray(data.childBranches)) {
@@ -420,8 +470,17 @@ function parseBranchCosts(data) {
 
   const results = [];
   for (const storyletNode of nodes) for (const branch of storyletNode.childBranches) {
-    if (!Array.isArray(branch.qualityRequirements) || branch.qualityRequirements.length === 0) continue;
+    // Populate challenge map from branch.challenges for ALL branches (independent of qualityRequirements)
+    if (branch.id && Array.isArray(branch.challenges)) {
+      const arr = [];
+      for (const ch of branch.challenges) {
+        const qid = EQUIP_HIGHEST_BY_NAME.get((ch.name || '').toLowerCase());
+        if (qid) arr.push({ qualityId: qid, qualityName: ch.name, image: ch.image || "" });
+      }
+      if (arr.length) _challengeByBranch.set(branch.id, arr);
+    }
 
+    if (!Array.isArray(branch.qualityRequirements) || branch.qualityRequirements.length === 0) continue;
     const costs = [];
     for (const req of branch.qualityRequirements) {
       if (req.category === "Companion") continue;
@@ -1074,6 +1133,19 @@ let _cachedCCQtys = null;          // null = not yet received; Map<id,qty> after
 let _cachedFactionStats = null;    // null = not yet received; Map<id,{favours,renown}> after first myself
 let _cachedFavoursQtys = null;     // Map<favoursQualityId, qty> — used to recover qty when quality goes to 0
 const _cpState = new Map();        // Map<qualityId, {level, cp, totalCP}> — pre-action CP state for delta calculation
+let _canChangeOutfit = true;          // cached from /myself and choosebranch responses
+let _challengeByBranch = new Map();   // branchId → [{qualityId, qualityName, image}, ...]
+
+const EQUIP_HIGHEST_BY_NAME = new Map([
+  ["watchful", 209], ["shadowy", 210], ["dangerous", 211], ["persuasive", 212],
+  ["respectable", 950], ["dreaded", 957], ["bizarre", 958], ["baroque!", 18738],
+  ["kataleptic toxicology", 140826], ["monstrous anatomy", 140830],
+  ["a player of chess", 140873], ["glasswork", 140896], ["shapeling arts", 140897],
+  ["artisan of the red science", 140969], ["mithridacy", 140998],
+  ["zeefaring", 142291], ["steward of the discordance", 141623],
+  ["neathproofed", 142591], ["inerrant", 144845], ["insubstantial", 144846],
+  ["chthonosophy", 144818],
+]);
 
 // ── EPA counter state ─────────────────────────────────────────────────────────
 let _epa = { lifetime: { actions: 0, echoes: 0 }, session: { actions: 0, echoes: 0, running: false } };
@@ -1208,6 +1280,7 @@ const BONE_EFFECTS_BY_ID = {
 
 function parseMyself(data) {
   if (!data || !Array.isArray(data.possessions)) return;
+  _canChangeOutfit = data.character?.canChangeOutfit ?? true;
   const charId = data.character?.id;
   if (charId && charId !== _currentCharId) {
     _currentCharId = charId;
@@ -1577,9 +1650,69 @@ function injectEpaPanel() {
   panel.replaceChildren(wrapper);
 }
 
+// ── Optimal loadout "+" button ────────────────────────────────────────────────
+
+function _makeLoadoutBtn(qualityId, qualityName) {
+  const btn = document.createElement("button");
+  btn.className = "fl-loadout-btn";
+  btn.style.cssText = "display:inline-block;box-sizing:border-box;width:36px;height:36px;min-width:36px;padding:0;margin:0 2px;border:1px solid #c8a96e;font-size:20px;font-weight:bold;line-height:36px;text-align:center;cursor:pointer;background:rgba(42,28,20,0.85);color:#c8a96e;border-radius:4px;vertical-align:middle;";
+  btn.textContent = "+";
+  btn.title = `Equip Highest ${qualityName}`;
+  btn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    btn.disabled = true;
+    window.postMessage({ source: "fl-helper-cmd", type: "equip-highest", qualityId }, "*");
+  });
+  return btn;
+}
+
+function injectLoadoutButtons() {
+  if (!_canChangeOutfit) return;
+
+  // Path A: quality-requirement access condition icons
+  for (const container of document.querySelectorAll("div.icon.quality-requirement")) {
+    if (container.nextElementSibling?.classList.contains("fl-loadout-btn")) continue;
+    const inner = container.querySelector('[role="button"][aria-label]');
+    if (!inner) continue;
+    const label = (inner.getAttribute("aria-label") || "").toLowerCase();
+    if (label.includes("unlocked")) continue; // requirement already met
+    let qualityId = null, qualityName = "";
+    for (const [name, qid] of EQUIP_HIGHEST_BY_NAME) {
+      if (label.includes(name)) { qualityId = qid; qualityName = name; break; }
+    }
+    if (!qualityId) continue;
+    container.after(_makeLoadoutBtn(qualityId, qualityName));
+  }
+
+  // Path B: branch-level challenge indicators (broad difficulty %)
+  for (const [branchId, challenges] of _challengeByBranch) {
+    const branchEl = document.querySelector(`[data-branch-id="${branchId}"]`);
+    if (!branchEl) continue;
+    const desc = branchEl.querySelector('.challenge__description');
+    if (desc && desc.textContent.includes('100%')) continue;
+    for (const challenge of challenges) {
+      if (branchEl.querySelector(`.fl-loadout-btn[data-qid="${challenge.qualityId}"]`)) continue;
+      const btn = _makeLoadoutBtn(challenge.qualityId, challenge.qualityName);
+      btn.setAttribute("data-qid", String(challenge.qualityId));
+      let placed = false;
+      if (challenge.image) {
+        const img = branchEl.querySelector(`img[src*="${challenge.image}"]`);
+        if (img) {
+          const container = img.closest("div.icon") || img.closest(".icon") || img.parentElement;
+          (container || img).after(btn);
+          placed = true;
+        }
+      }
+      if (!placed) {
+        (branchEl.querySelector(".media__body, .branch__body") || branchEl).appendChild(btn);
+      }
+    }
+  }
+}
+
 function startPossessionsObserver() {
   setInterval(() => {
-    injectPossessionsStyles(); injectEpaPanel(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); injectSkeletonTracker(); _tryAnnotateBonesFromDOM(); _tryAnnotateFramesFromDOM(); _tryAnnotateBuyersFromDOM();
+    injectPossessionsStyles(); injectEpaPanel(); injectPossessionsJumpLink(); injectRenownBar(); injectCrossConversionBar(); injectSkeletonTracker(); _tryAnnotateBonesFromDOM(); _tryAnnotateFramesFromDOM(); _tryAnnotateBuyersFromDOM(); injectLoadoutButtons();
   }, 1000);
 }
 
@@ -2134,6 +2267,7 @@ window.addEventListener("message", (event) => {
 
   if (event.data.type === "choosebranch") {
     const data = event.data.data;
+    _canChangeOutfit = data.canChangeOutfit ?? _canChangeOutfit;
     const changes = parseChanges(data);
     annotateResults(changes, parseCPChanges(data));
     _updateFavoursFromChoosebranch(data);
@@ -2168,10 +2302,20 @@ window.addEventListener("message", (event) => {
     annotateBranchBones(parseBranchBones(_bd));
     annotateFrameBranches(parseFrameBranches(_bd));
     annotateBuyerBranches(parseBuyerBranches(_bd));
+    setTimeout(injectLoadoutButtons, 300);
   } else if (event.data.type === "storylet-list") {
     _detectManiaFromStorylets(event.data.data);
   } else if (event.data.type === "myself") {
     parseMyself(event.data.data);
+  } else if (event.data.type === "equip-done") {
+    if (event.data.ok) {
+      window.location.reload();
+    } else {
+      for (const btn of document.querySelectorAll(".fl-loadout-btn:disabled")) {
+        btn.disabled = false;
+      }
+      console.warn("[FL] equipHighest returned non-OK status");
+    }
   }
 });
 

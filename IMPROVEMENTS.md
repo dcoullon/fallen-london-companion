@@ -55,11 +55,8 @@ Suggest skeletons that are efficient to build in the current week, factoring in:
 - Requires a skeleton recipe database and weekly buyer schedule (or detection of the current week's buff)
 
 
-### Optimal loadout button
-When a branch shows less than 100% success rate, add a button "Move to optimal loadout" that automatically selects the equipment combination that reaches the maximum achievable success rate for the relevant quality.
-- Needs to know which stat the check is on and the player's possessions + their stat bonuses
-- May require intercepting the possessions/character data from the API
-- UX: button appears inline near the success % indicator
+### Optimal loadout button — post-equip page refresh
+After clicking "+" and equipping the optimal loadout, the page currently does a full `location.reload()` which triggers the Fallen London logo loading animation. Replace with a softer SPA-style navigation so the storylet view re-renders without re-initialising the whole app.
 
 ### Agent "redo" tickbox
 When an agent finishes an assignment and the result screen appears, show a tickbox
@@ -70,6 +67,13 @@ same plot without having to navigate back manually.
 ---
 
 ## Done
+
+- **Optimal loadout "+" button** — "+" button injected next to each broad challenge quality icon on
+  storylet branches when the player is below 100% success. Clicking calls `POST /api/outfit/equipHighest`
+  with the relevant quality ID. Hidden when the access requirement is already met ("unlocked") or success
+  is already 100%. Supports multi-challenge branches (one "+" per challenge). Quality name→ID map is a
+  hardcoded static constant (`EQUIP_HIGHEST_BY_NAME`, 21 entries). Auth header captured via XHR
+  `setRequestHeader` intercept. Post-equip: full page reload (soft-reload improvement tracked in Pending).
 
 - **Landing page** — production-grade static landing page at `docs/index.html` deployed via GitHub Pages
   (`https://dcoullon.github.io/fallen-london-companion/`). Fifth City Gothic design (EB Garamond, brass/ink-blue/parchment).
