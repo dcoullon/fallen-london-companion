@@ -10,6 +10,7 @@ if (typeof FL_TEST_MODE === "undefined") {
   s.textContent = `(function () {
   // Auth headers captured from the game's own outgoing requests, reused for our API calls.
   let _gameHeaders = {};
+  let _lastStoryletReq = null;   // { url, body } — saved for replay after equip
   function _getHeader(headers, name) {
     if (!headers) return null;
     if (typeof headers.get === "function") return headers.get(name) || headers.get(name.toLowerCase()) || null;
@@ -26,13 +27,17 @@ if (typeof FL_TEST_MODE === "undefined") {
       if (auth) _gameHeaders["Authorization"] = auth;
       if (ver)  _gameHeaders["X-Current-Version"] = ver;
     }
+    if (url.includes("storylet/begin") || url.includes("/opportunity")) {
+      _lastStoryletReq = { url, body: args[1]?.body || null };
+    }
     const response = await originalFetch.apply(this, args);
     const isChooseBranch = url.includes("choosebranch");
     const isBegin = url.includes("storylet/begin") || url.includes("/opportunity");
     const isMyself = url.includes("character/myself");
     const isStoryletList = url.includes("/storylet") && !url.includes("/storylet/");
-    if (isChooseBranch || isBegin || isMyself || isStoryletList) {
-      const type = isChooseBranch ? "choosebranch" : isBegin ? "storylet-begin" : isStoryletList ? "storylet-list" : "myself";
+    const isEquipHighest = url.includes("outfit/equipHighest");
+    if (isChooseBranch || isBegin || isMyself || isStoryletList || isEquipHighest) {
+      const type = isChooseBranch ? "choosebranch" : isBegin ? "storylet-begin" : isStoryletList ? "storylet-list" : isEquipHighest ? "equip-highest-resp" : "myself";
       response.clone().json().then((data) => {
         window.postMessage({ source: "fl-helper", type, data }, "*");
       }).catch(() => {});
@@ -59,6 +64,7 @@ if (typeof FL_TEST_MODE === "undefined") {
     const _xhrIsBegin = this._flUrl && (this._flUrl.includes("storylet/begin") || this._flUrl.includes("/opportunity"));
     const _xhrIsMyself = this._flUrl && this._flUrl.includes("character/myself");
     const _xhrIsStoryletList = this._flUrl && this._flUrl.includes("/storylet") && !this._flUrl.includes("/storylet/");
+    if (_xhrIsBegin) _lastStoryletReq = { url: this._flUrl, body: args[0] || null };
     if (_xhrIsChooseBranch || _xhrIsBegin || _xhrIsMyself || _xhrIsStoryletList) {
       const type = _xhrIsChooseBranch ? "choosebranch" : _xhrIsBegin ? "storylet-begin" : _xhrIsStoryletList ? "storylet-list" : "myself";
       this.addEventListener("load", () => {
@@ -89,15 +95,35 @@ if (typeof FL_TEST_MODE === "undefined") {
           });
           if (resp.ok) {
             try {
-              const myselfResp = await originalFetch("https://api.fallenlondon.com/api/character/myself", {
-                method: "GET",
+              const equipBody = await resp.json().catch(() => null);
+              if (!window._flEquipLogged) {
+                console.log("[FL] equipHighest response keys:", equipBody ? Object.keys(equipBody) : "null");
+                console.log("[FL] equipHighest response:", JSON.stringify(equipBody));
+                window._flEquipLogged = true;
+              }
+              // Re-fetch the current storylet so the server gives us fresh targetNumber values
+              // (targetNumber = server-computed success %, not a difficulty level).
+              let storyletData = null;
+              if (_lastStoryletReq) {
+                const stOpts = {
+                  method: _lastStoryletReq.body ? "POST" : "GET",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest", ..._gameHeaders },
+                  body: _lastStoryletReq.body || undefined
+                };
+                const stResp = await originalFetch(_lastStoryletReq.url, stOpts);
+                if (stResp.ok) storyletData = await stResp.json();
+              }
+              window.postMessage({ source: "fl-helper", type: "equip-done", ok: true, storyletData }, "*");
+              // Fire-and-forget /myself to keep extension cached data (faction bars etc.) in sync.
+              originalFetch("https://api.fallenlondon.com/api/character/myself", {
                 credentials: "include",
                 headers: { "X-Requested-With": "XMLHttpRequest", ..._gameHeaders }
-              });
-              const myselfData = myselfResp.ok ? await myselfResp.json() : null;
-              window.postMessage({ source: "fl-helper", type: "equip-done", ok: true, myselfData }, "*");
+              }).then(r => r.ok ? r.json() : null)
+                .then(d => { if (d) window.postMessage({ source: "fl-helper", type: "myself", data: d }, "*"); })
+                .catch(() => {});
             } catch (err) {
-              window.postMessage({ source: "fl-helper", type: "equip-done", ok: true, myselfData: null }, "*");
+              window.postMessage({ source: "fl-helper", type: "equip-done", ok: true, storyletData: null }, "*");
             }
           } else {
             window.postMessage({ source: "fl-helper", type: "equip-done", qualityId: e.data.qualityId, ok: false }, "*");
@@ -488,14 +514,15 @@ function parseBranchCosts(data) {
     if (branch.id && Array.isArray(branch.challenges)) {
       const arr = [];
       for (const ch of branch.challenges) {
-        const qid = EQUIP_HIGHEST_BY_NAME.get((ch.name || '').toLowerCase());
+        if (!_challengeFieldsLogged) console.log("[FL] RAW challenge from API:", JSON.stringify(ch));
+        const qid = _resolveEquipQualityId(ch.name);
         if (qid) {
-          arr.push({ qualityId: qid, qualityName: ch.name, image: ch.image || "", targetNumber: ch.targetNumber || 0 });
-          if (!_challengeFieldsLogged) {
-            console.log("[FL] challenge targetNumber=", ch.targetNumber, "name=", ch.name);
-            _challengeFieldsLogged = true;
-          }
+          arr.push({ qualityId: qid, qualityName: ch.name, image: ch.image || "", targetNumber: ch.targetNumber || 0, challengeType: ch.type || '', _raw: ch });
         }
+      }
+      if (!_challengeFieldsLogged && branch.challenges.length > 0) {
+        console.log("[FL] stored", arr.length, "of", branch.challenges.length, "challenges for branch", branch.id);
+        _challengeFieldsLogged = true;
       }
       if (arr.length) _challengeByBranch.set(branch.id, arr);
     }
@@ -1168,6 +1195,16 @@ const EQUIP_HIGHEST_BY_NAME = new Map([
   ["chthonosophy", 144818],
 ]);
 
+function _resolveEquipQualityId(chName) {
+  const lower = (chName || '').toLowerCase().trim();
+  const exact = EQUIP_HIGHEST_BY_NAME.get(lower);
+  if (exact) return exact;
+  for (const [key, id] of EQUIP_HIGHEST_BY_NAME) {
+    if (lower.includes(key)) return id;
+  }
+  return null;
+}
+
 // ── EPA counter state ─────────────────────────────────────────────────────────
 let _epa = { lifetime: { actions: 0, echoes: 0 }, session: { actions: 0, echoes: 0, running: false } };
 let _currentCharId = null;
@@ -1682,27 +1719,28 @@ function _makeLoadoutBtn(qualityId, qualityName) {
   btn.addEventListener("click", (ev) => {
     ev.stopPropagation();
     btn.disabled = true;
+    btn.classList.add('fl-loadout-in-progress');
+    const branchEl = btn.closest('[data-branch-id]');
+    if (branchEl) {
+      const desc = branchEl.querySelector('.challenge__description');
+      if (desc) desc.style.opacity = '0.4';
+    }
     window.postMessage({ source: "fl-helper-cmd", type: "equip-highest", qualityId }, "*");
   });
   return btn;
 }
 
-function _updateChallengePercentages(myselfData) {
-  if (!myselfData || !Array.isArray(myselfData.possessions)) return false;
-  const effectiveLevels = new Map();
-  for (const p of myselfData.possessions) effectiveLevels.set(p.id, p.effectiveLevel);
+function _updateChallengePercentages() {
   let updated = 0;
   for (const [branchId, challenges] of _challengeByBranch) {
     const branchEl = document.querySelector(`[data-branch-id="${branchId}"]`);
     if (!branchEl) continue;
     for (const ch of challenges) {
       if (!ch.targetNumber) continue;
-      const newLevel = effectiveLevels.get(ch.qualityId);
-      if (newLevel == null) continue;
-      const newPct = Math.min(100, Math.floor(newLevel / ch.targetNumber * 100));
       const desc = branchEl.querySelector('.challenge__description');
       if (desc) {
-        desc.textContent = desc.textContent.replace(/\d+%/, `${newPct}%`);
+        desc.style.opacity = '';
+        desc.textContent = desc.textContent.replace(/\d+%/, `${ch.targetNumber}%`);
         updated++;
       }
     }
@@ -2351,12 +2389,25 @@ window.addEventListener("message", (event) => {
     _detectManiaFromStorylets(event.data.data);
   } else if (event.data.type === "myself") {
     parseMyself(event.data.data);
-  } else if (event.data.type === "equip-done") {
-    for (const btn of document.querySelectorAll(".fl-loadout-btn:disabled")) {
-      btn.disabled = false;
+  } else if (event.data.type === "equip-highest-resp") {
+    if (!window._flEquipRespLogged) {
+      console.log("[FL] game equipHighest response keys:", event.data.data ? Object.keys(event.data.data) : "null");
+      console.log("[FL] game equipHighest response:", JSON.stringify(event.data.data));
+      window._flEquipRespLogged = true;
     }
-    if (!event.data.ok) { console.warn("[FL] equipHighest returned non-OK status"); return; }
-    const updated = event.data.myselfData && _updateChallengePercentages(event.data.myselfData);
+  } else if (event.data.type === "equip-done") {
+    for (const el of document.querySelectorAll('.challenge__description[style]')) el.style.opacity = '';
+    if (!event.data.ok) {
+      for (const btn of document.querySelectorAll(".fl-loadout-in-progress")) {
+        btn.disabled = false; btn.textContent = "+"; btn.classList.remove('fl-loadout-in-progress');
+      }
+      console.warn("[FL] equipHighest returned non-OK status"); return;
+    }
+    for (const btn of document.querySelectorAll(".fl-loadout-in-progress")) {
+      btn.textContent = "✓"; btn.title = btn.title.replace(/^Equip Highest/, "Equipped:"); btn.classList.remove('fl-loadout-in-progress');
+    }
+    if (event.data.storyletData) parseBranchCosts(event.data.storyletData);
+    const updated = _updateChallengePercentages();
     if (!updated) window.location.reload();
   }
 });
